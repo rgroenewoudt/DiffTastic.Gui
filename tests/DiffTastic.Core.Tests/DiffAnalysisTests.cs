@@ -70,6 +70,18 @@ public class DiffAnalysisTests
     }
 
     [Fact]
+    public void Prompt_cuts_very_long_lines()
+    {
+        var doc = new DiffDocument([Changed(0, new string('a', 100_000), new string('b', 100_000))], "JavaScript", null);
+
+        var prompt = DiffAnalysis.BuildPrompt(doc, "app.min.js", budget: 10_000);
+
+        Assert.True(prompt.Length <= 10_000, $"length {prompt.Length}");
+        Assert.Contains("### Hunk 0\n-" + new string('a', DiffAnalysis.MaxLineLength) + "… (99500 more characters)\n", prompt);
+        Assert.DoesNotContain("more hunks not shown.", prompt);
+    }
+
+    [Fact]
     public void Prompt_leaves_out_hunks_over_budget()
     {
         var rows = new List<AlignedRow>();

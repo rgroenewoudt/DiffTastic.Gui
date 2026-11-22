@@ -119,10 +119,18 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
             sb.Append(CultureInfo.InvariantCulture, $"{prefix}… ({lines.Count - maxLines} more lines)\n");
     }
 
+    public const int MaxLineLength = 500;
+
     private static void AppendLine(StringBuilder sb, char prefix, string? text)
     {
-        if (text is not null)
-            sb.Append(prefix).Append(text).Append('\n');
+        if (text is null)
+            return;
+        sb.Append(prefix);
+        if (text.Length <= MaxLineLength)
+            sb.Append(text);
+        else
+            sb.Append(text, 0, MaxLineLength).Append(CultureInfo.InvariantCulture, $"… ({text.Length - MaxLineLength} more characters)");
+        sb.Append('\n');
     }
 
     private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };

@@ -119,4 +119,33 @@ public sealed partial class LocalizationTests
         Assert.StartsWith("Difference 1 of", vm.StatusText);
         Assert.Equal("Open files…", ToolTip.GetTip(window.FindControl<Button>("OpenButton")!));
     }
+
+    [AvaloniaFact]
+    public async Task Language_change_reanalyzes_in_that_language()
+    {
+        var ai = new AiTests.FakeAi();
+        var settings = new AppSettings { AiEnabled = true };
+        var vm = new MainWindowViewModel(new StartupArgs(Sample("old.cs"), Sample("new.cs"), null), settings, ai)
+        {
+            LocateAi = _ => ai,
+        };
+        await vm.LoadAsync();
+        await vm.AnalysisReady;
+        Assert.Contains("reviewHints in English.", ai.LastPrompt);
+        try
+        {
+            settings.Language = "de";
+            vm.ApplySettings();
+            await vm.AnalysisReady;
+
+            Assert.Equal(2, ai.Calls);
+            Assert.Contains("reviewHints in German.", ai.LastPrompt);
+            Assert.Contains("KI: Fake", vm.StatusText);
+        }
+        finally
+        {
+            settings.Language = "en";
+            vm.ApplySettings();
+        }
+    }
 }

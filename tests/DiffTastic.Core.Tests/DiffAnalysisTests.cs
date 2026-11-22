@@ -32,6 +32,13 @@ public class DiffAnalysisTests
         Assert.Contains("### Hunk 1\n", prompt);
         Assert.Contains("+    // comment\n }\n", prompt);
         Assert.DoesNotContain("### Hunk 2", prompt);
+        Assert.Contains("Write summary, reason and reviewHints in English.", prompt);
+    }
+
+    [Fact]
+    public void Prompt_asks_for_the_output_language()
+    {
+        Assert.Contains("reviewHints in Dutch.", DiffAnalysis.BuildPrompt(Sample(), "A.cs", "Dutch"));
     }
 
     [Fact]

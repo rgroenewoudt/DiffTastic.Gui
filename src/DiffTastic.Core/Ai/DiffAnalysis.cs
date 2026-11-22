@@ -63,24 +63,25 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
             Do not invent problems.
         """;
 
-    public static string BuildPrompt(DiffDocument doc, string fileName, int budget = PromptBudget)
+    public static string BuildPrompt(DiffDocument doc, string fileName, string language = "English", int budget = PromptBudget)
     {
         var maxLines = 200;
         while (true)
         {
-            var prompt = Render(doc, fileName, maxLines);
+            var prompt = Render(doc, fileName, language, maxLines);
             if (prompt.Length <= budget)
                 return prompt;
             if (maxLines <= 4)
-                return Render(doc, fileName, maxLines, budget);
+                return Render(doc, fileName, language, maxLines, budget);
             maxLines /= 2;
         }
     }
 
     /// <summary>Renders hunks until <paramref name="budget"/> is reached; the rest is left out.</summary>
-    private static string Render(DiffDocument doc, string fileName, int maxLinesPerSide, int budget = int.MaxValue)
+    private static string Render(DiffDocument doc, string fileName, string language, int maxLinesPerSide, int budget = int.MaxValue)
     {
         var sb = new StringBuilder(Instructions);
+        sb.Append(CultureInfo.InvariantCulture, $"Write summary, reason and reviewHints in {language}.\n");
         sb.Append(CultureInfo.InvariantCulture, $"\nFile: {fileName} ({doc.Language}), {doc.Blocks.Count} hunks.\n");
         for (var i = 0; i < doc.Blocks.Count; i++)
         {

@@ -119,6 +119,7 @@ public sealed class BlamePopupTests : IAsyncLifetime
 
         Assert.Equal("Fake explanation.", popup.Explanation);
         Assert.Contains("Line: public int Add(int a, int b, int c = 0)", ai.LastPrompt);
+        Assert.Contains("Write the explanation in English.", ai.LastPrompt);
         Assert.Contains("Support a third operand and add Sum", ai.LastPrompt);
         Assert.Contains("+    public int Sum(params int[] values)", ai.LastPrompt);
         Screenshots.Save(window, "13-blame-explain");

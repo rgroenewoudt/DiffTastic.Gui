@@ -6,7 +6,7 @@ using DiffTastic.Core.Diff;
 namespace DiffTastic.Core.Ai;
 
 /// <summary>Asks the AI about a diff; answers are cached per prompt, so reloading costs nothing.</summary>
-public sealed class DiffAnalyzer(AiProvider provider)
+public sealed class DiffAnalyzer(AiProvider provider, string language = "English")
 {
     private readonly ConcurrentDictionary<string, DiffAnalysis> _cache = new();
 
@@ -17,7 +17,7 @@ public sealed class DiffAnalyzer(AiProvider provider)
         if (doc.Blocks.Count == 0)
             return new DiffAnalysis("Files are identical.", []);
 
-        var prompt = DiffAnalysis.BuildPrompt(doc, fileName);
+        var prompt = DiffAnalysis.BuildPrompt(doc, fileName, language);
         var key = Hash($"{provider.Name}\n{provider.Model}\n{prompt}");
         if (_cache.TryGetValue(key, out var cached))
             return cached;

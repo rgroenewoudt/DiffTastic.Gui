@@ -14,8 +14,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
 {
     private readonly DiffService _diffService = new(DifftRunner.Locate());
     private readonly AppSettings _settings = settings ?? new AppSettings();
-    private DiffAnalyzer? _analyzer = ai is null ? null : new DiffAnalyzer(ai);
-    private CommitExplainer? _explainer = ai is null ? null : new CommitExplainer(ai);
+    private DiffAnalyzer? _analyzer = ai is null ? null : new DiffAnalyzer(ai, Localization.AiLanguage);
+    private CommitExplainer? _explainer = ai is null ? null : new CommitExplainer(ai, Localization.AiLanguage);
     private CancellationTokenSource? _aiCts;
     private BlameService? _blameService;
     private Task<BlameResult?> _leftBlame = Task.FromResult<BlameResult?>(null);
@@ -101,12 +101,12 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         if (languageChanged)
             OnPropertyChanged(string.Empty);
         var ai = LocateAi(_settings);
-        var changed = ai?.Name != _analyzer?.Provider.Name || ai?.Model != _analyzer?.Provider.Model;
+        var changed = languageChanged || ai?.Name != _analyzer?.Provider.Name || ai?.Model != _analyzer?.Provider.Model;
         if (changed)
         {
             CancelAnalysis();
-            _analyzer = ai is null ? null : new DiffAnalyzer(ai);
-            _explainer = ai is null ? null : new CommitExplainer(ai);
+            _analyzer = ai is null ? null : new DiffAnalyzer(ai, Localization.AiLanguage);
+            _explainer = ai is null ? null : new CommitExplainer(ai, Localization.AiLanguage);
             OnPropertyChanged(nameof(IsAiAvailable));
             OnPropertyChanged(nameof(AiToolTip));
         }

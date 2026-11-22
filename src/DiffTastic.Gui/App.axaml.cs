@@ -18,6 +18,7 @@ public sealed partial class App : Application
         {
             var vm = new MainWindowViewModel(StartupArgs.Parse(desktop.Args ?? []));
             desktop.MainWindow = new MainWindow { DataContext = vm };
+            desktop.Exit += (_, _) => vm.Dispose();
             _ = vm.LoadAsync();
         }
 

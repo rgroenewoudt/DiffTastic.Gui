@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Globalization;
 
 namespace DiffTastic.Core.Git;
 
@@ -98,8 +99,8 @@ public sealed class BlameService(GitRunner git)
                 if (parts.Length >= 3 && IsSha(parts[0]))
                 {
                     sha = parts[0];
-                    origLine = int.Parse(parts[1]);
-                    finalLine = int.Parse(parts[2]);
+                    origLine = int.Parse(parts[1], CultureInfo.InvariantCulture);
+                    finalLine = int.Parse(parts[2], CultureInfo.InvariantCulture);
                     if (!headers.ContainsKey(sha))
                         headers[sha] = new Dictionary<string, string>();
                 }

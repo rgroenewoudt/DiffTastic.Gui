@@ -56,7 +56,7 @@ public static class DiffColors
         _ => ChangedHiddenPen,
     };
 
-    private static IPen DashedPen(IBrush brush) => new Pen(brush, 1, DashStyle.Dash).ToImmutable();
+    private static ImmutablePen DashedPen(IBrush brush) => new Pen(brush, 1, DashStyle.Dash).ToImmutable();
 
     private static ImmutableSolidColorBrush Brush(string hex) => new(Color.Parse(hex));
 

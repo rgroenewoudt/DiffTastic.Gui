@@ -38,10 +38,10 @@ public sealed class OverviewBar : Control
         Cursor = new Cursor(StandardCursorType.Hand);
     }
 
-    public override void Render(DrawingContext dc)
+    public override void Render(DrawingContext context)
     {
         var h = Bounds.Height;
-        dc.FillRectangle(Background, new Rect(Bounds.Size));
+        context.FillRectangle(Background, new Rect(Bounds.Size));
         if (Rows.Count == 0)
             return;
 
@@ -49,12 +49,12 @@ public sealed class OverviewBar : Control
         foreach (var (start, count, kind) in _runs)
         {
             var height = Math.Max(3, count * rowHeight);
-            dc.FillRectangle(DiffColors.Marker(kind), new Rect(3, start * rowHeight, Bounds.Width - 6, height));
+            context.FillRectangle(DiffColors.Marker(kind), new Rect(3, start * rowHeight, Bounds.Width - 6, height));
         }
 
         var vTop = Viewport.First * rowHeight;
         var vHeight = Math.Max(4, (Viewport.Last - Viewport.First) * rowHeight);
-        dc.DrawRectangle(ViewportFill, ViewportPen, new Rect(0.5, vTop, Bounds.Width - 1, vHeight));
+        context.DrawRectangle(ViewportFill, ViewportPen, new Rect(0.5, vTop, Bounds.Width - 1, vHeight));
     }
 
     /// <summary>Runs of consecutive rows with the same non-equal kind.</summary>

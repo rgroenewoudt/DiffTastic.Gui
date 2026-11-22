@@ -14,7 +14,7 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
 
     public KnownLayer Layer => KnownLayer.Background;
 
-    public void Draw(TextView textView, DrawingContext dc)
+    public void Draw(TextView textView, DrawingContext drawingContext)
     {
         if (Rows.Count == 0 || !textView.VisualLinesValid)
             return;
@@ -33,12 +33,12 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
 
             if (line is null)
             {
-                DrawFiller(dc, rect);
+                DrawFiller(drawingContext, rect);
                 continue;
             }
 
             if (DiffColors.RowBackground(row.Kind, side) is { } bg)
-                dc.FillRectangle(bg, rect);
+                drawingContext.FillRectangle(bg, rect);
 
             if (row.Kind == RowKind.Changed)
             {
@@ -47,13 +47,13 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
                 {
                     var segment = new TextSegment { StartOffset = lineStart + change.Start, Length = change.Length };
                     foreach (var r in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment, false))
-                        dc.FillRectangle(DiffColors.CharHighlight(side), r, 2);
+                        drawingContext.FillRectangle(DiffColors.CharHighlight(side), r, 2);
                 }
             }
         }
 
-        DrawHiddenChanges(textView, dc, width);
-        DrawCurrentBlock(textView, dc, width);
+        DrawHiddenChanges(textView, drawingContext, width);
+        DrawCurrentBlock(textView, drawingContext, width);
     }
 
     private void DrawHiddenChanges(TextView textView, DrawingContext dc, double width)

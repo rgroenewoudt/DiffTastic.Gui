@@ -7,7 +7,7 @@ using DiffTastic.Gui.Controls;
 
 namespace DiffTastic.Gui.ViewModels;
 
-public sealed partial class MainWindowViewModel(StartupArgs args) : ObservableObject
+public sealed partial class MainWindowViewModel(StartupArgs args) : ObservableObject, IDisposable
 {
     private readonly DiffService _diffService = new(DifftRunner.Locate());
     private BlameService? _blameService;
@@ -220,6 +220,13 @@ public sealed partial class MainWindowViewModel(StartupArgs args) : ObservableOb
             return "";
         var name = RepoPath ?? path;
         return revision is null ? name : $"{name}   ·   {revision}";
+    }
+
+    public void Dispose()
+    {
+        _blameCts?.Cancel();
+        _blameCts?.Dispose();
+        _blameCts = null;
     }
 
     private static string RevisionLabel(BlameTarget target) => target switch

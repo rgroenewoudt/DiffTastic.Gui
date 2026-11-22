@@ -213,8 +213,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
             if (cts.IsCancellationRequested)
                 return;
             Analysis = analysis;
-            if (IsSkipped(CurrentBlock) && FindBlock(0, 1) is >= 0 and var first)
-                CurrentBlock = first;
+            if (IsSkipped(CurrentBlock) && NearestBlock(CurrentBlock) is >= 0 and var nearest)
+                CurrentBlock = nearest;
             AiStatus = $"AI: {provider.Name} ({provider.Model})";
         }
         catch (Exception ex)
@@ -348,6 +348,9 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         }
         return -1;
     }
+
+    /// <summary>First block that is not skipped at or after <paramref name="block"/>, else before it; -1 if none.</summary>
+    private int NearestBlock(int block) => FindBlock(block, 1) is >= 0 and var next ? next : FindBlock(block, -1);
 
     private bool IsSkipped(int block) => SkipNoise && Analysis?.IsNoise(block) == true;
 

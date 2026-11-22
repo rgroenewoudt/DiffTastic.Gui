@@ -81,6 +81,20 @@ public sealed partial class AiTests
     }
 
     [AvaloniaFact]
+    public async Task Analysis_moves_off_noise_to_the_nearest_difference()
+    {
+        var ai = new FakeAi { Gate = new TaskCompletionSource() };
+        var vm = new MainWindowViewModel(new StartupArgs(Sample("long-old.cs"), Sample("long-new.cs"), null), new AppSettings { AiEnabled = true }, ai);
+        await vm.LoadAsync();
+        vm.CurrentBlock = 3;
+
+        ai.Gate.SetResult();
+        await vm.AnalysisReady;
+
+        Assert.Equal(4, vm.CurrentBlock);
+    }
+
+    [AvaloniaFact]
     public async Task Disabled_ai_does_not_call_the_tool()
     {
         var (window, vm, ai) = await OpenAsync(aiEnabled: false);

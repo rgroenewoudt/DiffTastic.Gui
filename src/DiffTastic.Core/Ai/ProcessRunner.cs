@@ -23,8 +23,6 @@ public static class ProcessRunner
         psi.CreateNoWindow = true;
         psi.StandardOutputEncoding = Encoding.UTF8;
         psi.StandardErrorEncoding = Encoding.UTF8;
-        if (stdin is not null)
-            psi.StandardInputEncoding = new UTF8Encoding(false);
 
         using var process = Process.Start(psi) ?? throw new InvalidOperationException($"Could not start {executable}.");
         using var cts = CancellationTokenSource.CreateLinkedTokenSource(ct);
@@ -35,10 +33,7 @@ public static class ProcessRunner
         try
         {
             if (stdin is not null)
-            {
-                await process.StandardInput.WriteAsync(stdin.AsMemory(), cts.Token);
-                process.StandardInput.Close();
-            }
+                await WriteStdinAsync(process, stdin, cts.Token);
             await process.WaitForExitAsync(cts.Token);
         }
         catch (OperationCanceledException)
@@ -49,6 +44,28 @@ public static class ProcessRunner
         }
 
         return new ProcessResult(process.ExitCode, await stdout, await stderr);
+    }
+
+    /// <summary>A process that exits early closes its stdin; its own output then explains why.</summary>
+    private static async Task WriteStdinAsync(Process process, string stdin, CancellationToken ct)
+    {
+        try
+        {
+            await process.StandardInput.BaseStream.WriteAsync(new UTF8Encoding(false).GetBytes(stdin), ct);
+        }
+        catch (IOException)
+        {
+        }
+        finally
+        {
+            try
+            {
+                process.StandardInput.Close();
+            }
+            catch (IOException)
+            {
+            }
+        }
     }
 
     /// <summary>Batch files (npm shims) need cmd.exe; arguments must then be free of cmd special characters.</summary>
@@ -100,7 +117,7 @@ public static class ProcessRunner
             if (!process.HasExited)
                 process.Kill(entireProcessTree: true);
         }
-        catch (InvalidOperationException)
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception or NotSupportedException)
         {
         }
     }

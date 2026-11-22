@@ -76,4 +76,17 @@ public class AiProviderTests
     {
         Assert.Equal("""{"a":[1,2]}""", ClaudeProvider.MinifyJson("{ \"a\" : [ 1, 2 ] }"));
     }
+
+    [Fact]
+    public async Task Early_exit_returns_the_process_output_instead_of_a_pipe_error()
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        var result = await ProcessRunner.RunAsync(
+            "cmd.exe", ["/d", "/c", "echo not logged in 1>&2 & exit 3"], new string('x', 4_000_000),
+            Path.GetTempPath(), TimeSpan.FromSeconds(30));
+
+        Assert.Equal(3, result.ExitCode);
+        Assert.Contains("not logged in", result.Stderr);
+    }
 }

@@ -84,6 +84,12 @@ public class MainWindowTests
             Dispatcher.UIThread.RunJobs();
         Assert.NotEqual(left, window.LeftPane.GetFoldStates());
         Assert.Equal(window.RightPane.GetFoldStates(), window.LeftPane.GetFoldStates());
+
+        window.CollapseUnchanged();
+        var hidden = FoldRegionFinder.DefaultFolded(FoldRegionFinder.Find(vm.Document.Rows))[^1];
+        window.ScrollToRow(hidden.StartRow + 1, center: true);
+        Assert.Equal(left.Count(f => f) - 1, window.LeftPane.GetFoldStates().Count(f => f));
+        Assert.Equal(window.LeftPane.GetFoldStates(), window.RightPane.GetFoldStates());
         await vm.BlameReady;
     }
 

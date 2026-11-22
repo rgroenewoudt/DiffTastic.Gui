@@ -158,12 +158,12 @@ public sealed class DiffPane : DockPanel
         RememberFoldStates();
     }
 
-    /// <summary>Opens every folding that hides the row.</summary>
-    public void UnfoldRow(int row)
+    /// <summary>Opens every folding that hides a row in first..last.</summary>
+    public void UnfoldRows(int first, int last)
     {
         for (var i = 0; i < _sections.Count; i++)
         {
-            if (_regions[i].StartRow < row && row <= _regions[i].EndRow)
+            if (_regions[i].StartRow < last && first <= _regions[i].EndRow)
                 _sections[i].IsFolded = false;
         }
         RememberFoldStates();

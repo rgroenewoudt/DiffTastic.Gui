@@ -128,14 +128,19 @@ public partial class MainWindow : Window
         RightPane.SetCurrentBlock(block);
         if (block is { } b)
         {
-            LeftPane.UnfoldRow(b.StartRow);
-            RightPane.UnfoldRow(b.StartRow);
+            LeftPane.UnfoldRows(b.StartRow, b.EndRow);
+            RightPane.UnfoldRows(b.StartRow, b.EndRow);
             ScrollToRow(b.StartRow, center: false);
         }
     }
 
     /// <summary>Scrolls both panes so the row is visible near the top third (or centered).</summary>
-    public void ScrollToRow(int row, bool center) => ScrollToRow(row, center, attempts: 5);
+    public void ScrollToRow(int row, bool center)
+    {
+        LeftPane.UnfoldRows(row, row);
+        RightPane.UnfoldRows(row, row);
+        ScrollToRow(row, center, attempts: 5);
+    }
 
     private void ScrollToRow(int row, bool center, int attempts)
     {

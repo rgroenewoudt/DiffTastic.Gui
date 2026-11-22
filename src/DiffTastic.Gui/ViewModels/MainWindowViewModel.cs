@@ -154,7 +154,7 @@ public partial class MainWindowViewModel(StartupArgs args) : ObservableObject
     private static string? RelativeInside(string root, string file)
     {
         var relative = Path.GetRelativePath(root, file);
-        return relative.StartsWith("..") || Path.IsPathRooted(relative) ? null : relative.Replace('\\', '/');
+        return relative.StartsWith("..", StringComparison.Ordinal) || Path.IsPathRooted(relative) ? null : relative.Replace('\\', '/');
     }
 
     /// <summary>Blame popup for a row, or null when there is no blame for that line.</summary>

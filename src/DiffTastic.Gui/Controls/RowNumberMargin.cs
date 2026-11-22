@@ -14,12 +14,15 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
     private static readonly Typeface Font = new("Cascadia Mono, Consolas, monospace");
     private const double FontSize = 12;
 
+    private readonly Dictionary<int, FormattedText> _numbers = [];
+
     public IReadOnlyList<AlignedRow> Rows
     {
         get;
         set
         {
             field = value;
+            _numbers.Clear();
             InvalidateMeasure();
             InvalidateVisual();
         }
@@ -55,7 +58,7 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
             if (line is null)
                 continue;
 
-            var text = Format((line.LineIndex + 1).ToString(CultureInfo.InvariantCulture));
+            var text = Number(line.LineIndex + 1);
             var x = Bounds.Width - MarkerWidth - 6 - text.Width;
             dc.DrawText(text, new Point(x, top + (visualLine.Height - text.Height) / 2));
         }
@@ -71,6 +74,13 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
     }
 
     private void OnVisualLinesChanged(object? sender, EventArgs e) => InvalidateVisual();
+
+    private FormattedText Number(int number)
+    {
+        if (!_numbers.TryGetValue(number, out var text))
+            _numbers[number] = text = Format(number.ToString(CultureInfo.InvariantCulture));
+        return text;
+    }
 
     private static FormattedText Format(string s) =>
         new(s, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Font, FontSize, DiffColors.GutterText);

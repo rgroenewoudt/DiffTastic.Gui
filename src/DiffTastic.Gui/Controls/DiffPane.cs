@@ -5,8 +5,6 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
-using Avalonia.Input;
-using Avalonia.Interactivity;
 using AvaloniaEdit;
 using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
@@ -25,6 +23,7 @@ public sealed class DiffPane : DockPanel
     private readonly FoldingManager _folding;
     private IReadOnlyList<FoldRegion> _regions = [];
     private readonly List<FoldingSection> _sections = [];
+    private bool[] _knownStates = [];
 
     private static readonly RegistryOptions Registry = new(ThemeName.LightPlus);
 
@@ -90,11 +89,17 @@ public sealed class DiffPane : DockPanel
         _textMate = Editor.InstallTextMate(Registry);
 
         _folding = FoldingManager.Install(Editor.TextArea);
-        foreach (var margin in Editor.TextArea.LeftMargins.OfType<FoldingMargin>())
-            margin.AddHandler(PointerReleasedEvent, (_, _) => FoldsToggled?.Invoke(this, EventArgs.Empty), RoutingStrategies.Bubble, true);
+        Editor.TextArea.TextView.VisualLinesChanged += (_, _) =>
+        {
+            if (!GetFoldStates().SequenceEqual(_knownStates))
+            {
+                RememberFoldStates();
+                FoldsToggled?.Invoke(this, EventArgs.Empty);
+            }
+        };
     }
 
-    /// <summary>Raised after the user clicked the folding margin.</summary>
+    /// <summary>Raised after the user opened or closed a folding.</summary>
     public event EventHandler? FoldsToggled;
 
     public Side Side { get; }
@@ -141,6 +146,7 @@ public sealed class DiffPane : DockPanel
             section.IsFolded = folded.Contains(region);
             _sections.Add(section);
         }
+        RememberFoldStates();
     }
 
     public bool[] GetFoldStates() => _sections.Select(s => s.IsFolded).ToArray();
@@ -149,6 +155,7 @@ public sealed class DiffPane : DockPanel
     {
         for (var i = 0; i < Math.Min(states.Length, _sections.Count); i++)
             _sections[i].IsFolded = states[i];
+        RememberFoldStates();
     }
 
     /// <summary>Opens every folding that hides the row.</summary>
@@ -159,7 +166,10 @@ public sealed class DiffPane : DockPanel
             if (_regions[i].StartRow < row && row <= _regions[i].EndRow)
                 _sections[i].IsFolded = false;
         }
+        RememberFoldStates();
     }
+
+    private void RememberFoldStates() => _knownStates = GetFoldStates();
 
     /// <summary>Picks a syntax grammar from a file name; plain text when unknown.</summary>
     public void SetLanguageFromFileName(string? fileName)

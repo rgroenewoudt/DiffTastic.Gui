@@ -76,6 +76,14 @@ public class MainWindowTests
         window.CollapseUnchanged();
         Assert.Equal(left, window.LeftPane.GetFoldStates());
         Assert.Equal(left, window.RightPane.GetFoldStates());
+
+        var manager = window.RightPane.Editor.TextArea.TextView.ElementGenerators
+            .OfType<AvaloniaEdit.Folding.FoldingElementGenerator>().Single().FoldingManager!;
+        manager.AllFoldings.First(f => f.IsFolded).IsFolded = false;
+        for (var i = 0; i < 5; i++)
+            Dispatcher.UIThread.RunJobs();
+        Assert.NotEqual(left, window.LeftPane.GetFoldStates());
+        Assert.Equal(window.RightPane.GetFoldStates(), window.LeftPane.GetFoldStates());
         await vm.BlameReady;
     }
 

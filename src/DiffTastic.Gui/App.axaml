@@ -6,4 +6,61 @@
         <FluentTheme />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
     </Application.Styles>
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#F0F0F0" />
+                    <SolidColorBrush x:Key="DialogBackgroundBrush" Color="White" />
+                    <SolidColorBrush x:Key="BarBackgroundBrush" Color="#F7F7F7" />
+                    <SolidColorBrush x:Key="BarBorderBrush" Color="#D0D0D0" />
+                    <SolidColorBrush x:Key="ToolIconBrush" Color="#3A3A3A" />
+                    <SolidColorBrush x:Key="ToolIconDisabledBrush" Color="#B0B0B0" />
+                    <SolidColorBrush x:Key="StatusTextBrush" Color="#505050" />
+                    <SolidColorBrush x:Key="HintTextBrush" Color="#6A6A6A" />
+                    <SolidColorBrush x:Key="AiBackgroundBrush" Color="#F3F0FA" />
+                    <SolidColorBrush x:Key="AiBarBorderBrush" Color="#D9D2EC" />
+                    <SolidColorBrush x:Key="AiAccentBrush" Color="#9B8CC9" />
+                    <SolidColorBrush x:Key="AiTextBrush" Color="#2A2440" />
+                    <SolidColorBrush x:Key="AiNoteTextBrush" Color="#5A5470" />
+                    <SolidColorBrush x:Key="AiHintTextBrush" Color="#9A5B00" />
+                    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="White" />
+                    <SolidColorBrush x:Key="PopupBorderBrush" Color="#D8D8D8" />
+                    <SolidColorBrush x:Key="PopupTextBrush" Color="#24292F" />
+                    <SolidColorBrush x:Key="PopupSecondaryTextBrush" Color="#555555" />
+                    <SolidColorBrush x:Key="PopupMutedTextBrush" Color="#888888" />
+                    <SolidColorBrush x:Key="MessageBackgroundBrush" Color="#F6F8FA" />
+                    <SolidColorBrush x:Key="MessageBorderBrush" Color="#C4C9CF" />
+                    <SolidColorBrush x:Key="NavButtonBackgroundBrush" Color="#F1F3F5" />
+                    <SolidColorBrush x:Key="NavButtonBorderBrush" Color="#D0D7DE" />
+                </ResourceDictionary>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="WindowBackgroundBrush" Color="#1E1E1E" />
+                    <SolidColorBrush x:Key="DialogBackgroundBrush" Color="#2B2B2B" />
+                    <SolidColorBrush x:Key="BarBackgroundBrush" Color="#252526" />
+                    <SolidColorBrush x:Key="BarBorderBrush" Color="#3C3C3C" />
+                    <SolidColorBrush x:Key="ToolIconBrush" Color="#D4D4D4" />
+                    <SolidColorBrush x:Key="ToolIconDisabledBrush" Color="#666666" />
+                    <SolidColorBrush x:Key="StatusTextBrush" Color="#B0B0B0" />
+                    <SolidColorBrush x:Key="HintTextBrush" Color="#9A9A9A" />
+                    <SolidColorBrush x:Key="AiBackgroundBrush" Color="#29253A" />
+                    <SolidColorBrush x:Key="AiBarBorderBrush" Color="#3E3760" />
+                    <SolidColorBrush x:Key="AiAccentBrush" Color="#8B7CC9" />
+                    <SolidColorBrush x:Key="AiTextBrush" Color="#E2DDF5" />
+                    <SolidColorBrush x:Key="AiNoteTextBrush" Color="#B4ADD0" />
+                    <SolidColorBrush x:Key="AiHintTextBrush" Color="#E0A040" />
+                    <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#2D2D30" />
+                    <SolidColorBrush x:Key="PopupBorderBrush" Color="#454545" />
+                    <SolidColorBrush x:Key="PopupTextBrush" Color="#E6EDF3" />
+                    <SolidColorBrush x:Key="PopupSecondaryTextBrush" Color="#A0A0A0" />
+                    <SolidColorBrush x:Key="PopupMutedTextBrush" Color="#808080" />
+                    <SolidColorBrush x:Key="MessageBackgroundBrush" Color="#252526" />
+                    <SolidColorBrush x:Key="MessageBorderBrush" Color="#505357" />
+                    <SolidColorBrush x:Key="NavButtonBackgroundBrush" Color="#3A3D41" />
+                    <SolidColorBrush x:Key="NavButtonBorderBrush" Color="#505357" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
 </Application>

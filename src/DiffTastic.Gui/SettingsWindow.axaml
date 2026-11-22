@@ -8,7 +8,7 @@
         Title="{l:Tr SettingsTitle}"
         Width="480" SizeToContent="Height" CanResize="False"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
-        Background="White">
+        Background="{DynamicResource DialogBackgroundBrush}">
 
     <Window.Styles>
         <Style Selector="TextBlock.label">
@@ -17,13 +17,13 @@
         </Style>
         <Style Selector="TextBlock.hint">
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Foreground" Value="#6A6A6A" />
+            <Setter Property="Foreground" Value="{DynamicResource HintTextBrush}" />
             <Setter Property="TextWrapping" Value="Wrap" />
         </Style>
     </Window.Styles>
 
     <DockPanel>
-        <Border DockPanel.Dock="Bottom" Background="#F7F7F7" BorderBrush="#D0D0D0" BorderThickness="0,1,0,0" Padding="16,10">
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource BarBackgroundBrush}" BorderBrush="{DynamicResource BarBorderBrush}" BorderThickness="0,1,0,0" Padding="16,10">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
                 <Button Name="OkButton" Content="{l:Tr Ok}" IsDefault="True" MinWidth="80" HorizontalContentAlignment="Center" />
                 <Button Name="CancelButton" Content="{l:Tr Cancel}" IsCancel="True" MinWidth="80" HorizontalContentAlignment="Center" />

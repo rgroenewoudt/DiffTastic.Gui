@@ -9,43 +9,43 @@
         <Style Selector="Button.nav">
             <Setter Property="Padding" Value="10,4" />
             <Setter Property="FontSize" Value="12" />
-            <Setter Property="Background" Value="#F1F3F5" />
-            <Setter Property="BorderBrush" Value="#D0D7DE" />
+            <Setter Property="Background" Value="{DynamicResource NavButtonBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource NavButtonBorderBrush}" />
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="4" />
         </Style>
     </UserControl.Styles>
 
-    <Border Background="White" CornerRadius="8" Padding="18,14" MaxWidth="780" MinWidth="420"
-            BorderBrush="#D8D8D8" BorderThickness="1"
+    <Border Background="{DynamicResource PopupBackgroundBrush}" CornerRadius="8" Padding="18,14" MaxWidth="780" MinWidth="420"
+            BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
             BoxShadow="0 6 24 0 #40000000" Margin="12">
         <StackPanel Spacing="10">
             <TextBlock TextWrapping="Wrap" FontSize="13">
                 <Run Text="{Binding KindLabel, Mode=OneWay}" FontWeight="Bold" />
-                <Run Text="·" Foreground="#888" />
-                <Run Text="{Binding LineLabel, Mode=OneWay}" Foreground="#555" />
+                <Run Text="·" Foreground="{DynamicResource PopupMutedTextBrush}" />
+                <Run Text="{Binding LineLabel, Mode=OneWay}" Foreground="{DynamicResource PopupSecondaryTextBrush}" />
             </TextBlock>
 
-            <TextBlock Text="{Binding HeaderText}" TextWrapping="Wrap" FontSize="13" Foreground="#24292F" />
+            <TextBlock Text="{Binding HeaderText}" TextWrapping="Wrap" FontSize="13" Foreground="{DynamicResource PopupTextBrush}" />
 
-            <Border Background="#F6F8FA" BorderBrush="#C4C9CF" BorderThickness="3,0,0,0" Padding="12,10">
+            <Border Background="{DynamicResource MessageBackgroundBrush}" BorderBrush="{DynamicResource MessageBorderBrush}" BorderThickness="3,0,0,0" Padding="12,10">
                 <ScrollViewer MaxHeight="260" HorizontalScrollBarVisibility="Disabled">
                     <SelectableTextBlock Text="{Binding Message}" TextWrapping="Wrap"
                                          FontFamily="Cascadia Mono, Consolas, monospace" FontSize="12.5"
-                                         Foreground="#24292F" />
+                                         Foreground="{DynamicResource PopupTextBrush}" />
                 </ScrollViewer>
             </Border>
 
-            <Border Name="ExplanationBox" Background="#F3F0FA" BorderBrush="#9B8CC9" BorderThickness="3,0,0,0" Padding="12,8"
+            <Border Name="ExplanationBox" Background="{DynamicResource AiBackgroundBrush}" BorderBrush="{DynamicResource AiAccentBrush}" BorderThickness="3,0,0,0" Padding="12,8"
                     IsVisible="{Binding HasExplanation}">
-                <SelectableTextBlock Text="{Binding Explanation}" TextWrapping="Wrap" FontSize="12.5" Foreground="#2A2440" />
+                <SelectableTextBlock Text="{Binding Explanation}" TextWrapping="Wrap" FontSize="12.5" Foreground="{DynamicResource AiTextBrush}" />
             </Border>
 
             <DockPanel LastChildFill="False">
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <Button Classes="nav" Name="OlderButton" Command="{Binding OlderCommand}" ToolTip.Tip="{l:Tr OlderTip}" Content="{l:Tr Older}" />
                     <TextBlock Text="{Binding PositionText}" VerticalAlignment="Center" MinWidth="44"
-                               TextAlignment="Center" FontSize="12" Foreground="#555" />
+                               TextAlignment="Center" FontSize="12" Foreground="{DynamicResource PopupSecondaryTextBrush}" />
                     <Button Classes="nav" Name="NewerButton" Command="{Binding NewerCommand}" ToolTip.Tip="{l:Tr NewerTip}" Content="{l:Tr Newer}" />
                 </StackPanel>
                 <Button DockPanel.Dock="Right" Classes="nav" Name="CopyShaButton" ToolTip.Tip="{l:Tr CopyShaTip}" Content="{l:Tr CopySha}" />

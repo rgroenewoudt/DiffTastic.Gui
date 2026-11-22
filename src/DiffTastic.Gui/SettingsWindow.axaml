@@ -2,9 +2,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:DiffTastic.Gui.ViewModels"
         xmlns:ai="using:DiffTastic.Core.Ai"
+        xmlns:l="using:DiffTastic.Gui"
         x:Class="DiffTastic.Gui.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
-        Title="Settings - DiffTastic"
+        Title="{l:Tr SettingsTitle}"
         Width="480" SizeToContent="Height" CanResize="False"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Background="White">
@@ -24,38 +25,38 @@
     <DockPanel>
         <Border DockPanel.Dock="Bottom" Background="#F7F7F7" BorderBrush="#D0D0D0" BorderThickness="0,1,0,0" Padding="16,10">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                <Button Name="OkButton" Content="OK" IsDefault="True" MinWidth="80" HorizontalContentAlignment="Center" />
-                <Button Name="CancelButton" Content="Cancel" IsCancel="True" MinWidth="80" HorizontalContentAlignment="Center" />
+                <Button Name="OkButton" Content="{l:Tr Ok}" IsDefault="True" MinWidth="80" HorizontalContentAlignment="Center" />
+                <Button Name="CancelButton" Content="{l:Tr Cancel}" IsCancel="True" MinWidth="80" HorizontalContentAlignment="Center" />
             </StackPanel>
         </Border>
 
         <StackPanel Margin="20,16" Spacing="14">
-            <TextBlock Text="AI" FontSize="15" FontWeight="SemiBold" />
+            <TextBlock Text="{l:Tr AiHeader}" FontSize="15" FontWeight="SemiBold" />
 
             <StackPanel Spacing="4">
-                <CheckBox Name="AiEnabledBox" Content="Analyze diffs with AI" IsChecked="{Binding AiEnabled}"
+                <CheckBox Name="AiEnabledBox" Content="{l:Tr AiEnabled}" IsChecked="{Binding AiEnabled}"
                           IsEnabled="{Binding AnyAiFound}" />
                 <TextBlock Classes="hint"
-                           Text="Sends the changed code to Anthropic or OpenAI. Only turn it on when that is allowed for the code." />
+                           Text="{l:Tr AiPrivacyHint}" />
             </StackPanel>
 
             <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="8">
-                <TextBlock Classes="label" Text="Provider" />
+                <TextBlock Classes="label" Text="{l:Tr Provider}" />
                 <ComboBox Grid.Column="1" Name="ProviderBox" ItemsSource="{Binding Providers}"
                           SelectedItem="{Binding Provider}" HorizontalAlignment="Stretch" />
 
-                <TextBlock Grid.Row="1" Classes="label" Text="Claude model" />
+                <TextBlock Grid.Row="1" Classes="label" Text="{l:Tr ClaudeModel}" />
                 <TextBox Grid.Row="1" Grid.Column="1" Name="ClaudeModelBox" Text="{Binding ClaudeModel}"
                          Watermark="{x:Static ai:ClaudeProvider.DefaultModel}" />
                 <TextBlock Grid.Row="2" Grid.Column="1" Classes="hint" Text="{Binding ClaudeStatus}" />
 
-                <TextBlock Grid.Row="3" Classes="label" Text="Codex model" />
+                <TextBlock Grid.Row="3" Classes="label" Text="{l:Tr CodexModel}" />
                 <TextBox Grid.Row="3" Grid.Column="1" Name="CodexModelBox" Text="{Binding CodexModel}"
                          Watermark="{x:Static ai:CodexProvider.DefaultModel}" />
                 <TextBlock Grid.Row="4" Grid.Column="1" Classes="hint" Text="{Binding CodexStatus}" />
             </Grid>
 
-            <TextBlock Classes="hint" Text="Empty model uses the cheapest default." />
+            <TextBlock Classes="hint" Text="{l:Tr ModelHint}" />
         </StackPanel>
     </DockPanel>
 </Window>

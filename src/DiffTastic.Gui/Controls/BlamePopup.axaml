@@ -1,6 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:DiffTastic.Gui.ViewModels"
+             xmlns:l="using:DiffTastic.Gui"
              x:Class="DiffTastic.Gui.Controls.BlamePopup"
              x:DataType="vm:BlamePopupViewModel">
 
@@ -42,15 +43,15 @@
 
             <DockPanel LastChildFill="False">
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-                    <Button Classes="nav" Name="OlderButton" Command="{Binding OlderCommand}" ToolTip.Tip="Previous commit that changed this line">◀ Older</Button>
+                    <Button Classes="nav" Name="OlderButton" Command="{Binding OlderCommand}" ToolTip.Tip="{l:Tr OlderTip}" Content="{l:Tr Older}" />
                     <TextBlock Text="{Binding PositionText}" VerticalAlignment="Center" MinWidth="44"
                                TextAlignment="Center" FontSize="12" Foreground="#555" />
-                    <Button Classes="nav" Name="NewerButton" Command="{Binding NewerCommand}" ToolTip.Tip="Next commit that changed this line">Newer ▶</Button>
+                    <Button Classes="nav" Name="NewerButton" Command="{Binding NewerCommand}" ToolTip.Tip="{l:Tr NewerTip}" Content="{l:Tr Newer}" />
                 </StackPanel>
-                <Button DockPanel.Dock="Right" Classes="nav" Name="CopyShaButton" ToolTip.Tip="Copy commit SHA">Copy SHA</Button>
+                <Button DockPanel.Dock="Right" Classes="nav" Name="CopyShaButton" ToolTip.Tip="{l:Tr CopyShaTip}" Content="{l:Tr CopySha}" />
                 <Button DockPanel.Dock="Right" Classes="nav" Name="ExplainButton" Margin="0,0,6,0"
                         Command="{Binding ExplainCommand}" IsVisible="{Binding CanExplain}"
-                        ToolTip.Tip="{Binding ExplainToolTip}">Explain (AI)</Button>
+                        ToolTip.Tip="{Binding ExplainToolTip}" Content="{l:Tr Explain}" />
             </DockPanel>
         </StackPanel>
     </Border>

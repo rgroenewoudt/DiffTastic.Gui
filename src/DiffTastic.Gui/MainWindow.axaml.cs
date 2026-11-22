@@ -7,6 +7,7 @@ using Avalonia.Platform.Storage;
 using Avalonia.Threading;
 using DiffTastic.Core.Diff;
 using DiffTastic.Gui.Controls;
+using DiffTastic.Gui.Resources;
 using DiffTastic.Gui.ViewModels;
 
 namespace DiffTastic.Gui;
@@ -269,10 +270,10 @@ public sealed partial class MainWindow : Window
         if (_vm is null)
             return;
 
-        var left = await PickFileAsync("Open file A (left)");
+        var left = await PickFileAsync(Strings.OpenLeftTitle);
         if (left is null)
             return;
-        var right = await PickFileAsync("Open file B (right)");
+        var right = await PickFileAsync(Strings.OpenRightTitle);
         if (right is null)
             return;
 

@@ -5,6 +5,7 @@ using DiffTastic.Core.Diff;
 using DiffTastic.Core.Difft;
 using DiffTastic.Core.Git;
 using DiffTastic.Gui.Controls;
+using DiffTastic.Gui.Resources;
 
 namespace DiffTastic.Gui.ViewModels;
 
@@ -39,7 +40,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
-    private string? _blameStatus;
+    private Func<string>? _blameStatus;
 
     /// <summary>Completes when blame for both sides is loaded (or failed).</summary>
     public Task BlameReady { get; private set; } = Task.CompletedTask;
@@ -51,7 +52,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(StatusText))]
-    private string? _aiStatus;
+    private Func<string>? _aiStatus;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(Summary), nameof(CurrentNote), nameof(CurrentNoteText), nameof(CurrentHintsText), nameof(HasNoise))]
@@ -68,19 +69,19 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     public HunkNote? CurrentNote => Analysis?.NoteFor(CurrentBlock);
 
     public string? CurrentNoteText => CurrentNote is { } note
-        ? $"Difference {note.Hunk + 1}   ·   {ImportanceLabel(note)}   ·   {note.Reason}"
+        ? $"{Localization.Format(Strings.Difference, note.Hunk + 1)}   ·   {ImportanceLabel(note)}   ·   {note.Reason}"
         : null;
 
     public string? CurrentHintsText => CurrentNote is { ReviewHints.Count: > 0 } note
         ? string.Join('\n', note.ReviewHints.Select(h => "⚠ " + h))
         : null;
 
-    private static string ImportanceLabel(HunkNote note) => note.IsNoise ? "noise" : note.Importance switch
+    private static string ImportanceLabel(HunkNote note) => note.IsNoise ? Strings.ImportanceNoise : note.Importance switch
     {
-        3 => "●●● critical",
-        2 => "●● notable",
-        1 => "● minor",
-        _ => "trivial",
+        3 => "●●● " + Strings.ImportanceCritical,
+        2 => "●● " + Strings.ImportanceNotable,
+        1 => "● " + Strings.ImportanceMinor,
+        _ => Strings.ImportanceTrivial,
     };
 
     public bool IsAiAvailable => _analyzer is not null;
@@ -114,18 +115,18 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     }
 
     public string AiToolTip => _analyzer?.Provider is { } p
-        ? $"AI analysis with {p.Name} ({p.Model}). Sends the changed code to {p.Vendor}."
-        : "No AI tool found (claude or codex on PATH).";
+        ? Localization.Format(Strings.AiToolTip, p.Name, p.Model, p.Vendor)
+        : Strings.AiNotFound;
 
     public string? Summary => Analysis?.Summary;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LeftTitle))]
-    private string? _leftRevision;
+    private BlameTarget? _leftRevision;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(RightTitle))]
-    private string? _rightRevision;
+    private BlameTarget? _rightRevision;
 
     public string LeftTitle => DisplayName(LeftPath, LeftRevision);
     public string RightTitle => DisplayName(RightPath, RightRevision);
@@ -135,16 +136,17 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         get
         {
             if (Document is null)
-                return Error ?? (IsBusy ? "Comparing…" : "Open two files to compare.");
+                return Error ?? (IsBusy ? Strings.Comparing : Strings.OpenTwoFiles);
 
             var count = Document.Blocks.Count;
-            var position = count == 0 ? "Files are identical" :
-                CurrentBlock >= 0 ? $"Difference {CurrentBlock + 1} of {count}" : $"{count} differences";
+            var position = count == 0 ? Strings.FilesIdentical :
+                CurrentBlock >= 0 ? Localization.Format(Strings.DifferenceOf, CurrentBlock + 1, count)
+                : Localization.Format(Strings.DifferenceCount, count);
             var engine = Document.EngineNote ?? "difftastic";
             var text = $"{position}   ·   {Document.Language}   ·   {engine}";
             if (BlameStatus is not null)
-                text += $"   ·   {BlameStatus}";
-            return AiStatus is null ? text : $"{text}   ·   {AiStatus}";
+                text += $"   ·   {BlameStatus()}";
+            return AiStatus is null ? text : $"{text}   ·   {AiStatus()}";
         }
     }
 
@@ -210,21 +212,26 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         var cts = _aiCts = new CancellationTokenSource();
         var provider = analyzer.Provider;
         var fileName = RepoPath ?? Path.GetFileName(RightPath ?? LeftPath ?? "");
-        AiStatus = $"AI: analyzing with {provider.Name}…";
+        AiStatus = () => Localization.Format(Strings.AiAnalyzing, provider.Name);
         try
         {
-            var analysis = await Task.Run(() => analyzer.AnalyzeAsync(doc, fileName, cts.Token), cts.Token);
+            var analysis = doc.Blocks.Count == 0
+                ? new DiffAnalysis(Strings.FilesIdentical, [])
+                : await Task.Run(() => analyzer.AnalyzeAsync(doc, fileName, cts.Token), cts.Token);
             if (cts.IsCancellationRequested)
                 return;
             Analysis = analysis;
             if (IsSkipped(CurrentBlock) && NearestBlock(CurrentBlock) is >= 0 and var nearest)
                 CurrentBlock = nearest;
-            AiStatus = $"AI: {provider.Name} ({provider.Model})";
+            AiStatus = () => Localization.Format(Strings.AiDone, provider.Name, provider.Model);
         }
         catch (Exception ex)
         {
             if (!cts.IsCancellationRequested)
-                AiStatus = "AI failed: " + FirstLine(ex.Message);
+            {
+                var message = FirstLine(ex.Message);
+                AiStatus = () => Localization.Format(Strings.AiFailed, message);
+            }
         }
     }
 
@@ -256,7 +263,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         var git = new GitRunner(root);
         var locator = new RevisionLocator(git, root);
         var service = new BlameService(git);
-        BlameStatus = "loading blame…";
+        BlameStatus = () => Strings.BlameLoading;
         _leftBlame = BlameSideAsync(service, locator, left, repoPath, label => LeftRevision = label, ct);
         _rightBlame = BlameSideAsync(service, locator, right, repoPath, label => RightRevision = label, ct);
         _blameService = service;
@@ -265,11 +272,11 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         var r = await _rightBlame;
         if (ct.IsCancellationRequested)
             return;
-        BlameStatus = l is null && r is null ? "no blame" : $"blame: {repoPath}";
+        BlameStatus = l is null && r is null ? () => Strings.BlameNone : () => Localization.Format(Strings.BlameFor, repoPath);
     }
 
     private static async Task<BlameResult?> BlameSideAsync(
-        BlameService service, RevisionLocator locator, string file, string repoPath, Action<string> setRevision,
+        BlameService service, RevisionLocator locator, string file, string repoPath, Action<BlameTarget> setRevision,
         CancellationToken ct)
     {
         try
@@ -279,7 +286,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
             var target = await Task.Run(() => locator.LocateAsync(file, repoPath, ct), ct);
             if (ct.IsCancellationRequested)
                 return null;
-            setRevision(RevisionLabel(target));
+            setRevision(target);
             return await Task.Run(() => service.BlameAsync(target, ct), ct);
         }
         catch (Exception)
@@ -374,12 +381,12 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         CurrentBlock = FindBlock(last, -1) is >= 0 and var found ? found : last;
     }
 
-    private string DisplayName(string? path, string? revision)
+    private string DisplayName(string? path, BlameTarget? revision)
     {
         if (path is null)
             return "";
         var name = RepoPath ?? path;
-        return revision is null ? name : $"{name}   ·   {revision}";
+        return revision is null ? name : $"{name}   ·   {RevisionLabel(revision)}";
     }
 
     public void Dispose()
@@ -393,9 +400,9 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
 
     private static string RevisionLabel(BlameTarget target) => target switch
     {
-        BlameTarget.WorkingTree => "working tree",
+        BlameTarget.WorkingTree => Strings.RevisionWorkingTree,
         BlameTarget.Commit { Sha: "HEAD" } => "HEAD",
         BlameTarget.Commit c => c.Sha[..Math.Min(8, c.Sha.Length)],
-        _ => "uncommitted",
+        _ => Strings.RevisionUncommitted,
     };
 }

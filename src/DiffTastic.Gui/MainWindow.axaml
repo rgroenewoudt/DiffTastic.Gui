@@ -4,6 +4,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="using:DiffTastic.Gui.ViewModels"
         xmlns:controls="using:DiffTastic.Gui.Controls"
+        xmlns:l="using:DiffTastic.Gui"
         mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="700"
         x:Class="DiffTastic.Gui.MainWindow"
         x:DataType="vm:MainWindowViewModel"
@@ -53,42 +54,42 @@
     <DockPanel>
         <Border DockPanel.Dock="Top" Background="#F7F7F7" BorderBrush="#D0D0D0" BorderThickness="0,0,0,1" Padding="4,3">
             <DockPanel>
-            <Button DockPanel.Dock="Right" Classes="tool" Name="SettingsButton" ToolTip.Tip="Settings…">
+            <Button DockPanel.Dock="Right" Classes="tool" Name="SettingsButton" ToolTip.Tip="{l:Tr SettingsTip}">
                 <PathIcon Data="{StaticResource IconSettings}" />
             </Button>
             <StackPanel Orientation="Horizontal" Spacing="2">
-                <Button Classes="tool" Name="OpenButton" ToolTip.Tip="Open files…">
+                <Button Classes="tool" Name="OpenButton" ToolTip.Tip="{l:Tr OpenTip}">
                     <PathIcon Data="{StaticResource IconOpen}" />
                 </Button>
-                <Button Classes="tool" Name="ReloadButton" ToolTip.Tip="Reload (F5)">
+                <Button Classes="tool" Name="ReloadButton" ToolTip.Tip="{l:Tr ReloadTip}">
                     <PathIcon Data="{StaticResource IconReload}" />
                 </Button>
                 <Separator Width="1" Height="20" Background="#D0D0D0" Margin="6,0" />
-                <Button Classes="tool" Command="{Binding FirstDiffCommand}" ToolTip.Tip="First difference (Ctrl+Home)">
+                <Button Classes="tool" Command="{Binding FirstDiffCommand}" ToolTip.Tip="{l:Tr FirstDiffTip}">
                     <PathIcon Data="{StaticResource IconFirst}" />
                 </Button>
-                <Button Classes="tool" Command="{Binding PreviousDiffCommand}" ToolTip.Tip="Previous difference (Ctrl+Up)">
+                <Button Classes="tool" Command="{Binding PreviousDiffCommand}" ToolTip.Tip="{l:Tr PreviousDiffTip}">
                     <PathIcon Data="{StaticResource IconPrev}" />
                 </Button>
-                <Button Classes="tool" Command="{Binding NextDiffCommand}" ToolTip.Tip="Next difference (Ctrl+Down)">
+                <Button Classes="tool" Command="{Binding NextDiffCommand}" ToolTip.Tip="{l:Tr NextDiffTip}">
                     <PathIcon Data="{StaticResource IconNext}" />
                 </Button>
-                <Button Classes="tool" Command="{Binding LastDiffCommand}" ToolTip.Tip="Last difference (Ctrl+End)">
+                <Button Classes="tool" Command="{Binding LastDiffCommand}" ToolTip.Tip="{l:Tr LastDiffTip}">
                     <PathIcon Data="{StaticResource IconLast}" />
                 </Button>
                 <Separator Width="1" Height="20" Background="#D0D0D0" Margin="6,0" />
-                <Button Classes="tool" Name="ExpandAllButton" ToolTip.Tip="Expand all">
+                <Button Classes="tool" Name="ExpandAllButton" ToolTip.Tip="{l:Tr ExpandAllTip}">
                     <PathIcon Data="{StaticResource IconExpandAll}" />
                 </Button>
-                <Button Classes="tool" Name="CollapseUnchangedButton" ToolTip.Tip="Collapse unchanged">
+                <Button Classes="tool" Name="CollapseUnchangedButton" ToolTip.Tip="{l:Tr CollapseUnchangedTip}">
                     <PathIcon Data="{StaticResource IconCollapse}" />
                 </Button>
                 <Separator Width="1" Height="20" Background="#D0D0D0" Margin="6,0" IsVisible="{Binding IsAiAvailable}" />
-                <ToggleButton Classes="tool" Name="AiToggle" Content="AI" IsVisible="{Binding IsAiAvailable}"
+                <ToggleButton Classes="tool" Name="AiToggle" Content="{l:Tr AiHeader}" IsVisible="{Binding IsAiAvailable}"
                               IsChecked="{Binding AiEnabled}" ToolTip.Tip="{Binding AiToolTip}" />
-                <ToggleButton Classes="tool" Name="SkipNoiseToggle" Content="Skip noise" IsVisible="{Binding HasNoise}"
+                <ToggleButton Classes="tool" Name="SkipNoiseToggle" Content="{l:Tr SkipNoise}" IsVisible="{Binding HasNoise}"
                               IsChecked="{Binding SkipNoise}"
-                              ToolTip.Tip="Previous/next difference skip changes the AI marked as noise (formatting, renames, comments)" />
+                              ToolTip.Tip="{l:Tr SkipNoiseTip}" />
             </StackPanel>
             </DockPanel>
         </Border>

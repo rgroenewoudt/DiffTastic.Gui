@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="SettingsTip" xml:space="preserve">
+    <value>Settings…</value>
+  </data>
+  <data name="OpenTip" xml:space="preserve">
+    <value>Open files…</value>
+  </data>
+  <data name="ReloadTip" xml:space="preserve">
+    <value>Reload (F5)</value>
+  </data>
+  <data name="FirstDiffTip" xml:space="preserve">
+    <value>First difference (Ctrl+Home)</value>
+  </data>
+  <data name="PreviousDiffTip" xml:space="preserve">
+    <value>Previous difference (Ctrl+Up)</value>
+  </data>
+  <data name="NextDiffTip" xml:space="preserve">
+    <value>Next difference (Ctrl+Down)</value>
+  </data>
+  <data name="LastDiffTip" xml:space="preserve">
+    <value>Last difference (Ctrl+End)</value>
+  </data>
+  <data name="ExpandAllTip" xml:space="preserve">
+    <value>Expand all</value>
+  </data>
+  <data name="CollapseUnchangedTip" xml:space="preserve">
+    <value>Collapse unchanged</value>
+  </data>
+  <data name="SkipNoise" xml:space="preserve">
+    <value>Skip noise</value>
+  </data>
+  <data name="SkipNoiseTip" xml:space="preserve">
+    <value>Previous/next difference skip changes the AI marked as noise (formatting, renames, comments)</value>
+  </data>
+  <data name="OpenLeftTitle" xml:space="preserve">
+    <value>Open file A (left)</value>
+  </data>
+  <data name="OpenRightTitle" xml:space="preserve">
+    <value>Open file B (right)</value>
+  </data>
+  <data name="Comparing" xml:space="preserve">
+    <value>Comparing…</value>
+  </data>
+  <data name="OpenTwoFiles" xml:space="preserve">
+    <value>Open two files to compare.</value>
+  </data>
+  <data name="FilesIdentical" xml:space="preserve">
+    <value>Files are identical</value>
+  </data>
+  <data name="DifferenceOf" xml:space="preserve">
+    <value>Difference {0} of {1}</value>
+  </data>
+  <data name="DifferenceCount" xml:space="preserve">
+    <value>{0} differences</value>
+  </data>
+  <data name="Difference" xml:space="preserve">
+    <value>Difference {0}</value>
+  </data>
+  <data name="ImportanceNoise" xml:space="preserve">
+    <value>noise</value>
+  </data>
+  <data name="ImportanceCritical" xml:space="preserve">
+    <value>critical</value>
+  </data>
+  <data name="ImportanceNotable" xml:space="preserve">
+    <value>notable</value>
+  </data>
+  <data name="ImportanceMinor" xml:space="preserve">
+    <value>minor</value>
+  </data>
+  <data name="ImportanceTrivial" xml:space="preserve">
+    <value>trivial</value>
+  </data>
+  <data name="AiToolTip" xml:space="preserve">
+    <value>AI analysis with {0} ({1}). Sends the changed code to {2}.</value>
+  </data>
+  <data name="AiNotFound" xml:space="preserve">
+    <value>No AI tool found (claude or codex on PATH).</value>
+  </data>
+  <data name="AiAnalyzing" xml:space="preserve">
+    <value>AI: analyzing with {0}…</value>
+  </data>
+  <data name="AiDone" xml:space="preserve">
+    <value>AI: {0} ({1})</value>
+  </data>
+  <data name="AiFailed" xml:space="preserve">
+    <value>AI failed: {0}</value>
+  </data>
+  <data name="BlameLoading" xml:space="preserve">
+    <value>loading blame…</value>
+  </data>
+  <data name="BlameNone" xml:space="preserve">
+    <value>no blame</value>
+  </data>
+  <data name="BlameFor" xml:space="preserve">
+    <value>blame: {0}</value>
+  </data>
+  <data name="RevisionWorkingTree" xml:space="preserve">
+    <value>working tree</value>
+  </data>
+  <data name="RevisionUncommitted" xml:space="preserve">
+    <value>uncommitted</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Settings - DiffTastic</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>General</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Language</value>
+  </data>
+  <data name="SystemLanguage" xml:space="preserve">
+    <value>System language</value>
+  </data>
+  <data name="AiHeader" xml:space="preserve">
+    <value>AI</value>
+  </data>
+  <data name="AiEnabled" xml:space="preserve">
+    <value>Analyze diffs with AI</value>
+  </data>
+  <data name="AiPrivacyHint" xml:space="preserve">
+    <value>Sends the changed code to Anthropic or OpenAI. Only turn it on when that is allowed for the code.</value>
+  </data>
+  <data name="Provider" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="ProviderAuto" xml:space="preserve">
+    <value>Auto (first found)</value>
+  </data>
+  <data name="ClaudeModel" xml:space="preserve">
+    <value>Claude model</value>
+  </data>
+  <data name="CodexModel" xml:space="preserve">
+    <value>Codex model</value>
+  </data>
+  <data name="ModelHint" xml:space="preserve">
+    <value>Empty model uses the cheapest default.</value>
+  </data>
+  <data name="ToolFound" xml:space="preserve">
+    <value>{0} found on PATH</value>
+  </data>
+  <data name="ToolNotFound" xml:space="preserve">
+    <value>{0} not found on PATH</value>
+  </data>
+  <data name="KindAdded" xml:space="preserve">
+    <value>Added</value>
+  </data>
+  <data name="KindRemoved" xml:space="preserve">
+    <value>Removed</value>
+  </data>
+  <data name="KindChanged" xml:space="preserve">
+    <value>Changed</value>
+  </data>
+  <data name="KindUnchanged" xml:space="preserve">
+    <value>Unchanged</value>
+  </data>
+  <data name="LineLabel" xml:space="preserve">
+    <value>{0} · line {1}</value>
+  </data>
+  <data name="ExplainTip" xml:space="preserve">
+    <value>Explain this commit with {0}. Sends the commit to {1}.</value>
+  </data>
+  <data name="Explaining" xml:space="preserve">
+    <value>Explaining…</value>
+  </data>
+  <data name="NotCommitted" xml:space="preserve">
+    <value>This line is not committed yet.</value>
+  </data>
+  <data name="LineFromCommit" xml:space="preserve">
+    <value>Line comes from commit {0} by {1}, authored {2} with message:</value>
+  </data>
+  <data name="BeforeThatCommit" xml:space="preserve">
+    <value>Before that, commit {0} by {1} changed this line, authored {2} with message:</value>
+  </data>
+  <data name="UncommittedMessage" xml:space="preserve">
+    <value>Uncommitted change in the working copy.</value>
+  </data>
+  <data name="Older" xml:space="preserve">
+    <value>◀ Older</value>
+  </data>
+  <data name="OlderTip" xml:space="preserve">
+    <value>Previous commit that changed this line</value>
+  </data>
+  <data name="Newer" xml:space="preserve">
+    <value>Newer ▶</value>
+  </data>
+  <data name="NewerTip" xml:space="preserve">
+    <value>Next commit that changed this line</value>
+  </data>
+  <data name="CopySha" xml:space="preserve">
+    <value>Copy SHA</value>
+  </data>
+  <data name="CopyShaTip" xml:space="preserve">
+    <value>Copy commit SHA</value>
+  </data>
+  <data name="Explain" xml:space="preserve">
+    <value>Explain (AI)</value>
+  </data>
+  <data name="MinutesAgo" xml:space="preserve">
+    <value>{0} min ago</value>
+  </data>
+  <data name="HoursAgo" xml:space="preserve">
+    <value>{0} h ago</value>
+  </data>
+  <data name="DaysAgo" xml:space="preserve">
+    <value>{0} days ago</value>
+  </data>
+  <data name="MonthsAgo" xml:space="preserve">
+    <value>{0} months ago</value>
+  </data>
+  <data name="YearsAgo" xml:space="preserve">
+    <value>{0} years ago</value>
+  </data>
+  <data name="TimeFormat" xml:space="preserve">
+    <value>{0:HH:mm} on {0:d MMM yyyy} ({1})</value>
+  </data>
+</root>

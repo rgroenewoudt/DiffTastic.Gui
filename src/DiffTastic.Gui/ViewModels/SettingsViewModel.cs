@@ -1,12 +1,13 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using DiffTastic.Core.Ai;
+using DiffTastic.Gui.Resources;
 
 namespace DiffTastic.Gui.ViewModels;
 
 /// <summary>Editable copy of <see cref="AppSettings"/> for the settings dialog.</summary>
 public sealed partial class SettingsViewModel : ObservableObject
 {
-    public const string Auto = "Auto (first found)";
+    public static string Auto => Strings.ProviderAuto;
 
     public SettingsViewModel(AppSettings settings, Func<string, string?>? findOnPath = null)
     {
@@ -31,8 +32,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     public bool CodexFound { get; }
     public bool AnyAiFound => ClaudeFound || CodexFound;
 
-    public string ClaudeStatus => ClaudeFound ? "claude found on PATH" : "claude not found on PATH";
-    public string CodexStatus => CodexFound ? "codex found on PATH" : "codex not found on PATH";
+    public string ClaudeStatus => Localization.Format(ClaudeFound ? Strings.ToolFound : Strings.ToolNotFound, AiLocator.Claude);
+    public string CodexStatus => Localization.Format(CodexFound ? Strings.ToolFound : Strings.ToolNotFound, AiLocator.Codex);
 
     [ObservableProperty] private bool _aiEnabled;
     [ObservableProperty] private string _provider;

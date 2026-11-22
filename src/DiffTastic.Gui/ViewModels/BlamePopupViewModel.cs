@@ -1,10 +1,10 @@
-using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DiffTastic.Core.Ai;
 using DiffTastic.Core.Diff;
 using DiffTastic.Core.Git;
 using DiffTastic.Gui.Controls;
+using DiffTastic.Gui.Resources;
 
 namespace DiffTastic.Gui.ViewModels;
 
@@ -27,13 +27,13 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
         _explainer = explainer;
         _lineText = lineText;
         Kind = kind;
-        LineLabel = $"{(side == Side.Left ? "A" : "B")} · line {lineNumber}";
+        LineLabel = Localization.Format(Strings.LineLabel, side == Side.Left ? "A" : "B", lineNumber);
     }
 
     public bool CanExplain => _explainer is not null && !Commit.IsUncommitted;
 
     public string ExplainToolTip => _explainer is { Provider: var p }
-        ? $"Explain this commit with {p.Name}. Sends the commit to {p.Vendor}."
+        ? Localization.Format(Strings.ExplainTip, p.Name, p.Vendor)
         : "";
 
     [ObservableProperty]
@@ -53,7 +53,7 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
         ExplainCommand.NotifyCanExecuteChanged();
         if (IsExplaining)
         {
-            Explanation = "Explaining…";
+            Explanation = Strings.Explaining;
             return;
         }
         Explanation = _explainer is not null && _explainer.TryGetCached(value.Sha, _lineText, out var cached) ? cached : null;
@@ -82,7 +82,7 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
         var ct = _cts.Token;
         _explaining.Add(commit.Sha);
         ExplainCommand.NotifyCanExecuteChanged();
-        Explanation = "Explaining…";
+        Explanation = Strings.Explaining;
         try
         {
             var diff = await _service.GetCommitDiffAsync(commit.Sha, commit.Path ?? _line.OriginalPath, ct);
@@ -96,7 +96,7 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
             if (ct.IsCancellationRequested && Commit.Sha == commit.Sha)
                 Explanation = null;
             else if (Commit.Sha == commit.Sha)
-                Explanation = "AI failed: " + ex.Message.Split('\n', 2)[0].Trim();
+                Explanation = Localization.Format(Strings.AiFailed, ex.Message.Split('\n', 2)[0].Trim());
         }
         finally
         {
@@ -109,10 +109,10 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
     public RowKind Kind { get; }
     public string KindLabel => Kind switch
     {
-        RowKind.Added => "Added",
-        RowKind.Removed => "Removed",
-        RowKind.Changed => "Changed",
-        _ => "Unchanged",
+        RowKind.Added => Strings.KindAdded,
+        RowKind.Removed => Strings.KindRemoved,
+        RowKind.Changed => Strings.KindChanged,
+        _ => Strings.KindUnchanged,
     };
     public string LineLabel { get; }
 
@@ -137,12 +137,12 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
     public string Sha => Commit.Sha;
 
     public string HeaderText => Commit.IsUncommitted
-        ? "This line is not committed yet."
+        ? Strings.NotCommitted
         : Index == 0
-            ? $"Line comes from commit {Commit.ShortSha} by {Commit.Author}, authored {FormatTime(Commit.AuthorTime)} with message:"
-            : $"Before that, commit {Commit.ShortSha} by {Commit.Author} changed this line, authored {FormatTime(Commit.AuthorTime)} with message:";
+            ? Localization.Format(Strings.LineFromCommit, Commit.ShortSha, Commit.Author, FormatTime(Commit.AuthorTime))
+            : Localization.Format(Strings.BeforeThatCommit, Commit.ShortSha, Commit.Author, FormatTime(Commit.AuthorTime));
 
-    public string Message => Commit.IsUncommitted ? "Uncommitted change in the working copy." : Commit.Message;
+    public string Message => Commit.IsUncommitted ? Strings.UncommittedMessage : Commit.Message;
 
     public string PositionText => IsLoadingHistory ? "…" : $"{Index + 1} / {Commits.Count}";
 
@@ -189,11 +189,11 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
     public static string FormatTime(DateTimeOffset time)
     {
         var age = DateTimeOffset.Now - time;
-        var relative = age.TotalMinutes < 60 ? $"{Math.Max(1, (int)age.TotalMinutes)} min ago"
-            : age.TotalHours < 24 ? $"{(int)age.TotalHours} h ago"
-            : age.TotalDays < 60 ? $"{(int)age.TotalDays} days ago"
-            : age.TotalDays < 730 ? $"{(int)(age.TotalDays / 30)} months ago"
-            : $"{(int)(age.TotalDays / 365)} years ago";
-        return string.Create(CultureInfo.InvariantCulture, $"{time:HH:mm} on {time:d MMM yyyy} ({relative})");
+        var relative = age.TotalMinutes < 60 ? Localization.Format(Strings.MinutesAgo, Math.Max(1, (int)age.TotalMinutes))
+            : age.TotalHours < 24 ? Localization.Format(Strings.HoursAgo, (int)age.TotalHours)
+            : age.TotalDays < 60 ? Localization.Format(Strings.DaysAgo, (int)age.TotalDays)
+            : age.TotalDays < 730 ? Localization.Format(Strings.MonthsAgo, (int)(age.TotalDays / 30))
+            : Localization.Format(Strings.YearsAgo, (int)(age.TotalDays / 365));
+        return Localization.Format(Strings.TimeFormat, time, relative);
     }
 }

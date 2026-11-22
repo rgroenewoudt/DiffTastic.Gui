@@ -87,10 +87,12 @@ public sealed class DiffPane : DockPanel
     public TextEditor Editor { get; }
     public IReadOnlyList<AlignedRow> Rows { get; private set; } = [];
 
-    public string Title
+    public string Title => _title.Text ?? "";
+
+    public void SetTitle(string title, string? fullPath)
     {
-        get => _title.Text ?? "";
-        set => _title.Text = value;
+        _title.Text = title;
+        ToolTip.SetTip(_title, fullPath);
     }
 
     public void Show(IReadOnlyList<AlignedRow> rows)

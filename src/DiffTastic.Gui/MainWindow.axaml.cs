@@ -34,6 +34,11 @@ public partial class MainWindow : Window
             view.PointerPressed += (_, e) => _vm?.SelectBlockAtRow(pane.RowAt(e.GetPosition(view)));
         }
 
+        Blame = new BlameHoverController(PanesGrid, (side, row) =>
+            _vm?.CreateBlamePopupAsync(side, row) ?? Task.FromResult<BlamePopupViewModel?>(null));
+        Blame.Attach(LeftPane);
+        Blame.Attach(RightPane);
+
         Overview.RowRequested += (_, row) => ScrollToRow(row, center: true);
         OpenButton.Click += async (_, _) => await OpenFilesAsync();
         ReloadButton.Click += async (_, _) => await (_vm?.LoadAsync() ?? Task.CompletedTask);
@@ -42,6 +47,7 @@ public partial class MainWindow : Window
 
     public DiffPane LeftPane { get; }
     public DiffPane RightPane { get; }
+    public BlameHoverController Blame { get; }
 
     protected override void OnDataContextChanged(EventArgs e)
     {
@@ -74,6 +80,7 @@ public partial class MainWindow : Window
 
     private void ShowDocument()
     {
+        Blame.Close();
         var rows = _vm?.Document?.Rows ?? [];
         var fileName = _vm?.RepoPath ?? _vm?.RightPath;
         LeftPane.SetLanguageFromFileName(fileName);
@@ -87,8 +94,8 @@ public partial class MainWindow : Window
 
     private void UpdateTitles()
     {
-        LeftPane.Title = _vm?.LeftTitle ?? "";
-        RightPane.Title = _vm?.RightTitle ?? "";
+        LeftPane.SetTitle(_vm?.LeftTitle ?? "", _vm?.LeftPath);
+        RightPane.SetTitle(_vm?.RightTitle ?? "", _vm?.RightPath);
         var name = _vm?.RepoPath ?? (_vm?.RightPath is { } p ? Path.GetFileName(p) : null);
         Title = name is null ? "DiffTastic" : $"{name} - DiffTastic";
     }
@@ -173,6 +180,11 @@ public partial class MainWindow : Window
         {
             if (command.CanExecute(null))
                 command.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && Blame.IsOpen)
+        {
+            Blame.Close();
             e.Handled = true;
         }
         else if (e.Key == Key.F5)

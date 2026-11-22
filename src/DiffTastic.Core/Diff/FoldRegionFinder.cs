@@ -62,6 +62,7 @@ public static class FoldRegionFinder
                 continue;
 
             var hasCodeBefore = false;
+            var hasBrace = false;
             var i = 0;
             while (i < text.Length)
             {
@@ -117,6 +118,7 @@ public static class FoldRegionFinder
                         }
                         else if (c == '{')
                         {
+                            hasBrace = true;
                             var header = hasCodeBefore ? row : previousRow;
                             if (header >= 0)
                                 open.Push((header, IsDeclaration(HeaderText(rows, side, header, hasCodeBefore ? i : -1))));
@@ -125,6 +127,7 @@ public static class FoldRegionFinder
                         }
                         else if (c == '}')
                         {
+                            hasBrace = true;
                             if (open.Count > 0)
                             {
                                 var (header, isDeclaration) = open.Pop();
@@ -139,7 +142,7 @@ public static class FoldRegionFinder
                 i++;
             }
 
-            if (!string.IsNullOrWhiteSpace(text))
+            if (hasCodeBefore || hasBrace)
                 previousRow = row;
         }
         return result;

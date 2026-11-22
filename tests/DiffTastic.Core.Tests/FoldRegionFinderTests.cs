@@ -81,6 +81,21 @@ public class FoldRegionFinderTests
     }
 
     [Fact]
+    public void Comment_rows_are_not_headers()
+    {
+        var rows = Equal(
+            "void M()",
+            "/* note",
+            "   more */",
+            "// legacy",
+            "{",
+            "    A();",
+            "}");
+
+        Assert.Equal([new FoldRegion(0, 6, false, true)], FoldRegionFinder.Find(rows));
+    }
+
+    [Fact]
     public void Default_folds_unchanged_declarations_outermost_only()
     {
         var rows = Equal(

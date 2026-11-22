@@ -8,6 +8,10 @@ Windows diff viewer in KDiff3 style, built on [difftastic](https://difftastic.wi
 - Hover a line to see the commit that last changed it. Use **Older / Newer** to walk through the line's history (`git log -L`).
 - Falls back to a plain line diff when difft is missing, fails or takes longer than 15 s.
 
+## Download
+
+Every push to `master` creates a [release](https://github.com/rgroenewoudt/DiffTastic.Gui/releases) with self-contained builds for Windows (`win-x64`) and Linux (`linux-x64`). difft is included; no .NET install needed.
+
 ## Build
 
 ```powershell

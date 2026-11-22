@@ -4,19 +4,24 @@ namespace DiffTastic.Core.Difft;
 
 public sealed class DifftRunner(string executablePath)
 {
+    private static readonly string[] Names = ["difft.exe", "difft"];
+
     public string ExecutablePath { get; } = executablePath;
 
     /// <summary>Looks next to the app first, then on PATH.</summary>
     public static DifftRunner? Locate()
     {
-        var local = Path.Combine(AppContext.BaseDirectory, "difft.exe");
-        if (File.Exists(local))
-            return new DifftRunner(local);
+        foreach (var name in Names)
+        {
+            var local = Path.Combine(AppContext.BaseDirectory, name);
+            if (File.Exists(local))
+                return new DifftRunner(local);
+        }
 
         var pathDirs = (Environment.GetEnvironmentVariable("PATH") ?? "").Split(Path.PathSeparator);
         foreach (var dir in pathDirs)
         {
-            foreach (var name in new[] { "difft.exe", "difft" })
+            foreach (var name in Names)
             {
                 var candidate = Path.Combine(dir.Trim(), name);
                 if (File.Exists(candidate))

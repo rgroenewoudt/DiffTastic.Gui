@@ -43,9 +43,10 @@ public sealed class BlameService(GitRunner git)
     /// <summary>Patch of a commit for one path, or the whole commit when that path was not touched (e.g. after a rename).</summary>
     public async Task<string> GetCommitDiffAsync(string sha, string path, CancellationToken ct = default)
     {
-        var diff = await git.RunAsync(["show", "--format=", "--no-color", "--no-ext-diff", sha, "--", path], ct);
+        string[] show = ["show", "--format=", "--no-color", "--no-ext-diff", "--diff-merges=first-parent", sha];
+        var diff = await git.RunAsync([.. show, "--", path], ct);
         if (string.IsNullOrWhiteSpace(diff))
-            diff = await git.RunAsync(["show", "--format=", "--no-color", "--no-ext-diff", sha], ct);
+            diff = await git.RunAsync(show, ct);
         return diff;
     }
 

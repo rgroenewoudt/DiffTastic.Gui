@@ -43,6 +43,22 @@ public sealed class GitTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Commit_diff_of_a_merge_shows_what_the_merge_brought_in()
+    {
+        await _git.RunAsync("checkout", "-q", "-b", "side");
+        await File.WriteAllTextAsync(Path.Combine(_root, "src", "other.txt"), "from side\n");
+        await _git.RunAsync("add", "-A");
+        await _git.RunAsync("commit", "-q", "-m", "Side work");
+        await _git.RunAsync("checkout", "-q", "main");
+        await _git.RunAsync("merge", "-q", "--no-ff", "-m", "Merge side", "side");
+        var merge = (await _git.RunAsync("rev-parse", "HEAD")).Trim();
+
+        var diff = await new BlameService(_git).GetCommitDiffAsync(merge, "src/other.txt");
+
+        Assert.Contains("+from side", diff);
+    }
+
+    [Fact]
     public async Task Blame_working_tree_points_to_last_commit_per_line()
     {
         var blame = await new BlameService(_git).BlameAsync(new BlameTarget.WorkingTree("src/file.txt"));

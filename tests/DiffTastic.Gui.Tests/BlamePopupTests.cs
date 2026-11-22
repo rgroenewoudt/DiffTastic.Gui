@@ -168,6 +168,41 @@ public sealed class BlamePopupTests : IAsyncLifetime
     }
 
     [AvaloniaFact]
+    public async Task Older_commit_can_be_explained_while_another_runs()
+    {
+        var ai = new AiTests.FakeAi();
+        var vm = new MainWindowViewModel(
+            new StartupArgs(_oldCopy, Path.Combine(_root, "Calculator.cs"), "Calculator.cs"),
+            new AppSettings { AiEnabled = true }, ai);
+        var window = new MainWindow { DataContext = vm, Width = 1200, Height = 600 };
+        window.Show();
+        await vm.LoadAsync();
+        await vm.BlameReady;
+        await vm.AnalysisReady;
+        ai.Gate = new TaskCompletionSource();
+
+        var row = vm.Document!.Rows.ToList().FindIndex(r => r.Right?.LineIndex == 2);
+        await window.Blame.ShowAsync(window.RightPane, row, 300);
+        var popup = window.Blame.Current!;
+        var first = popup.ExplainCommand.ExecuteAsync(null);
+        Assert.False(popup.ExplainCommand.CanExecute(null));
+
+        popup.OlderCommand.Execute(null);
+        Assert.True(popup.ExplainCommand.CanExecute(null));
+        var second = popup.ExplainCommand.ExecuteAsync(null);
+        Assert.Equal("Explaining…", popup.Explanation);
+
+        ai.Gate.SetResult();
+        await Task.WhenAll(first, second);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal("Fake explanation.", popup.Explanation);
+        Assert.True(popup.ExplainCommand.CanExecute(null));
+        popup.NewerCommand.Execute(null);
+        Assert.Equal("Fake explanation.", popup.Explanation);
+    }
+
+    [AvaloniaFact]
     public async Task Explain_is_hidden_without_ai()
     {
         var vm = new MainWindowViewModel(new StartupArgs(_oldCopy, Path.Combine(_root, "Calculator.cs"), "Calculator.cs"));

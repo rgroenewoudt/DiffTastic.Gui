@@ -40,9 +40,10 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(HasExplanation))]
     private string? _explanation;
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ExplainCommand))]
-    private bool _isExplaining;
+    /// <summary>Commits with an explanation request still running.</summary>
+    private readonly HashSet<string> _explaining = [];
+
+    public bool IsExplaining => _explaining.Contains(Commit.Sha);
 
     public bool HasExplanation => Explanation is not null;
 
@@ -50,15 +51,13 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(CanExplain));
         ExplainCommand.NotifyCanExecuteChanged();
-        if (IsExplaining && _explainingSha == value.Sha)
+        if (IsExplaining)
         {
             Explanation = "Explaining…";
             return;
         }
         Explanation = _explainer is not null && _explainer.TryGetCached(value.Sha, _lineText, out var cached) ? cached : null;
     }
-
-    private string? _explainingSha;
 
     /// <summary>Stops a running explanation; called when the popup goes away.</summary>
     public void Dispose()
@@ -74,15 +73,15 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
 
     private bool CanRunExplain() => CanExplain && !IsExplaining && !_disposed;
 
-    [RelayCommand(CanExecute = nameof(CanRunExplain))]
+    [RelayCommand(CanExecute = nameof(CanRunExplain), AllowConcurrentExecutions = true)]
     private async Task ExplainAsync()
     {
         if (_explainer is null || _disposed)
             return;
         var commit = Commit;
         var ct = _cts.Token;
-        _explainingSha = commit.Sha;
-        IsExplaining = true;
+        _explaining.Add(commit.Sha);
+        ExplainCommand.NotifyCanExecuteChanged();
         Explanation = "Explaining…";
         try
         {
@@ -94,14 +93,16 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
-            if (ct.IsCancellationRequested)
+            if (ct.IsCancellationRequested && Commit.Sha == commit.Sha)
                 Explanation = null;
             else if (Commit.Sha == commit.Sha)
                 Explanation = "AI failed: " + ex.Message.Split('\n', 2)[0].Trim();
         }
         finally
         {
-            IsExplaining = false;
+            _explaining.Remove(commit.Sha);
+            if (!_disposed)
+                ExplainCommand.NotifyCanExecuteChanged();
         }
     }
 

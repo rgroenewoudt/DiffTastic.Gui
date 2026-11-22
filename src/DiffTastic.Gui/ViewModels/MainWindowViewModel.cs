@@ -145,6 +145,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         }
         catch (Exception ex)
         {
+            CancelAnalysis();
             Document = null;
             Error = ex.Message;
         }

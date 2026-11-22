@@ -123,6 +123,34 @@ public sealed partial class AiTests
         Assert.Contains("AI failed: Not logged in", vm.StatusText);
     }
 
+    [AvaloniaFact]
+    public async Task Failed_reload_drops_analysis_started_during_compare()
+    {
+        var (_, vm, ai) = await OpenAsync(aiEnabled: false);
+        var locked = Path.Combine(Path.GetTempPath(), $"difftastic-locked-{Guid.NewGuid():N}.cs");
+        await File.WriteAllTextAsync(locked, "x");
+        try
+        {
+            using (new FileStream(locked, FileMode.Open, FileAccess.ReadWrite, FileShare.None))
+            {
+                vm.LeftPath = locked;
+                var load = vm.LoadAsync();
+                vm.AiEnabled = true;
+                await load;
+                await vm.AnalysisReady;
+            }
+            Dispatcher.UIThread.RunJobs();
+
+            Assert.NotNull(vm.Error);
+            Assert.Null(vm.Document);
+            Assert.Null(vm.Analysis);
+        }
+        finally
+        {
+            File.Delete(locked);
+        }
+    }
+
     /// <summary>Answers for every hunk in the prompt: even hunks important with a hint, odd hunks noise.</summary>
     public sealed partial class FakeAi : AiProvider
     {

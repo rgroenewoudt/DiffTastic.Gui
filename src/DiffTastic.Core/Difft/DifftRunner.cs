@@ -56,7 +56,15 @@ public sealed class DifftRunner(string executablePath)
         }
         catch (OperationCanceledException)
         {
-            process.Kill(entireProcessTree: true);
+            try
+            {
+                if (!process.HasExited)
+                    process.Kill(entireProcessTree: true);
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            ct.ThrowIfCancellationRequested();
             throw new TimeoutException($"difft did not finish within {timeout.TotalSeconds:0}s.");
         }
 

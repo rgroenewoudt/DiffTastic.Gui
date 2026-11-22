@@ -52,7 +52,14 @@ public sealed class BlameHoverController
         view.PointerHover += async (_, e) =>
         {
             var p = e.GetPosition(view);
-            await ShowAsync(pane, pane.RowAt(p), p.X);
+            try
+            {
+                await ShowAsync(pane, pane.RowAt(p), p.X);
+            }
+            catch (Exception)
+            {
+                Close();
+            }
         };
         view.PointerMoved += (_, e) =>
         {

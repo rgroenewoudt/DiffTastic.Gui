@@ -145,7 +145,7 @@ public partial class MainWindowViewModel(StartupArgs args) : ObservableObject
             setRevision(RevisionLabel(target));
             return await Task.Run(() => service.BlameAsync(target, ct), ct);
         }
-        catch (Exception ex) when (ex is GitException or OperationCanceledException)
+        catch (Exception)
         {
             return null;
         }

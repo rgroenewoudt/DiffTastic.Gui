@@ -78,7 +78,7 @@ public partial class BlamePopupViewModel : ObservableObject
                 Commit = history[Index];
             }
         }
-        catch (GitException)
+        catch (Exception)
         {
         }
         finally

@@ -193,7 +193,8 @@ public sealed partial class AiTests
         public TaskCompletionSource? Gate { get; set; }
         public bool Cancelled { get; private set; }
         public override string Name => "Fake";
-        public override string Model => "fake-1";
+        public string ModelName { get; init; } = "fake-1";
+        public override string Model => ModelName;
         public override string Vendor => "nobody";
 
         public override async Task<string> CompleteJsonAsync(string prompt, string schema, CancellationToken ct = default)

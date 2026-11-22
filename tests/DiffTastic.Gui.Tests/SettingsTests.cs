@@ -56,7 +56,7 @@ public sealed class SettingsTests
     public async Task ApplySettings_switches_provider_and_reanalyzes()
     {
         var first = new AiTests.FakeAi();
-        var second = new AiTests.FakeAi();
+        var second = new AiTests.FakeAi { ModelName = "fake-2" };
         var settings = new AppSettings { AiEnabled = true };
         var vm = new MainWindowViewModel(new StartupArgs(Sample("old.cs"), Sample("new.cs"), null), settings, first)
         {
@@ -73,6 +73,24 @@ public sealed class SettingsTests
         Assert.Equal(1, first.Calls);
         Assert.Equal(1, second.Calls);
         Assert.NotNull(vm.Analysis);
+    }
+
+    [AvaloniaFact]
+    public async Task ApplySettings_keeps_analysis_when_tool_is_the_same()
+    {
+        var settings = new AppSettings { AiEnabled = true };
+        var vm = new MainWindowViewModel(new StartupArgs(Sample("old.cs"), Sample("new.cs"), null), settings, new AiTests.FakeAi())
+        {
+            LocateAi = _ => new AiTests.FakeAi(),
+        };
+        await vm.LoadAsync();
+        await vm.AnalysisReady;
+        var analysis = vm.Analysis;
+
+        vm.ApplySettings();
+        await vm.AnalysisReady;
+
+        Assert.Same(analysis, vm.Analysis);
     }
 
     [AvaloniaFact]

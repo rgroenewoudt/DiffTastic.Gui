@@ -95,17 +95,21 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     public void ApplySettings()
     {
         _settings.Save();
-        CancelAnalysis();
         var ai = LocateAi(_settings);
-        _analyzer = ai is null ? null : new DiffAnalyzer(ai);
-        _explainer = ai is null ? null : new CommitExplainer(ai);
-        OnPropertyChanged(nameof(IsAiAvailable));
-        OnPropertyChanged(nameof(AiToolTip));
+        var changed = ai?.Name != _analyzer?.Provider.Name || ai?.Model != _analyzer?.Provider.Model;
+        if (changed)
+        {
+            CancelAnalysis();
+            _analyzer = ai is null ? null : new DiffAnalyzer(ai);
+            _explainer = ai is null ? null : new CommitExplainer(ai);
+            OnPropertyChanged(nameof(IsAiAvailable));
+            OnPropertyChanged(nameof(AiToolTip));
+        }
 
         var enabled = _settings.AiEnabled && ai is not null;
         if (AiEnabled != enabled)
             AiEnabled = enabled;
-        else
+        else if (changed)
             AnalysisReady = AnalyzeAsync();
     }
 

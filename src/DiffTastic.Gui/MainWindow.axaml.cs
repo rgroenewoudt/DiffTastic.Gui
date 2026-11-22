@@ -90,7 +90,23 @@ public sealed partial class MainWindow : Window
             case nameof(MainWindowViewModel.LeftTitle) or nameof(MainWindowViewModel.RightTitle):
                 UpdateTitles();
                 break;
+            case nameof(MainWindowViewModel.Analysis):
+                ShowAnalysis();
+                break;
         }
+    }
+
+    private void ShowAnalysis()
+    {
+        var blocks = _vm?.Document?.Blocks ?? [];
+        var notes = _vm?.Analysis?.Hunks
+            .Where(n => n.Hunk < blocks.Count)
+            .Select(n => (Block: blocks[n.Hunk], Note: n))
+            .ToList() ?? [];
+        Overview.Notes = notes;
+        var hintRows = notes.Where(n => n.Note.ReviewHints.Count > 0).Select(n => n.Block.StartRow).ToHashSet();
+        LeftPane.SetHintRows(hintRows);
+        RightPane.SetHintRows(hintRows);
     }
 
     private void ShowDocument()
@@ -107,6 +123,7 @@ public sealed partial class MainWindow : Window
         LeftPane.SetFoldings(_foldRegions, _defaultFolded);
         RightPane.SetFoldings(_foldRegions, _defaultFolded);
         Overview.Rows = rows;
+        ShowAnalysis();
         UpdateTitles();
         ShowCurrentBlock();
     }

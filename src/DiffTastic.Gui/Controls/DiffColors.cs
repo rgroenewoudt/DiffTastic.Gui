@@ -22,6 +22,8 @@ public static class DiffColors
     public static readonly IBrush RemovedMarker = Brush("#D9534F");
     public static readonly IBrush AddedMarker = Brush("#3FA34D");
 
+    public static readonly IBrush ImportantMarker = Brush("#E8590C");
+
     private static readonly IPen ChangedHiddenPen = DashedPen(ChangedMarker);
     private static readonly IPen RemovedHiddenPen = DashedPen(RemovedMarker);
     private static readonly IPen AddedHiddenPen = DashedPen(AddedMarker);

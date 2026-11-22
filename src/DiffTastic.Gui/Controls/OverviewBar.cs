@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using DiffTastic.Core.Ai;
 using DiffTastic.Core.Diff;
 
 namespace DiffTastic.Gui.Controls;
@@ -32,9 +33,14 @@ public sealed class OverviewBar : Control
     /// <summary>First and last visible row.</summary>
     public (double First, double Last) Viewport { get; set { field = value; InvalidateVisual(); } }
 
+    /// <summary>AI notes per block; important blocks get a strip on the left.</summary>
+    public IReadOnlyList<(DiffBlock Block, HunkNote Note)> Notes { get; set { field = value; InvalidateVisual(); } } = [];
+
+    private const double StripWidth = 4;
+
     public OverviewBar()
     {
-        Width = 18;
+        Width = 22;
         Cursor = new Cursor(StandardCursorType.Hand);
     }
 
@@ -46,10 +52,19 @@ public sealed class OverviewBar : Control
             return;
 
         var rowHeight = h / Rows.Count;
+        var left = StripWidth + 3;
         foreach (var (start, count, kind) in _runs)
         {
             var height = Math.Max(3, count * rowHeight);
-            dc.FillRectangle(DiffColors.Marker(kind), new Rect(3, start * rowHeight, Bounds.Width - 6, height));
+            dc.FillRectangle(DiffColors.Marker(kind), new Rect(left, start * rowHeight, Bounds.Width - left - 3, height));
+        }
+
+        foreach (var (block, note) in Notes)
+        {
+            if (!note.IsImportant)
+                continue;
+            var height = Math.Max(4, (block.EndRow - block.StartRow + 1) * rowHeight);
+            dc.FillRectangle(DiffColors.ImportantMarker, new Rect(1, block.StartRow * rowHeight, StripWidth, height));
         }
 
         var vTop = Viewport.First * rowHeight;

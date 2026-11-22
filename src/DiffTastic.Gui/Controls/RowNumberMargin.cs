@@ -28,11 +28,25 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
         }
     } = [];
 
+    public IReadOnlySet<int> HintRows
+    {
+        get;
+        set
+        {
+            field = value;
+            InvalidateMeasure();
+            InvalidateVisual();
+        }
+    } = new HashSet<int>();
+
+    private const double HintSize = 7;
+
     protected override Size MeasureOverride(Size availableSize)
     {
         var digits = Math.Max(3, Rows.Count.ToString(CultureInfo.InvariantCulture).Length);
         var text = Format(new string('9', digits));
-        return new Size(text.Width + 14 + MarkerWidth, 0);
+        var hintSpace = HintRows.Count > 0 ? HintSize + 3 : 0;
+        return new Size(text.Width + 14 + MarkerWidth + hintSpace, 0);
     }
 
     public override void Render(DrawingContext dc)
@@ -54,6 +68,12 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
 
             if (row.Kind != RowKind.Equal)
                 dc.FillRectangle(DiffColors.Marker(row.Kind), new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
+
+            if (HintRows.Contains(rowIndex))
+            {
+                var center = new Point(3 + HintSize / 2, top + visualLine.Height / 2);
+                dc.DrawEllipse(DiffColors.ImportantMarker, null, center, HintSize / 2, HintSize / 2);
+            }
 
             if (line is null)
                 continue;

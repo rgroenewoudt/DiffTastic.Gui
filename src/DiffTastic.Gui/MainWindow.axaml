@@ -89,6 +89,12 @@
             <StackPanel Spacing="3">
                 <SelectableTextBlock Name="AiSummary" Text="{Binding Summary}" TextWrapping="Wrap" FontSize="12.5"
                                      Foreground="#2A2440" />
+                <SelectableTextBlock Name="AiNote" Text="{Binding CurrentNoteText}" TextWrapping="Wrap" FontSize="12"
+                                     Foreground="#5A5470"
+                                     IsVisible="{Binding CurrentNoteText, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <SelectableTextBlock Name="AiHints" Text="{Binding CurrentHintsText}" TextWrapping="Wrap" FontSize="12"
+                                     Foreground="#9A5B00"
+                                     IsVisible="{Binding CurrentHintsText, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </StackPanel>
         </Border>
 

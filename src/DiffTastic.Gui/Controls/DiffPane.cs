@@ -185,6 +185,11 @@ public sealed class DiffPane : DockPanel
         Editor.TextArea.TextView.InvalidateLayer(AvaloniaEdit.Rendering.KnownLayer.Background);
     }
 
+    /// <summary>Rows that get an AI review hint marker in the gutter.</summary>
+    public void SetHintRows(IReadOnlySet<int> rows) => _margin.HintRows = rows;
+
+    public IReadOnlySet<int> HintRows => _margin.HintRows;
+
     private ScrollViewer? ScrollViewer => Editor.FindDescendantOfType<ScrollViewer>();
 
     public double VerticalOffset => ScrollViewer?.Offset.Y ?? 0;

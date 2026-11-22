@@ -40,6 +40,25 @@ public sealed partial class AiTests
     }
 
     [AvaloniaFact]
+    public async Task Shows_note_and_hints_for_current_difference()
+    {
+        var (window, vm, _) = await OpenAsync();
+
+        vm.FirstDiffCommand.Execute(null);
+        Assert.StartsWith("Difference 1   ·   ●●● critical   ·   Hunk 0 changes behavior.", vm.CurrentNoteText);
+        Assert.Equal("⚠ Check callers of hunk 0.", vm.CurrentHintsText);
+
+        var firstBlock = vm.Document!.Blocks[0];
+        Assert.Contains(firstBlock.StartRow, window.LeftPane.HintRows);
+        Assert.Contains(firstBlock.StartRow, window.RightPane.HintRows);
+        Screenshots.Save(window, "21-ai-note");
+
+        vm.CurrentBlock = 1;
+        Assert.Contains("noise", vm.CurrentNoteText);
+        Assert.Null(vm.CurrentHintsText);
+    }
+
+    [AvaloniaFact]
     public async Task Disabled_ai_does_not_call_the_tool()
     {
         var (window, vm, ai) = await OpenAsync(aiEnabled: false);

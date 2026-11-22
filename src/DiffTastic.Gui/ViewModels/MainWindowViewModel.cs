@@ -29,7 +29,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     private DiffDocument? _document;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusText))]
+    [NotifyPropertyChangedFor(nameof(StatusText), nameof(CurrentNote), nameof(CurrentNoteText), nameof(CurrentHintsText))]
     [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
     private int _currentBlock = -1;
 
@@ -53,8 +53,26 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     private string? _aiStatus;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Summary))]
+    [NotifyPropertyChangedFor(nameof(Summary), nameof(CurrentNote), nameof(CurrentNoteText), nameof(CurrentHintsText))]
     private DiffAnalysis? _analysis;
+
+    public HunkNote? CurrentNote => Analysis?.NoteFor(CurrentBlock);
+
+    public string? CurrentNoteText => CurrentNote is { } note
+        ? $"Difference {note.Hunk + 1}   ·   {ImportanceLabel(note)}   ·   {note.Reason}"
+        : null;
+
+    public string? CurrentHintsText => CurrentNote is { ReviewHints.Count: > 0 } note
+        ? string.Join('\n', note.ReviewHints.Select(h => "⚠ " + h))
+        : null;
+
+    private static string ImportanceLabel(HunkNote note) => note.IsNoise ? "noise" : note.Importance switch
+    {
+        3 => "●●● critical",
+        2 => "●● notable",
+        1 => "● minor",
+        _ => "trivial",
+    };
 
     public bool IsAiAvailable => _analyzer is not null;
 

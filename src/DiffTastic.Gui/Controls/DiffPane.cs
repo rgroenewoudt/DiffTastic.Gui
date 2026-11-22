@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.TextMate;
 using DiffTastic.Core.Diff;
@@ -124,6 +125,16 @@ public sealed class DiffPane : DockPanel
     {
         _renderer.CurrentBlock = block;
         Editor.TextArea.TextView.InvalidateLayer(AvaloniaEdit.Rendering.KnownLayer.Background);
+    }
+
+    private ScrollViewer? ScrollViewer => Editor.FindDescendantOfType<ScrollViewer>();
+
+    public double VerticalOffset => ScrollViewer?.Offset.Y ?? 0;
+
+    public void ScrollTo(double? x, double y)
+    {
+        if (ScrollViewer is { } sv)
+            sv.Offset = new Vector(x ?? sv.Offset.X, y);
     }
 
     /// <summary>Row index under a point relative to this pane's text view, or -1.</summary>

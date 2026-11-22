@@ -89,3 +89,26 @@ public class LineAlignerTests
         Assert.Equal("note", doc.EngineNote);
     }
 }
+
+public class DiffServiceTests
+{
+    private static string Fixture(string name) => Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
+
+    [Fact]
+    public async Task Without_difft_uses_line_diff()
+    {
+        var doc = await new DiffService(null).CompareAsync(Fixture("old.cs"), Fixture("new.cs"));
+
+        Assert.NotNull(doc.EngineNote);
+        Assert.Contains(doc.Rows, r => r.Kind == RowKind.Added && r.Right!.Text == "using System.Linq;");
+    }
+
+    [Fact]
+    public async Task Broken_difft_falls_back()
+    {
+        var doc = await new DiffService(new DifftRunner("C:/does/not/exist/difft.exe")).CompareAsync(Fixture("old.cs"), Fixture("new.cs"));
+
+        Assert.NotNull(doc.EngineNote);
+        Assert.NotEmpty(doc.Blocks);
+    }
+}

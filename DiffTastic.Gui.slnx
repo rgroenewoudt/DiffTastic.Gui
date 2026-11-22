@@ -4,6 +4,7 @@
     <Project Path="src/DiffTastic.Gui/DiffTastic.Gui.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/DiffTastic.Core.Tests/DiffTastic.Core.Tests.csproj" />
     <Project Path="tests/DiffTastic.Gui.Tests/DiffTastic.Gui.Tests.csproj" />
   </Folder>
 </Solution>

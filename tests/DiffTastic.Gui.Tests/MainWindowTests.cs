@@ -45,4 +45,35 @@ public class MainWindowTests
         Assert.Equal(1, vm.CurrentBlock);
         Screenshots.Save(window, "02-next-diff");
     }
+
+    [AvaloniaFact]
+    public async Task Scrolls_to_first_difference_in_long_file()
+    {
+        var dir = Directory.CreateTempSubdirectory("difftastic-long").FullName;
+        var lines = Enumerable.Range(0, 2000).Select(i => $"int value{i} = {i};").ToArray();
+        await File.WriteAllLinesAsync(Path.Combine(dir, "a.cs"), lines);
+        lines[1500] = "int value1500 = -1;";
+        await File.WriteAllLinesAsync(Path.Combine(dir, "b.cs"), lines);
+
+        var vm = new MainWindowViewModel(new StartupArgs(Path.Combine(dir, "a.cs"), Path.Combine(dir, "b.cs"), null));
+        var window = new MainWindow { DataContext = vm, Width = 1200, Height = 600 };
+        window.Show();
+        await vm.LoadAsync();
+        for (var i = 0; i < 10; i++)
+            Dispatcher.UIThread.RunJobs();
+
+        var view = window.RightPane.Editor.TextArea.TextView;
+        var firstVisible = (int)(view.VerticalOffset / view.DefaultLineHeight);
+        Assert.InRange(1500, firstVisible, firstVisible + 30);
+        Assert.Equal(window.LeftPane.VerticalOffset, window.RightPane.VerticalOffset);
+        Screenshots.Save(window, "03-long-file");
+
+        var before = window.RightPane.VerticalOffset;
+        window.MouseWheel(new Avalonia.Point(300, 300), new Avalonia.Vector(0, 5));
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(window.LeftPane.VerticalOffset < before, "left pane should scroll up");
+        Assert.Equal(window.LeftPane.VerticalOffset, window.RightPane.VerticalOffset);
+        Screenshots.Save(window, "04-long-file-wheel");
+        Directory.Delete(dir, recursive: true);
+    }
 }

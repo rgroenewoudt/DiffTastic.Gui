@@ -37,6 +37,7 @@ public static class ProcessRunner
             if (stdin is not null)
                 await WriteStdinAsync(process, stdin, cts.Token);
             await process.WaitForExitAsync(cts.Token);
+            await Task.WhenAll(stdout, stderr);
         }
         catch (OperationCanceledException)
         {

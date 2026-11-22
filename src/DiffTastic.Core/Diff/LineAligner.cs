@@ -1,4 +1,3 @@
-using System.Text;
 using DiffTastic.Core.Difft;
 
 namespace DiffTastic.Core.Diff;
@@ -70,34 +69,45 @@ public static class LineAligner
             return new DiffLine(index, text, []);
 
         var ranges = new List<TextRange>(list.Count);
+        var cursor = new Utf8Cursor(text);
         foreach (var change in list)
         {
-            var start = Utf8ToUtf16Index(text, change.Start);
-            var end = Utf8ToUtf16Index(text, change.End);
+            var start = cursor.ToUtf16(change.Start);
+            var end = cursor.ToUtf16(change.End);
             if (end > start)
                 ranges.Add(new TextRange(start, end - start));
         }
         return new DiffLine(index, text, ranges);
     }
 
-    internal static int Utf8ToUtf16Index(string text, int byteOffset)
-    {
-        var bytes = 0;
-        for (var i = 0; i < text.Length; i++)
-        {
-            if (bytes >= byteOffset)
-                return i;
+    internal static int Utf8ToUtf16Index(string text, int byteOffset) => new Utf8Cursor(text).ToUtf16(byteOffset);
 
-            if (char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]))
+    /// <summary>Maps UTF-8 byte offsets to UTF-16 indexes; walks forward from the last offset.</summary>
+    private struct Utf8Cursor(string text)
+    {
+        private int _index;
+        private int _bytes;
+
+        public int ToUtf16(int byteOffset)
+        {
+            if (byteOffset < _bytes)
+                (_index, _bytes) = (0, 0);
+
+            while (_index < text.Length && _bytes < byteOffset)
             {
-                bytes += 4;
-                i++;
+                var c = text[_index];
+                if (char.IsHighSurrogate(c) && _index + 1 < text.Length && char.IsLowSurrogate(text[_index + 1]))
+                {
+                    _bytes += 4;
+                    _index += 2;
+                }
+                else
+                {
+                    _bytes += c < 0x80 ? 1 : c < 0x800 ? 2 : 3;
+                    _index++;
+                }
             }
-            else
-            {
-                bytes += Encoding.UTF8.GetByteCount(text.AsSpan(i, 1));
-            }
+            return _index;
         }
-        return text.Length;
     }
 }

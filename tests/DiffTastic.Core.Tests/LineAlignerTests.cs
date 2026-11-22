@@ -79,6 +79,19 @@ public class LineAlignerTests
     }
 
     [Fact]
+    public void Several_changes_on_one_line_map_to_utf16()
+    {
+        const string text = "ä x ä y 😀 z";
+        DifftChange Change(int start, int end) => new(start, end, "", "normal");
+        var side = new DifftSide(0, [Change(15, 16), Change(3, 4), Change(8, 9)]);
+        var result = new DifftResult([[0, 0]], [[new DifftLine(side, side)]], "Text", "changed");
+
+        var rows = LineAligner.Align([text], [text], result);
+
+        Assert.Equal([new TextRange(11, 1), new TextRange(2, 1), new TextRange(6, 1)], rows[0].Left!.Changes);
+    }
+
+    [Fact]
     public void Fallback_marks_changes()
     {
         var doc = DiffService.Fallback(["a", "b", "c"], ["a", "B", "c", "d"], "note");

@@ -88,6 +88,16 @@ public class LineAlignerTests
         Assert.Equal(RowKind.Added, doc.Rows[^1].Kind);
         Assert.Equal("note", doc.EngineNote);
     }
+
+    [Fact]
+    public void Fallback_keeps_bare_carriage_return_on_one_row()
+    {
+        var doc = DiffService.Fallback(["a", "x\ry", "c"], ["a", "x\ry", "C"], "note");
+
+        Assert.Equal(3, doc.Rows.Count);
+        Assert.Equal(2, doc.Rows[2].Left!.LineIndex);
+        Assert.Equal(RowKind.Changed, doc.Rows[2].Kind);
+    }
 }
 
 public class DiffServiceTests

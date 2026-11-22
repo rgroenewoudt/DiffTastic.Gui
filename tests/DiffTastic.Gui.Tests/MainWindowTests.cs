@@ -78,6 +78,24 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Bare_carriage_return_stays_on_one_row()
+    {
+        var dir = Directory.CreateTempSubdirectory("difftastic-cr").FullName;
+        await File.WriteAllTextAsync(Path.Combine(dir, "a.cs"), "int a = 1;\nint b\r= 2;\nint c = 3;\n");
+        await File.WriteAllTextAsync(Path.Combine(dir, "b.cs"), "int a = 1;\nint b\r= 2;\nint c = 4;\n");
+
+        var vm = new MainWindowViewModel(new StartupArgs(Path.Combine(dir, "a.cs"), Path.Combine(dir, "b.cs"), null));
+        var window = new MainWindow { DataContext = vm, Width = 1200, Height = 600 };
+        window.Show();
+        await vm.LoadAsync();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(vm.Document!.Rows.Count, window.LeftPane.Editor.LineCount);
+        Assert.Equal(vm.Document.Rows.Count, window.RightPane.Editor.LineCount);
+        Directory.Delete(dir, recursive: true);
+    }
+
+    [AvaloniaFact]
     public async Task Horizontal_scroll_reaches_end_of_long_line_on_one_side()
     {
         var dir = Directory.CreateTempSubdirectory("difftastic-wide").FullName;

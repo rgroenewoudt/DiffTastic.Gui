@@ -5,6 +5,9 @@ namespace DiffTastic.Core.Diff;
 
 public static class LineAligner
 {
+    /// <summary>Shown instead of a CR inside a line, so editors do not split the line.</summary>
+    public const char CarriageReturnSymbol = '␍';
+
     public static string[] SplitLines(string text)
     {
         var lines = text.Split('\n');

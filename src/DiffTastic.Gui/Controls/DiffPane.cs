@@ -107,7 +107,7 @@ public sealed class DiffPane : DockPanel
         {
             if (i > 0)
                 sb.Append('\n');
-            sb.Append((Side == Side.Left ? rows[i].Left : rows[i].Right)?.Text);
+            sb.Append((Side == Side.Left ? rows[i].Left : rows[i].Right)?.Text.Replace('\r', LineAligner.CarriageReturnSymbol));
         }
         Editor.Text = sb.ToString();
         Editor.TextArea.TextView.Redraw();

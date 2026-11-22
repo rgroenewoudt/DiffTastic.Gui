@@ -40,7 +40,7 @@ public sealed class DiffService(DifftRunner? difft)
     public static DiffDocument Fallback(string[] left, string[] right, string note)
     {
         var model = SideBySideDiffBuilder.Instance.BuildDiffModel(
-            string.Join('\n', left), string.Join('\n', right), ignoreWhitespace: false);
+            JoinLines(left), JoinLines(right), ignoreWhitespace: false);
 
         var rows = new List<AlignedRow>();
         for (var i = 0; i < Math.Max(model.OldText.Lines.Count, model.NewText.Lines.Count); i++)
@@ -63,6 +63,10 @@ public sealed class DiffService(DifftRunner? difft)
         }
         return new DiffDocument(rows, "Text", note);
     }
+
+    /// <summary>DiffPlex also splits on a bare CR, so it is replaced by a visible symbol.</summary>
+    private static string JoinLines(string[] lines) =>
+        string.Join('\n', lines.Select(l => l.Replace('\r', LineAligner.CarriageReturnSymbol)));
 
     private static DiffLine? ToLine(DiffPiece? piece)
     {

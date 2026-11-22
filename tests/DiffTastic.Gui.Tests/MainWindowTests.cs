@@ -74,6 +74,7 @@ public class MainWindowTests
         Assert.True(window.LeftPane.VerticalOffset < before, "left pane should scroll up");
         Assert.Equal(window.LeftPane.VerticalOffset, window.RightPane.VerticalOffset);
         Screenshots.Save(window, "04-long-file-wheel");
+        await vm.BlameReady;
         Directory.Delete(dir, recursive: true);
     }
 
@@ -92,6 +93,7 @@ public class MainWindowTests
 
         Assert.Equal(vm.Document!.Rows.Count, window.LeftPane.Editor.LineCount);
         Assert.Equal(vm.Document.Rows.Count, window.RightPane.Editor.LineCount);
+        await vm.BlameReady;
         Directory.Delete(dir, recursive: true);
     }
 
@@ -116,6 +118,7 @@ public class MainWindowTests
         Assert.Equal(1500, window.RightPane.Editor.TextArea.TextView.ScrollOffset.X, 1);
         Assert.True(window.LeftPane.Editor.TextArea.TextView.ScrollOffset.X < 1500, "left pane is clamped to its own width");
         Screenshots.Save(window, "05-wide-line");
+        await vm.BlameReady;
         Directory.Delete(dir, recursive: true);
     }
 }

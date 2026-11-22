@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using DiffTastic.Core.Diff;
@@ -14,7 +15,7 @@ public static class DiffColors
     public static readonly IBrush RemovedText = Brush("#F7A8A8");
     public static readonly IBrush AddedText = Brush("#9EDC9E");
     public static readonly IBrush Filler = Brush("#EEEEEE");
-    public static readonly IPen FillerHatch = new ImmutablePen(new ImmutableSolidColorBrush(Color.Parse("#D4D4D4")), 1);
+    public static readonly IBrush FillerHatch = Hatch("#D4D4D4", 8);
     public static readonly IPen CurrentBlockPen = new ImmutablePen(new ImmutableSolidColorBrush(Color.Parse("#3A6FD8")), 1.5);
 
     public static readonly IBrush ChangedMarker = Brush("#E0B000");
@@ -44,4 +45,26 @@ public static class DiffColors
     };
 
     private static ImmutableSolidColorBrush Brush(string hex) => new(Color.Parse(hex));
+
+    /// <summary>Tiled 45° lines, <paramref name="step"/> pixels apart.</summary>
+    private static DrawingBrush Hatch(string hex, double step)
+    {
+        var lines = new GeometryGroup
+        {
+            Children =
+            {
+                new LineGeometry(new Point(0, step), new Point(step, 0)),
+                new LineGeometry(new Point(-1, 1), new Point(1, -1)),
+                new LineGeometry(new Point(step - 1, step + 1), new Point(step + 1, step - 1)),
+            },
+        };
+        var tile = new RelativeRect(0, 0, step, step, RelativeUnit.Absolute);
+        return new DrawingBrush(new GeometryDrawing { Geometry = lines, Pen = new ImmutablePen(Brush(hex), 1) })
+        {
+            TileMode = TileMode.Tile,
+            Stretch = Stretch.None,
+            SourceRect = tile,
+            DestinationRect = tile,
+        };
+    }
 }

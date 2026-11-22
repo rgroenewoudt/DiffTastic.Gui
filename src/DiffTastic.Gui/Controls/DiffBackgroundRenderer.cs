@@ -98,11 +98,6 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
     private static void DrawFiller(DrawingContext dc, Rect rect)
     {
         dc.FillRectangle(DiffColors.Filler, rect);
-        using (dc.PushClip(rect))
-        {
-            const double step = 8;
-            for (var x = rect.Left - rect.Height; x < rect.Right; x += step)
-                dc.DrawLine(DiffColors.FillerHatch, new Point(x, rect.Bottom), new Point(x + rect.Height, rect.Top));
-        }
+        dc.FillRectangle(DiffColors.FillerHatch, rect);
     }
 }

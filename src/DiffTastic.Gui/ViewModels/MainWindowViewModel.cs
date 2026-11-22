@@ -13,6 +13,7 @@ public partial class MainWindowViewModel(StartupArgs args) : ObservableObject
     private BlameService? _blameService;
     private Task<BlameResult?> _leftBlame = Task.FromResult<BlameResult?>(null);
     private Task<BlameResult?> _rightBlame = Task.FromResult<BlameResult?>(null);
+    private CancellationTokenSource? _blameCts;
 
     [ObservableProperty] private string? _leftPath = args.Left;
     [ObservableProperty] private string? _rightPath = args.Right;
@@ -98,7 +99,13 @@ public partial class MainWindowViewModel(StartupArgs args) : ObservableObject
 
     private async Task LoadBlameAsync(string left, string right)
     {
+        _blameCts?.Cancel();
+        var cts = _blameCts = new CancellationTokenSource();
+        var ct = cts.Token;
+
         _blameService = null;
+        _leftBlame = Task.FromResult<BlameResult?>(null);
+        _rightBlame = Task.FromResult<BlameResult?>(null);
         BlameStatus = null;
         LeftRevision = null;
         RightRevision = null;
@@ -106,34 +113,39 @@ public partial class MainWindowViewModel(StartupArgs args) : ObservableObject
         var root = await GitRunner.FindRepoRootAsync(Path.GetDirectoryName(right)!)
                    ?? await GitRunner.FindRepoRootAsync(Environment.CurrentDirectory);
         var repoPath = RepoPath ?? (root is null ? null : RelativeInside(root, right) ?? RelativeInside(root, left));
-        if (root is null || repoPath is null)
+        if (ct.IsCancellationRequested || root is null || repoPath is null)
             return;
 
         var git = new GitRunner(root);
         var locator = new RevisionLocator(git, root);
         var service = new BlameService(git);
         BlameStatus = "loading blame…";
-        _leftBlame = BlameSideAsync(service, locator, left, repoPath, label => LeftRevision = label);
-        _rightBlame = BlameSideAsync(service, locator, right, repoPath, label => RightRevision = label);
+        _leftBlame = BlameSideAsync(service, locator, left, repoPath, label => LeftRevision = label, ct);
+        _rightBlame = BlameSideAsync(service, locator, right, repoPath, label => RightRevision = label, ct);
         _blameService = service;
 
         var l = await _leftBlame;
         var r = await _rightBlame;
+        if (ct.IsCancellationRequested)
+            return;
         BlameStatus = l is null && r is null ? "no blame" : $"blame: {repoPath}";
     }
 
     private static async Task<BlameResult?> BlameSideAsync(
-        BlameService service, RevisionLocator locator, string file, string repoPath, Action<string> setRevision)
+        BlameService service, RevisionLocator locator, string file, string repoPath, Action<string> setRevision,
+        CancellationToken ct)
     {
         try
         {
             if (!File.Exists(file) || new FileInfo(file).Length == 0)
                 return null;
-            var target = await Task.Run(() => locator.LocateAsync(file, repoPath));
+            var target = await Task.Run(() => locator.LocateAsync(file, repoPath, ct), ct);
+            if (ct.IsCancellationRequested)
+                return null;
             setRevision(RevisionLabel(target));
-            return await Task.Run(() => service.BlameAsync(target));
+            return await Task.Run(() => service.BlameAsync(target, ct), ct);
         }
-        catch (GitException)
+        catch (Exception ex) when (ex is GitException or OperationCanceledException)
         {
             return null;
         }

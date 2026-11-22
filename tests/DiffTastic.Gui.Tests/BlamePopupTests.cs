@@ -92,4 +92,32 @@ public sealed class BlamePopupTests : IAsyncLifetime
         Assert.Equal("Add calculator", window.Blame.Current!.Message);
         Screenshots.Save(window, "12-blame-left");
     }
+
+    [AvaloniaFact]
+    public async Task Reload_ignores_blame_from_previous_load()
+    {
+        var working = Path.Combine(_root, "Calculator.cs");
+        var v1Copy = Path.Combine(Path.GetTempPath(), $"difftool-{Guid.NewGuid():N}.cs");
+        await File.WriteAllTextAsync(v1Copy, V1);
+        var v2Sha = (await _git.RunAsync("rev-parse", "HEAD~1")).Trim();
+        try
+        {
+            var vm = new MainWindowViewModel(new StartupArgs(v1Copy, working, "Calculator.cs"));
+            await vm.LoadAsync();
+            var first = vm.BlameReady;
+
+            await vm.OpenAsync(_oldCopy, working, "Calculator.cs");
+            await Task.WhenAll(first, vm.BlameReady);
+            Dispatcher.UIThread.RunJobs();
+
+            Assert.EndsWith(v2Sha[..8], vm.LeftTitle);
+            var row = vm.Document!.Rows.ToList().FindIndex(r => r.Left?.LineIndex == 2);
+            var popup = await vm.CreateBlamePopupAsync(Controls.Side.Left, row);
+            Assert.Equal("Use checked arithmetic", popup!.Commit.Summary);
+        }
+        finally
+        {
+            File.Delete(v1Copy);
+        }
+    }
 }

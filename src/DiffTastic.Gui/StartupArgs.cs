@@ -9,8 +9,11 @@ public sealed record StartupArgs(string? Left, string? Right, string? RepoPath)
         var files = new List<string>();
         for (var i = 0; i < args.Count; i++)
         {
-            if (args[i] == "--path" && i + 1 < args.Count)
-                repoPath = args[++i];
+            if (args[i] == "--path")
+            {
+                if (i + 1 < args.Count)
+                    repoPath = args[++i];
+            }
             else
                 files.Add(args[i]);
         }

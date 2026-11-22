@@ -98,7 +98,7 @@ public sealed class ClaudeProvider(string executable, string model) : AiProvider
 
 public sealed class CodexProvider(string executable, string model) : AiProvider
 {
-    public const string DefaultModel = "gpt-5.4-mini";
+    public const string DefaultModel = "gpt-6-luna";
 
     public override string Name => "Codex";
     public override string Model => model;

@@ -46,13 +46,14 @@ public static class FoldRegionFinder
 
     private enum Side { Left, Right }
 
-    private enum State { Code, BlockComment, VerbatimString, TemplateString }
+    private enum State { Code, BlockComment, VerbatimString, RawString, TemplateString }
 
     private static List<(int Start, int End, bool IsDeclaration)> Scan(IReadOnlyList<AlignedRow> rows, Side side)
     {
         var result = new List<(int, int, bool)>();
         var open = new Stack<(int HeaderRow, bool IsDeclaration)>();
         var state = State.Code;
+        var rawQuotes = 0;
         var previousRow = -1;
 
         for (var row = 0; row < rows.Count; row++)
@@ -83,6 +84,15 @@ public static class FoldRegionFinder
                         else if (c == '"')
                             state = State.Code;
                         break;
+                    case State.RawString:
+                        if (c == '"')
+                        {
+                            var run = QuoteRun(text, i);
+                            if (run >= rawQuotes)
+                                state = State.Code;
+                            i += run - 1;
+                        }
+                        break;
                     case State.TemplateString:
                         if (c == '\\')
                             i++;
@@ -90,7 +100,7 @@ public static class FoldRegionFinder
                             state = State.Code;
                         break;
                     default:
-                        if (c == '/' && next == '/')
+                        if (c == '/' && next == '/' || c == '#' && (next == '\0' || char.IsWhiteSpace(next)))
                         {
                             i = text.Length;
                             continue;
@@ -106,9 +116,23 @@ public static class FoldRegionFinder
                             i = Math.Max(i, text.IndexOf('"', i));
                             hasCodeBefore = true;
                         }
-                        else if (c is '"' or '\'')
+                        else if (c == '"' && QuoteRun(text, i) >= 3)
+                        {
+                            rawQuotes = QuoteRun(text, i);
+                            state = State.RawString;
+                            i += rawQuotes - 1;
+                            hasCodeBefore = true;
+                        }
+                        else if (c == '"')
                         {
                             i = SkipQuoted(text, i);
+                            hasCodeBefore = true;
+                        }
+                        else if (c == '\'')
+                        {
+                            var close = SkipQuoted(text, i);
+                            if (close < text.Length)
+                                i = close;
                             hasCodeBefore = true;
                         }
                         else if (c == '`')
@@ -146,6 +170,14 @@ public static class FoldRegionFinder
                 previousRow = row;
         }
         return result;
+    }
+
+    private static int QuoteRun(string text, int start)
+    {
+        var end = start;
+        while (end < text.Length && text[end] == '"')
+            end++;
+        return end - start;
     }
 
     private static int SkipQuoted(string text, int start)

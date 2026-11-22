@@ -40,6 +40,24 @@ public class FoldRegionFinderTests
     }
 
     [Fact]
+    public void Handles_lifetimes_raw_strings_and_hash_comments()
+    {
+        var rows = Equal(
+            "fn f<'a>(x: &'a str) -> &'a str {", // 0
+            "    x",
+            "}",
+            "void M()",                           // 3
+            "{",
+            "    var json = \"\"\"",
+            "        { \"a\": \"}\" }",
+            "        \"\"\";",
+            "    # comment {",
+            "}");
+
+        Assert.Equal([new FoldRegion(0, 2, false, true), new FoldRegion(3, 9, false, true)], FoldRegionFinder.Find(rows));
+    }
+
+    [Fact]
     public void Control_flow_and_initializers_are_not_declarations()
     {
         var rows = Equal(

@@ -90,6 +90,14 @@ public class MainWindowTests
         window.ScrollToRow(hidden.StartRow + 1, center: true);
         Assert.Equal(left.Count(f => f) - 1, window.LeftPane.GetFoldStates().Count(f => f));
         Assert.Equal(window.LeftPane.GetFoldStates(), window.RightPane.GetFoldStates());
+
+        var all = Enumerable.Repeat(true, left.Length).ToArray();
+        window.LeftPane.ApplyFoldStates(all);
+        window.RightPane.ApplyFoldStates(all);
+        window.ScrollToRow(0, center: false);
+        for (var i = 0; i < 5; i++)
+            Dispatcher.UIThread.RunJobs();
+        Screenshots.Save(window, "07-folded-changes");
         await vm.BlameReady;
     }
 

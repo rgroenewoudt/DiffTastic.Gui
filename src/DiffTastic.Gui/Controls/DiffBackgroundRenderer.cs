@@ -52,7 +52,32 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
             }
         }
 
+        DrawHiddenChanges(textView, dc, width);
         DrawCurrentBlock(textView, dc, width);
+    }
+
+    private void DrawHiddenChanges(TextView textView, DrawingContext dc, double width)
+    {
+        foreach (var visualLine in textView.VisualLines)
+        {
+            if (HiddenChange(visualLine) is not { } kind)
+                continue;
+            var top = visualLine.VisualTop - textView.VerticalOffset;
+            dc.DrawLine(new Pen(DiffColors.Marker(kind), 1, DashStyle.Dash), new Point(0, top + visualLine.Height - 1), new Point(width, top + visualLine.Height - 1));
+            dc.FillRectangle(DiffColors.Marker(kind), new Rect(0, top, 3, visualLine.Height));
+        }
+    }
+
+    /// <summary>Kind of the first non-equal row inside a folded visual line, or null.</summary>
+    private RowKind? HiddenChange(VisualLine visualLine)
+    {
+        var last = Math.Min(visualLine.LastDocumentLine.LineNumber, Rows.Count);
+        for (var i = visualLine.FirstDocumentLine.LineNumber; i < last; i++)
+        {
+            if (Rows[i].Kind != RowKind.Equal)
+                return Rows[i].Kind;
+        }
+        return null;
     }
 
     private void DrawCurrentBlock(TextView textView, DrawingContext dc, double width)

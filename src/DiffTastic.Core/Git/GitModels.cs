@@ -2,6 +2,9 @@ namespace DiffTastic.Core.Git;
 
 public sealed record CommitInfo(string Sha, string Author, DateTimeOffset AuthorTime, string Message)
 {
+    /// <summary>Path of the file in this commit, when known from line history.</summary>
+    public string? Path { get; init; }
+
     public bool IsUncommitted => Sha.Length > 0 && !Sha.AsSpan().ContainsAnyExcept('0');
     public string ShortSha => Sha[..Math.Min(8, Sha.Length)];
     public string Summary => Message.Split('\n', 2)[0].Trim();

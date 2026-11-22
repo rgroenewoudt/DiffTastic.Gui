@@ -86,7 +86,7 @@ public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
         Explanation = "Explaining…";
         try
         {
-            var diff = await _service.GetCommitDiffAsync(commit.Sha, _line.OriginalPath, ct);
+            var diff = await _service.GetCommitDiffAsync(commit.Sha, commit.Path ?? _line.OriginalPath, ct);
             var full = await _service.GetCommitAsync(commit, ct);
             var text = await Task.Run(() => _explainer.ExplainAsync(full, diff, _lineText, ct), ct);
             if (Commit.Sha == commit.Sha)

@@ -55,20 +55,26 @@ public sealed class BlameService(GitRunner git)
     public async Task<IReadOnlyList<CommitInfo>> LineHistoryAsync(string sha, string path, int line, CancellationToken ct = default)
     {
         var output = await git.RunAsync(
-            ["log", $"-L{line},{line}:{path}", "--no-patch", "--format=%H%x1f%an%x1f%at%x1f%B%x1e", sha], ct);
+            ["log", $"-L{line},{line}:{path}", "--format=%H%x1f%an%x1f%at%x1f%B%x1e", sha], ct);
         return ParseLog(output);
     }
 
-    /// <summary>Parses records of <c>%H%x1f%an%x1f%at%x1f%B%x1e</c>; patch text between records is skipped.</summary>
+    /// <summary>
+    /// Parses records of <c>%H%x1f%an%x1f%at%x1f%B%x1e</c>. The patch after a record gives that commit's file path.
+    /// </summary>
     public static IReadOnlyList<CommitInfo> ParseLog(string output)
     {
         var commits = new List<CommitInfo>();
         foreach (var record in output.Split('\x1e'))
         {
             var fields = record.Split('\x1f');
+            var lines = fields[0].Split('\n');
+            var patch = fields.Length < 4 ? lines : lines[..^1];
+            if (commits.Count > 0 && PatchPath(patch) is { } patchPath)
+                commits[^1] = commits[^1] with { Path = patchPath };
             if (fields.Length < 4)
                 continue;
-            var sha = fields[0].Split('\n')[^1].Trim();
+            var sha = lines[^1].Trim();
             if (!IsSha(sha) || !long.TryParse(fields[2], out var seconds))
                 continue;
             var time = DateTimeOffset.FromUnixTimeSeconds(seconds).ToLocalTime();
@@ -76,6 +82,10 @@ public sealed class BlameService(GitRunner git)
         }
         return commits;
     }
+
+    private static string? PatchPath(IEnumerable<string> patch) => patch
+        .Select(l => l.TrimEnd('\r'))
+        .FirstOrDefault(l => l.StartsWith("+++ b/", StringComparison.Ordinal))?[6..];
 
     private static bool IsSha(string value) =>
         value.Length is 40 or 64 && !value.AsSpan().ContainsAnyExcept(LowerHex);

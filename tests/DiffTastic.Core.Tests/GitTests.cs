@@ -166,6 +166,22 @@ public sealed class GitTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Line_history_knows_the_path_before_a_rename()
+    {
+        await _git.RunAsync("mv", "src/file.txt", "src/renamed.txt");
+        await _git.RunAsync("commit", "-q", "-m", "Rename");
+        await File.WriteAllTextAsync(Path.Combine(_root, "src", "renamed.txt"), "line one\nline 2\nline three\nline four\n");
+        await _git.RunAsync("commit", "-q", "-am", "Digit two");
+        var head = (await _git.RunAsync("rev-parse", "HEAD")).Trim();
+
+        var history = await new BlameService(_git).LineHistoryAsync(head, "src/renamed.txt", 2);
+
+        Assert.Equal([head, _shas[2], _shas[1], _shas[0]], history.Select(c => c.Sha));
+        Assert.Equal(["src/renamed.txt", "src/file.txt", "src/file.txt", "src/file.txt"], history.Select(c => c.Path));
+        Assert.Contains("+line TWO!", await new BlameService(_git).GetCommitDiffAsync(_shas[2], history[1].Path!));
+    }
+
+    [Fact]
     public void ParsePorcelain_reads_sha256_hashes()
     {
         var sha = new string('c', 64);

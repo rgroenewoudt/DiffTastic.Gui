@@ -27,7 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="../../tools/difft/difft.exe" Link="difft.exe" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../../tools/difft/difft.exe')" />
-    <None Include="../../tools/difft/difft" Link="difft" CopyToOutputDirectory="PreserveNewest" Condition="Exists('../../tools/difft/difft')" />
+    <None Include="../../tools/difft/difft.exe" Link="difft.exe" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" Condition="Exists('../../tools/difft/difft.exe')" />
+    <None Include="../../tools/difft/difft" Link="difft" CopyToOutputDirectory="PreserveNewest" ExcludeFromSingleFile="true" Condition="Exists('../../tools/difft/difft')" />
   </ItemGroup>
 </Project>

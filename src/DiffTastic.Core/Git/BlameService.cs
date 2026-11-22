@@ -40,6 +40,15 @@ public sealed class BlameService(GitRunner git)
         return full;
     }
 
+    /// <summary>Patch of a commit for one path, or the whole commit when that path was not touched (e.g. after a rename).</summary>
+    public async Task<string> GetCommitDiffAsync(string sha, string path, CancellationToken ct = default)
+    {
+        var diff = await git.RunAsync(["show", "--format=", "--no-color", "--no-ext-diff", sha, "--", path], ct);
+        if (string.IsNullOrWhiteSpace(diff))
+            diff = await git.RunAsync(["show", "--format=", "--no-color", "--no-ext-diff", sha], ct);
+        return diff;
+    }
+
     /// <summary>Commits that touched this line, newest first, starting at <paramref name="sha"/>.</summary>
     public async Task<IReadOnlyList<CommitInfo>> LineHistoryAsync(string sha, string path, int line, CancellationToken ct = default)
     {

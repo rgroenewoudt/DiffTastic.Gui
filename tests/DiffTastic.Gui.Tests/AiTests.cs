@@ -128,6 +128,7 @@ public sealed partial class AiTests
     {
         public int Calls { get; private set; }
         public string? Error { get; init; }
+        public string? LastPrompt { get; private set; }
         public override string Name => "Fake";
         public override string Model => "fake-1";
         public override string Vendor => "nobody";
@@ -135,8 +136,11 @@ public sealed partial class AiTests
         public override Task<string> CompleteJsonAsync(string prompt, string schema, CancellationToken ct = default)
         {
             Calls++;
+            LastPrompt = prompt;
             if (Error is not null)
                 throw new InvalidOperationException(Error);
+            if (schema == CommitExplainer.Schema)
+                return Task.FromResult(JsonSerializer.Serialize(new { explanation = "Fake explanation." }));
 
             var hunks = HunkHeader().Matches(prompt).Select(m => int.Parse(m.Groups[1].Value)).Select(i => new
             {

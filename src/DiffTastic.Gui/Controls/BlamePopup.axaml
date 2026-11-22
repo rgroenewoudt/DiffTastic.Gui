@@ -35,6 +35,11 @@
                 </ScrollViewer>
             </Border>
 
+            <Border Name="ExplanationBox" Background="#F3F0FA" BorderBrush="#9B8CC9" BorderThickness="3,0,0,0" Padding="12,8"
+                    IsVisible="{Binding HasExplanation}">
+                <SelectableTextBlock Text="{Binding Explanation}" TextWrapping="Wrap" FontSize="12.5" Foreground="#2A2440" />
+            </Border>
+
             <DockPanel LastChildFill="False">
                 <StackPanel DockPanel.Dock="Left" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
                     <Button Classes="nav" Name="OlderButton" Command="{Binding OlderCommand}" ToolTip.Tip="Previous commit that changed this line">◀ Older</Button>
@@ -43,6 +48,9 @@
                     <Button Classes="nav" Name="NewerButton" Command="{Binding NewerCommand}" ToolTip.Tip="Next commit that changed this line">Newer ▶</Button>
                 </StackPanel>
                 <Button DockPanel.Dock="Right" Classes="nav" Name="CopyShaButton" ToolTip.Tip="Copy commit SHA">Copy SHA</Button>
+                <Button DockPanel.Dock="Right" Classes="nav" Name="ExplainButton" Margin="0,0,6,0"
+                        Command="{Binding ExplainCommand}" IsVisible="{Binding CanExplain}"
+                        ToolTip.Tip="{Binding ExplainToolTip}">Explain (AI)</Button>
             </DockPanel>
         </StackPanel>
     </Border>

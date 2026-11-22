@@ -14,6 +14,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     private readonly DiffService _diffService = new(DifftRunner.Locate());
     private readonly AppSettings _settings = settings ?? new AppSettings();
     private readonly DiffAnalyzer? _analyzer = ai is null ? null : new DiffAnalyzer(ai);
+    private readonly CommitExplainer? _explainer = ai is null ? null : new CommitExplainer(ai);
     private CancellationTokenSource? _aiCts;
     private BlameService? _blameService;
     private Task<BlameResult?> _leftBlame = Task.FromResult<BlameResult?>(null);
@@ -279,7 +280,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         if (blameLine is null || !blame.Commits.TryGetValue(blameLine.Sha, out var commit))
             return null;
 
-        return new BlamePopupViewModel(service, blameLine, commit, aligned.Kind, side, line.LineIndex + 1);
+        return new BlamePopupViewModel(
+            service, blameLine, commit, aligned.Kind, side, line.LineIndex + 1, AiEnabled ? _explainer : null, line.Text);
     }
 
     public async Task OpenAsync(string left, string right, string? repoPath = null)

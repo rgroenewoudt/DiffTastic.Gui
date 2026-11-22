@@ -1,6 +1,7 @@
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DiffTastic.Core.Ai;
 using DiffTastic.Core.Diff;
 using DiffTastic.Core.Git;
 using DiffTastic.Gui.Controls;
@@ -11,15 +12,78 @@ public sealed partial class BlamePopupViewModel : ObservableObject
 {
     private readonly BlameService _service;
     private readonly BlameLine _line;
+    private readonly CommitExplainer? _explainer;
+    private readonly string _lineText;
 
-    public BlamePopupViewModel(BlameService service, BlameLine line, CommitInfo commit, RowKind kind, Side side, int lineNumber)
+    public BlamePopupViewModel(
+        BlameService service, BlameLine line, CommitInfo commit, RowKind kind, Side side, int lineNumber,
+        CommitExplainer? explainer = null, string lineText = "")
     {
         _service = service;
         _line = line;
         _commit = commit;
         _commits = [commit];
+        _explainer = explainer;
+        _lineText = lineText;
         Kind = kind;
         LineLabel = $"{(side == Side.Left ? "A" : "B")} · line {lineNumber}";
+    }
+
+    public bool CanExplain => _explainer is not null && !Commit.IsUncommitted;
+
+    public string ExplainToolTip => _explainer is { Provider: var p }
+        ? $"Explain this commit with {p.Name}. Sends the commit to {p.Vendor}."
+        : "";
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasExplanation))]
+    private string? _explanation;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExplainCommand))]
+    private bool _isExplaining;
+
+    public bool HasExplanation => Explanation is not null;
+
+    partial void OnCommitChanged(CommitInfo value)
+    {
+        OnPropertyChanged(nameof(CanExplain));
+        ExplainCommand.NotifyCanExecuteChanged();
+        if (IsExplaining && _explainingSha == value.Sha)
+            return;
+        Explanation = _explainer is not null && _explainer.TryGetCached(value.Sha, _lineText, out var cached) ? cached : null;
+    }
+
+    private string? _explainingSha;
+
+    private bool CanRunExplain() => CanExplain && !IsExplaining;
+
+    [RelayCommand(CanExecute = nameof(CanRunExplain))]
+    private async Task ExplainAsync()
+    {
+        if (_explainer is null)
+            return;
+        var commit = Commit;
+        _explainingSha = commit.Sha;
+        IsExplaining = true;
+        Explanation = "Explaining…";
+        try
+        {
+            var diff = await _service.GetCommitDiffAsync(commit.Sha, _line.OriginalPath);
+            var full = await _service.GetCommitAsync(commit);
+            var text = await Task.Run(() => _explainer.ExplainAsync(full, diff, _lineText));
+            if (Commit.Sha == commit.Sha)
+                Explanation = text;
+        }
+        catch (Exception ex)
+        {
+            if (Commit.Sha == commit.Sha)
+                Explanation = "AI failed: " + ex.Message.Split('\n', 2)[0].Trim();
+        }
+        finally
+        {
+            IsExplaining = false;
+        }
     }
 
     public RowKind Kind { get; }

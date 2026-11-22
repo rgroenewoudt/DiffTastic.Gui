@@ -75,6 +75,9 @@ public partial class MainWindow : Window
     private void ShowDocument()
     {
         var rows = _vm?.Document?.Rows ?? [];
+        var fileName = _vm?.RepoPath ?? _vm?.RightPath;
+        LeftPane.SetLanguageFromFileName(fileName);
+        RightPane.SetLanguageFromFileName(fileName);
         LeftPane.Show(rows);
         RightPane.Show(rows);
         Overview.Rows = rows;

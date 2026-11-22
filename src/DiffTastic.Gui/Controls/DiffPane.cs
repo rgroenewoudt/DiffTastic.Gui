@@ -5,7 +5,9 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using AvaloniaEdit;
+using AvaloniaEdit.TextMate;
 using DiffTastic.Core.Diff;
+using TextMateSharp.Grammars;
 
 namespace DiffTastic.Gui.Controls;
 
@@ -15,6 +17,9 @@ public sealed class DiffPane : DockPanel
     private readonly TextBlock _title;
     private readonly DiffBackgroundRenderer _renderer;
     private readonly RowNumberMargin _margin;
+    private readonly TextMate.Installation _textMate;
+
+    private static readonly RegistryOptions Registry = new(ThemeName.LightPlus);
 
     public DiffPane(Side side)
     {
@@ -74,6 +79,8 @@ public sealed class DiffPane : DockPanel
         Editor.TextArea.LeftMargins.Insert(0, _margin);
 
         Children.Add(Editor);
+
+        _textMate = Editor.InstallTextMate(Registry);
     }
 
     public Side Side { get; }
@@ -101,6 +108,14 @@ public sealed class DiffPane : DockPanel
         }
         Editor.Text = sb.ToString();
         Editor.TextArea.TextView.Redraw();
+    }
+
+    /// <summary>Picks a syntax grammar from a file name; plain text when unknown.</summary>
+    public void SetLanguageFromFileName(string? fileName)
+    {
+        var extension = Path.GetExtension(fileName ?? "");
+        var language = string.IsNullOrEmpty(extension) ? null : Registry.GetLanguageByExtension(extension);
+        _textMate.SetGrammar(language is null ? null : Registry.GetScopeByLanguageId(language.Id));
     }
 
     public void SetCurrentBlock(DiffBlock? block)

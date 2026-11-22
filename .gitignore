@@ -488,3 +488,4 @@ $RECYCLE.BIN/
 
 # difft binary is downloaded by tools/get-difft.ps1
 tools/difft/
+.claude/worktrees

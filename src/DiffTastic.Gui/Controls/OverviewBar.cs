@@ -13,6 +13,7 @@ public sealed class OverviewBar : Control
 {
     private static readonly IBrush Background = new ImmutableSolidColorBrush(Color.Parse("#F7F7F7"));
     private static readonly IBrush ViewportFill = new ImmutableSolidColorBrush(Color.FromArgb(40, 58, 111, 216));
+    private static readonly IBrush NoiseFade = new ImmutableSolidColorBrush(Color.FromArgb(180, 247, 247, 247));
     private static readonly IPen ViewportPen = new ImmutablePen(new ImmutableSolidColorBrush(Color.Parse("#3A6FD8")), 1);
 
     public event EventHandler<int>? RowRequested;
@@ -61,10 +62,11 @@ public sealed class OverviewBar : Control
 
         foreach (var (block, note) in Notes)
         {
-            if (!note.IsImportant)
-                continue;
             var height = Math.Max(4, (block.EndRow - block.StartRow + 1) * rowHeight);
-            dc.FillRectangle(DiffColors.ImportantMarker, new Rect(1, block.StartRow * rowHeight, StripWidth, height));
+            if (note.IsImportant)
+                dc.FillRectangle(DiffColors.ImportantMarker, new Rect(1, block.StartRow * rowHeight, StripWidth, height));
+            else if (note.IsNoise)
+                dc.FillRectangle(NoiseFade, new Rect(left, block.StartRow * rowHeight, Bounds.Width - left - 3, height));
         }
 
         var vTop = Viewport.First * rowHeight;

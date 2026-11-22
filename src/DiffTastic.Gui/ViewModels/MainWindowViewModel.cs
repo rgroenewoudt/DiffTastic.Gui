@@ -53,8 +53,16 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     private string? _aiStatus;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Summary), nameof(CurrentNote), nameof(CurrentNoteText), nameof(CurrentHintsText))]
+    [NotifyPropertyChangedFor(nameof(Summary), nameof(CurrentNote), nameof(CurrentNoteText), nameof(CurrentHintsText), nameof(HasNoise))]
+    [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
     private DiffAnalysis? _analysis;
+
+    /// <summary>Next/previous skip hunks the AI marked as noise.</summary>
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
+    private bool _skipNoise = true;
+
+    public bool HasNoise => Analysis?.Hunks.Any(h => h.IsNoise) == true;
 
     public HunkNote? CurrentNote => Analysis?.NoteFor(CurrentBlock);
 
@@ -178,6 +186,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
             if (cts.IsCancellationRequested)
                 return;
             Analysis = analysis;
+            if (IsSkipped(CurrentBlock) && FindBlock(0, 1) is >= 0 and var first)
+                CurrentBlock = first;
             AiStatus = $"AI: {provider.Name} ({provider.Model})";
         }
         catch (Exception ex)
@@ -295,20 +305,39 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     }
 
     private bool HasBlocks() => Document is { Blocks.Count: > 0 };
-    private bool CanGoNext() => Document is not null && CurrentBlock < Document.Blocks.Count - 1;
-    private bool CanGoPrevious() => Document is not null && CurrentBlock > 0;
+    private bool CanGoNext() => FindBlock(CurrentBlock + 1, 1) >= 0;
+    private bool CanGoPrevious() => FindBlock(CurrentBlock - 1, -1) >= 0;
+
+    /// <summary>First block from <paramref name="start"/> in <paramref name="step"/> direction, skipping noise when asked; -1 if none.</summary>
+    private int FindBlock(int start, int step)
+    {
+        if (Document is null)
+            return -1;
+        for (var i = start; i >= 0 && i < Document.Blocks.Count; i += step)
+        {
+            if (!IsSkipped(i))
+                return i;
+        }
+        return -1;
+    }
+
+    private bool IsSkipped(int block) => SkipNoise && Analysis?.IsNoise(block) == true;
 
     [RelayCommand(CanExecute = nameof(CanGoNext))]
-    private void NextDiff() => CurrentBlock++;
+    private void NextDiff() => CurrentBlock = FindBlock(CurrentBlock + 1, 1);
 
     [RelayCommand(CanExecute = nameof(CanGoPrevious))]
-    private void PreviousDiff() => CurrentBlock--;
+    private void PreviousDiff() => CurrentBlock = FindBlock(CurrentBlock - 1, -1);
 
     [RelayCommand(CanExecute = nameof(HasBlocks))]
-    private void FirstDiff() => CurrentBlock = 0;
+    private void FirstDiff() => CurrentBlock = Math.Max(0, FindBlock(0, 1));
 
     [RelayCommand(CanExecute = nameof(HasBlocks))]
-    private void LastDiff() => CurrentBlock = Document!.Blocks.Count - 1;
+    private void LastDiff()
+    {
+        var last = Document!.Blocks.Count - 1;
+        CurrentBlock = FindBlock(last, -1) is >= 0 and var found ? found : last;
+    }
 
     private string DisplayName(string? path, string? revision)
     {

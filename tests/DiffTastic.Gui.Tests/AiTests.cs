@@ -59,6 +59,27 @@ public sealed partial class AiTests
     }
 
     [AvaloniaFact]
+    public async Task Navigation_skips_noise()
+    {
+        var (window, vm, _) = await OpenAsync();
+        Assert.Equal(5, vm.Document!.Blocks.Count);
+        Assert.True(vm.HasNoise);
+        Assert.Equal(0, vm.CurrentBlock);
+
+        vm.NextDiffCommand.Execute(null);
+        Assert.Equal(2, vm.CurrentBlock);
+        vm.LastDiffCommand.Execute(null);
+        Assert.Equal(4, vm.CurrentBlock);
+        vm.PreviousDiffCommand.Execute(null);
+        Assert.Equal(2, vm.CurrentBlock);
+        Screenshots.Save(window, "22-ai-skip-noise");
+
+        vm.SkipNoise = false;
+        vm.PreviousDiffCommand.Execute(null);
+        Assert.Equal(1, vm.CurrentBlock);
+    }
+
+    [AvaloniaFact]
     public async Task Disabled_ai_does_not_call_the_tool()
     {
         var (window, vm, ai) = await OpenAsync(aiEnabled: false);

@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    branches: [master]
+    paths-ignore: ['**.md', 'LICENSE']
+  workflow_dispatch:
+
+concurrency: release
+
+permissions:
+  contents: write
+
+env:
+  VERSION: 0.1.${{ github.run_number }}
+  DOTNET_VERSION: 11.0.x
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - run: ./tools/get-difft.ps1
+        shell: pwsh
+      - run: dotnet test -c Release
+
+  build:
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+      - run: ./tools/get-difft.ps1
+        shell: pwsh
+      - name: Publish
+        run: >
+          dotnet publish src/DiffTastic.Gui -c Release -r ${{ matrix.rid }} --self-contained
+          -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:EnableCompressionInSingleFile=true -p:DebugType=none
+          -p:Version=${{ env.VERSION }} -o publish
+      - name: Remove native symbols
+        shell: pwsh
+        run: Remove-Item publish/*.pdb
+      - name: Archive (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Compress-Archive -Path publish/* -DestinationPath "DiffTastic.Gui-$env:VERSION-${{ matrix.rid }}.zip"
+      - name: Archive (Linux)
+        if: runner.os == 'Linux'
+        run: tar -czf "DiffTastic.Gui-$VERSION-${{ matrix.rid }}.tar.gz" -C publish .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.rid }}
+          path: DiffTastic.Gui-*
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          gh release create "v$VERSION" dist/*
+          --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA"
+          --title "v$VERSION" --generate-notes

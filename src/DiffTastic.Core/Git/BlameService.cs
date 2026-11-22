@@ -1,9 +1,12 @@
+using System.Buffers;
 using System.Collections.Concurrent;
 
 namespace DiffTastic.Core.Git;
 
 public sealed class BlameService(GitRunner git)
 {
+    private static readonly SearchValues<char> LowerHex = SearchValues.Create("0123456789abcdef");
+
     private readonly ConcurrentDictionary<string, CommitInfo> _messages = new();
 
     public async Task<BlameResult> BlameAsync(BlameTarget target, CancellationToken ct = default)
@@ -64,7 +67,7 @@ public sealed class BlameService(GitRunner git)
     }
 
     private static bool IsSha(string value) =>
-        value.Length is 40 or 64 && value.All(char.IsAsciiHexDigitLower);
+        value.Length is 40 or 64 && !value.AsSpan().ContainsAnyExcept(LowerHex);
 
     public static BlameResult ParsePorcelain(string output)
     {

@@ -42,3 +42,7 @@ the working tree file, `HEAD`, a commit that holds the same blob (`git log --fin
 
 - `tests/DiffTastic.Gui.Tests` renders the window headless and saves PNGs to `%TEMP%/difftastic-screenshots` (override with `DIFFTASTIC_SCREENSHOTS`).
 - `tools/screenshot.ps1 -ProcessId <pid> -OutFile x.png` captures the real running window.
+
+## License
+
+MIT. difftastic (downloaded separately) is also MIT licensed.

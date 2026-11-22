@@ -18,7 +18,7 @@ public static class Screenshots
         Directory.CreateDirectory(Folder);
         var path = Path.Combine(Folder, name + ".png");
         using var frame = window.CaptureRenderedFrame() ?? throw new InvalidOperationException("No frame rendered.");
-        frame.Save(path);
+        frame.Save(path, PngBitmapEncoderOptions.Default);
         return path;
     }
 }

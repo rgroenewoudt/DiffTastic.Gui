@@ -29,11 +29,31 @@ public sealed class GitRunner(string workingDirectory)
         using var process = Process.Start(psi) ?? throw new GitException("Could not start git.");
         var stdout = process.StandardOutput.ReadToEndAsync(ct);
         var stderr = process.StandardError.ReadToEndAsync(ct);
-        await process.WaitForExitAsync(ct);
+        try
+        {
+            await process.WaitForExitAsync(ct);
+        }
+        catch (OperationCanceledException)
+        {
+            KillQuietly(process);
+            throw;
+        }
 
         if (process.ExitCode != 0)
             throw new GitException((await stderr).Trim());
         return await stdout;
+    }
+
+    private static void KillQuietly(Process process)
+    {
+        try
+        {
+            if (!process.HasExited)
+                process.Kill(entireProcessTree: true);
+        }
+        catch (InvalidOperationException)
+        {
+        }
     }
 
     public Task<string> RunAsync(params string[] args) => RunAsync(args, CancellationToken.None);

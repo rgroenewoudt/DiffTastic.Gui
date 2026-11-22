@@ -200,16 +200,16 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     private async Task AnalyzeAsync()
     {
         CancelAnalysis();
-        if (!AiEnabled || _analyzer is null || Document is not { } doc)
+        if (!AiEnabled || _analyzer is not { } analyzer || Document is not { } doc)
             return;
 
         var cts = _aiCts = new CancellationTokenSource();
-        var provider = _analyzer.Provider;
+        var provider = analyzer.Provider;
         var fileName = RepoPath ?? Path.GetFileName(RightPath ?? LeftPath ?? "");
         AiStatus = $"AI: analyzing with {provider.Name}…";
         try
         {
-            var analysis = await Task.Run(() => _analyzer.AnalyzeAsync(doc, fileName, cts.Token), cts.Token);
+            var analysis = await Task.Run(() => analyzer.AnalyzeAsync(doc, fileName, cts.Token), cts.Token);
             if (cts.IsCancellationRequested)
                 return;
             Analysis = analysis;

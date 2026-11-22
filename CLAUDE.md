@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Windows side-by-side diff viewer (KDiff3 style) on top of difftastic (`difft.exe`) and Avalonia 12. .NET 10, solution file `DiffTastic.Gui.slnx`.
+Windows side-by-side diff viewer (KDiff3 style) on top of difftastic (`difft.exe`) and Avalonia 12. .NET 11, solution file `DiffTastic.Gui.slnx`.
 
 ## Commands
 

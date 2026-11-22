@@ -68,6 +68,14 @@ public class MainWindowTests
         Dispatcher.UIThread.RunJobs();
         Assert.Equal(window.LeftPane.GetFoldStates(), window.RightPane.GetFoldStates());
         Assert.Equal(window.LeftPane.VerticalOffset, window.RightPane.VerticalOffset);
+
+        window.ExpandAll();
+        Assert.DoesNotContain(true, window.LeftPane.GetFoldStates());
+        Assert.DoesNotContain(true, window.RightPane.GetFoldStates());
+
+        window.CollapseUnchanged();
+        Assert.Equal(left, window.LeftPane.GetFoldStates());
+        Assert.Equal(left, window.RightPane.GetFoldStates());
         await vm.BlameReady;
     }
 

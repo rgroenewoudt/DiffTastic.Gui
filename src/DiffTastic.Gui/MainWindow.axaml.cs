@@ -15,6 +15,8 @@ public partial class MainWindow : Window
 {
     private bool _syncing;
     private MainWindowViewModel? _vm;
+    private IReadOnlyList<FoldRegion> _foldRegions = [];
+    private HashSet<FoldRegion> _defaultFolded = [];
 
     public MainWindow()
     {
@@ -43,7 +45,19 @@ public partial class MainWindow : Window
         Overview.RowRequested += (_, row) => ScrollToRow(row, center: true);
         OpenButton.Click += async (_, _) => await OpenFilesAsync();
         ReloadButton.Click += async (_, _) => await (_vm?.LoadAsync() ?? Task.CompletedTask);
+        ExpandAllButton.Click += (_, _) => ExpandAll();
+        CollapseUnchangedButton.Click += (_, _) => CollapseUnchanged();
         AddHandler(KeyDownEvent, OnKeyDownTunnel, RoutingStrategies.Tunnel);
+    }
+
+    public void ExpandAll() => ApplyFoldStates(new bool[_foldRegions.Count]);
+
+    public void CollapseUnchanged() => ApplyFoldStates(_foldRegions.Select(_defaultFolded.Contains).ToArray());
+
+    private void ApplyFoldStates(bool[] states)
+    {
+        LeftPane.ApplyFoldStates(states);
+        RightPane.ApplyFoldStates(states);
     }
 
     public DiffPane LeftPane { get; }
@@ -88,10 +102,10 @@ public partial class MainWindow : Window
         RightPane.SetLanguageFromFileName(fileName);
         LeftPane.Show(rows);
         RightPane.Show(rows);
-        var regions = FoldRegionFinder.Find(rows);
-        var folded = FoldRegionFinder.DefaultFolded(regions).ToHashSet();
-        LeftPane.SetFoldings(regions, folded);
-        RightPane.SetFoldings(regions, folded);
+        _foldRegions = FoldRegionFinder.Find(rows);
+        _defaultFolded = FoldRegionFinder.DefaultFolded(_foldRegions).ToHashSet();
+        LeftPane.SetFoldings(_foldRegions, _defaultFolded);
+        RightPane.SetFoldings(_foldRegions, _defaultFolded);
         Overview.Rows = rows;
         UpdateTitles();
         ShowCurrentBlock();

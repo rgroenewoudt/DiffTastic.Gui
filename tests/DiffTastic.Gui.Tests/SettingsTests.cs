@@ -14,7 +14,7 @@ public sealed class SettingsTests
     [AvaloniaFact]
     public void Dialog_shows_current_settings()
     {
-        var settings = new AppSettings { AiEnabled = true, AiProvider = "codex", ClaudeModel = "sonnet" };
+        var settings = new AppSettings { AiEnabled = true, AiProvider = "codex", ClaudeModel = "sonnet", Theme = "Dark" };
         var vm = new SettingsViewModel(settings, name => name == AiLocator.Claude ? "claude.exe" : null);
         var window = new SettingsWindow { DataContext = vm };
         window.Show();
@@ -23,6 +23,7 @@ public sealed class SettingsTests
         Assert.True(window.FindControl<CheckBox>("AiEnabledBox")!.IsChecked);
         Assert.Equal("Codex", window.FindControl<ComboBox>("ProviderBox")!.SelectedItem);
         Assert.Equal("sonnet", window.FindControl<TextBox>("ClaudeModelBox")!.Text);
+        Assert.Equal("dark", ((ThemeOption)window.FindControl<ComboBox>("ThemeBox")!.SelectedItem!).Code);
         Assert.Equal("claude found on PATH", vm.ClaudeStatus);
         Assert.Equal("codex not found on PATH", vm.CodexStatus);
         Screenshots.Save(window, "30-settings");
@@ -51,6 +52,30 @@ public sealed class SettingsTests
         vm.ApplyTo(settings);
         Assert.Null(settings.AiProvider);
     }
+
+    [AvaloniaFact]
+    public void ApplyTo_writes_theme_back()
+    {
+        var settings = new AppSettings { Theme = "dark" };
+        var vm = new SettingsViewModel(settings, _ => null);
+        Assert.Equal("dark", vm.Theme.Code);
+
+        vm.Theme = vm.Themes[0];
+        vm.ApplyTo(settings);
+        Assert.Null(settings.Theme);
+
+        vm.Theme = vm.Themes.Single(t => t.Code == "light");
+        vm.ApplyTo(settings);
+        Assert.Equal("light", settings.Theme);
+    }
+
+    [Theory]
+    [InlineData(null, "Default")]
+    [InlineData("light", "Light")]
+    [InlineData("DARK", "Dark")]
+    [InlineData("xx", "Default")]
+    public void ThemeVariantFor_maps_setting(string? theme, string expected) =>
+        Assert.Equal(expected, App.ThemeVariantFor(theme).Key.ToString());
 
     [AvaloniaFact]
     public async Task ApplySettings_switches_provider_and_reanalyzes()

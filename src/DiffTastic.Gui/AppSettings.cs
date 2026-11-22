@@ -11,6 +11,9 @@ public sealed class AppSettings
     /// <summary>"en", "de", "nl" or "fr"; null follows the system language.</summary>
     public string? Language { get; set; }
 
+    /// <summary>"light" or "dark"; null follows the system theme.</summary>
+    public string? Theme { get; set; }
+
     public bool AiEnabled { get; set; }
 
     /// <summary>"claude" or "codex"; null picks the first installed one.</summary>

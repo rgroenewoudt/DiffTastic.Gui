@@ -132,6 +132,18 @@
   <data name="SystemLanguage" xml:space="preserve">
     <value>Systemsprache</value>
   </data>
+  <data name="Theme" xml:space="preserve">
+    <value>Design</value>
+  </data>
+  <data name="ThemeSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="ThemeLight" xml:space="preserve">
+    <value>Hell</value>
+  </data>
+  <data name="ThemeDark" xml:space="preserve">
+    <value>Dunkel</value>
+  </data>
   <data name="AiHeader" xml:space="preserve">
     <value>KI</value>
   </data>

@@ -9,6 +9,11 @@ public sealed record LanguageOption(string? Code, string Name)
     public override string ToString() => Name;
 }
 
+public sealed record ThemeOption(string? Code, string Name)
+{
+    public override string ToString() => Name;
+}
+
 /// <summary>Editable copy of <see cref="AppSettings"/> for the settings dialog.</summary>
 public sealed partial class SettingsViewModel : ObservableObject
 {
@@ -29,6 +34,13 @@ public sealed partial class SettingsViewModel : ObservableObject
             new("fr", "Français"),
         ];
         _language = Languages.FirstOrDefault(l => l.Code == settings.Language?.ToLowerInvariant()) ?? Languages[0];
+        Themes =
+        [
+            new(null, Strings.ThemeSystem),
+            new("light", Strings.ThemeLight),
+            new("dark", Strings.ThemeDark),
+        ];
+        _theme = Themes.FirstOrDefault(t => t.Code == settings.Theme?.ToLowerInvariant()) ?? Themes[0];
         _aiEnabled = settings.AiEnabled;
         _provider = settings.AiProvider?.ToLowerInvariant() switch
         {
@@ -42,6 +54,8 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public IReadOnlyList<LanguageOption> Languages { get; }
 
+    public IReadOnlyList<ThemeOption> Themes { get; }
+
     public IReadOnlyList<string> Providers { get; } = [Auto, "Claude", "Codex"];
 
     public bool ClaudeFound { get; }
@@ -52,6 +66,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public string CodexStatus => Localization.Format(CodexFound ? Strings.ToolFound : Strings.ToolNotFound, AiLocator.Codex);
 
     [ObservableProperty] private LanguageOption _language;
+    [ObservableProperty] private ThemeOption _theme;
     [ObservableProperty] private bool _aiEnabled;
     [ObservableProperty] private string _provider;
     [ObservableProperty] private string? _claudeModel;
@@ -60,6 +75,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public void ApplyTo(AppSettings settings)
     {
         settings.Language = Language.Code;
+        settings.Theme = Theme.Code;
         settings.AiEnabled = AiEnabled;
         settings.AiProvider = Provider switch
         {

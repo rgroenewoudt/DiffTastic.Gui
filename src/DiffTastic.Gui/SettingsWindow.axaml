@@ -33,10 +33,14 @@
         <StackPanel Margin="20,16" Spacing="14">
             <TextBlock Text="{l:Tr General}" FontSize="15" FontWeight="SemiBold" />
 
-            <Grid ColumnDefinitions="110,*">
+            <Grid ColumnDefinitions="110,*" RowDefinitions="Auto,Auto" RowSpacing="8">
                 <TextBlock Classes="label" Text="{l:Tr Language}" />
                 <ComboBox Grid.Column="1" Name="LanguageBox" ItemsSource="{Binding Languages}"
                           SelectedItem="{Binding Language}" HorizontalAlignment="Stretch" />
+
+                <TextBlock Grid.Row="1" Classes="label" Text="{l:Tr Theme}" />
+                <ComboBox Grid.Row="1" Grid.Column="1" Name="ThemeBox" ItemsSource="{Binding Themes}"
+                          SelectedItem="{Binding Theme}" HorizontalAlignment="Stretch" />
             </Grid>
 
             <TextBlock Text="{l:Tr AiHeader}" FontSize="15" FontWeight="SemiBold" Margin="0,6,0,0" />

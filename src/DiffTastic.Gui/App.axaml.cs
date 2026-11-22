@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using DiffTastic.Core.Ai;
 using DiffTastic.Gui.ViewModels;
 
 namespace DiffTastic.Gui;
@@ -16,7 +17,9 @@ public sealed partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var vm = new MainWindowViewModel(StartupArgs.Parse(desktop.Args ?? []));
+            var settings = AppSettings.Load(AppSettings.DefaultPath);
+            var ai = AiLocator.Locate(settings.AiProvider, settings.ClaudeModel, settings.CodexModel);
+            var vm = new MainWindowViewModel(StartupArgs.Parse(desktop.Args ?? []), settings, ai);
             desktop.MainWindow = new MainWindow { DataContext = vm };
             _ = vm.LoadAsync();
         }

@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using DiffTastic.Core.Ai;
 using DiffTastic.Core.Diff;
 using DiffTastic.Core.Difft;
 using DiffTastic.Core.Git;
@@ -7,9 +8,13 @@ using DiffTastic.Gui.Controls;
 
 namespace DiffTastic.Gui.ViewModels;
 
-public sealed partial class MainWindowViewModel(StartupArgs args) : ObservableObject
+public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? settings = null, AiProvider? ai = null)
+    : ObservableObject
 {
     private readonly DiffService _diffService = new(DifftRunner.Locate());
+    private readonly AppSettings _settings = settings ?? new AppSettings();
+    private readonly DiffAnalyzer? _analyzer = ai is null ? null : new DiffAnalyzer(ai);
+    private CancellationTokenSource? _aiCts;
     private BlameService? _blameService;
     private Task<BlameResult?> _leftBlame = Task.FromResult<BlameResult?>(null);
     private Task<BlameResult?> _rightBlame = Task.FromResult<BlameResult?>(null);
@@ -38,6 +43,27 @@ public sealed partial class MainWindowViewModel(StartupArgs args) : ObservableOb
     /// <summary>Completes when blame for both sides is loaded (or failed).</summary>
     public Task BlameReady { get; private set; } = Task.CompletedTask;
 
+    /// <summary>Completes when the AI analysis is done (or failed or skipped).</summary>
+    public Task AnalysisReady { get; private set; } = Task.CompletedTask;
+
+    [ObservableProperty] private bool _aiEnabled = (settings?.AiEnabled ?? false) && ai is not null;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(StatusText))]
+    private string? _aiStatus;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(Summary))]
+    private DiffAnalysis? _analysis;
+
+    public bool IsAiAvailable => _analyzer is not null;
+
+    public string AiToolTip => _analyzer?.Provider is { } p
+        ? $"AI analysis with {p.Name} ({p.Model}). Sends the changed code to {p.Vendor}."
+        : "No AI tool found (claude or codex on PATH).";
+
+    public string? Summary => Analysis?.Summary;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LeftTitle))]
     private string? _leftRevision;
@@ -61,7 +87,9 @@ public sealed partial class MainWindowViewModel(StartupArgs args) : ObservableOb
                 CurrentBlock >= 0 ? $"Difference {CurrentBlock + 1} of {count}" : $"{count} differences";
             var engine = Document.EngineNote ?? "difftastic";
             var text = $"{position}   ·   {Document.Language}   ·   {engine}";
-            return BlameStatus is null ? text : $"{text}   ·   {BlameStatus}";
+            if (BlameStatus is not null)
+                text += $"   ·   {BlameStatus}";
+            return AiStatus is null ? text : $"{text}   ·   {AiStatus}";
         }
     }
 
@@ -81,10 +109,12 @@ public sealed partial class MainWindowViewModel(StartupArgs args) : ObservableOb
         try
         {
             CurrentBlock = -1;
+            CancelAnalysis();
             Document = await Task.Run(() => _diffService.CompareAsync(LeftPath, RightPath));
             if (Document.Blocks.Count > 0)
                 CurrentBlock = 0;
             BlameReady = LoadBlameAsync(LeftPath, RightPath);
+            AnalysisReady = AnalyzeAsync();
         }
         catch (Exception ex)
         {
@@ -95,6 +125,54 @@ public sealed partial class MainWindowViewModel(StartupArgs args) : ObservableOb
         {
             IsBusy = false;
         }
+    }
+
+    partial void OnAiEnabledChanged(bool value)
+    {
+        _settings.AiEnabled = value;
+        _settings.Save();
+        AnalysisReady = value ? AnalyzeAsync() : Task.CompletedTask;
+        if (!value)
+            CancelAnalysis();
+    }
+
+    private void CancelAnalysis()
+    {
+        _aiCts?.Cancel();
+        _aiCts = null;
+        Analysis = null;
+        AiStatus = null;
+    }
+
+    private async Task AnalyzeAsync()
+    {
+        CancelAnalysis();
+        if (!AiEnabled || _analyzer is null || Document is not { } doc)
+            return;
+
+        var cts = _aiCts = new CancellationTokenSource();
+        var provider = _analyzer.Provider;
+        var fileName = RepoPath ?? Path.GetFileName(RightPath ?? LeftPath ?? "");
+        AiStatus = $"AI: analyzing with {provider.Name}…";
+        try
+        {
+            var analysis = await Task.Run(() => _analyzer.AnalyzeAsync(doc, fileName, cts.Token), cts.Token);
+            if (cts.IsCancellationRequested)
+                return;
+            Analysis = analysis;
+            AiStatus = $"AI: {provider.Name} ({provider.Model})";
+        }
+        catch (Exception ex)
+        {
+            if (!cts.IsCancellationRequested)
+                AiStatus = "AI failed: " + FirstLine(ex.Message);
+        }
+    }
+
+    private static string FirstLine(string text)
+    {
+        var line = text.Split('\n', 2)[0].Trim();
+        return line.Length <= 160 ? line : line[..160] + "…";
     }
 
     private async Task LoadBlameAsync(string left, string right)

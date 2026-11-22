@@ -11,7 +11,7 @@ using DiffTastic.Gui.ViewModels;
 
 namespace DiffTastic.Gui;
 
-public partial class MainWindow : Window
+public sealed partial class MainWindow : Window
 {
     private bool _syncing;
     private MainWindowViewModel? _vm;

@@ -5,7 +5,7 @@ using DiffTastic.Gui.ViewModels;
 
 namespace DiffTastic.Gui;
 
-public partial class App : Application
+public sealed partial class App : Application
 {
     public override void Initialize()
     {

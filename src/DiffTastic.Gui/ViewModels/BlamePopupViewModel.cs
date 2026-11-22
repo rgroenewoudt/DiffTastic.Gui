@@ -7,7 +7,7 @@ using DiffTastic.Gui.Controls;
 
 namespace DiffTastic.Gui.ViewModels;
 
-public partial class BlamePopupViewModel : ObservableObject
+public sealed partial class BlamePopupViewModel : ObservableObject
 {
     private readonly BlameService _service;
     private readonly BlameLine _line;

@@ -7,7 +7,7 @@ using DiffTastic.Gui.Controls;
 
 namespace DiffTastic.Gui.ViewModels;
 
-public partial class MainWindowViewModel(StartupArgs args) : ObservableObject
+public sealed partial class MainWindowViewModel(StartupArgs args) : ObservableObject
 {
     private readonly DiffService _diffService = new(DifftRunner.Locate());
     private BlameService? _blameService;

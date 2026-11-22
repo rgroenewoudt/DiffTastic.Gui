@@ -4,7 +4,7 @@ using DiffTastic.Gui.ViewModels;
 
 namespace DiffTastic.Gui.Controls;
 
-public partial class BlamePopup : UserControl
+public sealed partial class BlamePopup : UserControl
 {
     public BlamePopup()
     {

@@ -16,7 +16,18 @@ public sealed class OverviewBar : Control
 
     public event EventHandler<int>? RowRequested;
 
-    public IReadOnlyList<AlignedRow> Rows { get; set { field = value; InvalidateVisual(); } } = [];
+    private List<(int Start, int Count, RowKind Kind)> _runs = [];
+
+    public IReadOnlyList<AlignedRow> Rows
+    {
+        get;
+        set
+        {
+            field = value;
+            _runs = ChangedRuns(value);
+            InvalidateVisual();
+        }
+    } = [];
 
     /// <summary>First and last visible row.</summary>
     public (double First, double Last) Viewport { get; set { field = value; InvalidateVisual(); } }
@@ -35,24 +46,32 @@ public sealed class OverviewBar : Control
             return;
 
         var rowHeight = h / Rows.Count;
-        var i = 0;
-        while (i < Rows.Count)
+        foreach (var (start, count, kind) in _runs)
         {
-            var kind = Rows[i].Kind;
-            var start = i;
-            while (i < Rows.Count && Rows[i].Kind == kind)
-                i++;
-            if (kind == RowKind.Equal)
-                continue;
-
-            var top = start * rowHeight;
-            var height = Math.Max(3, (i - start) * rowHeight);
-            dc.FillRectangle(DiffColors.Marker(kind), new Rect(3, top, Bounds.Width - 6, height));
+            var height = Math.Max(3, count * rowHeight);
+            dc.FillRectangle(DiffColors.Marker(kind), new Rect(3, start * rowHeight, Bounds.Width - 6, height));
         }
 
         var vTop = Viewport.First * rowHeight;
         var vHeight = Math.Max(4, (Viewport.Last - Viewport.First) * rowHeight);
         dc.DrawRectangle(ViewportFill, ViewportPen, new Rect(0.5, vTop, Bounds.Width - 1, vHeight));
+    }
+
+    /// <summary>Runs of consecutive rows with the same non-equal kind.</summary>
+    private static List<(int Start, int Count, RowKind Kind)> ChangedRuns(IReadOnlyList<AlignedRow> rows)
+    {
+        var runs = new List<(int, int, RowKind)>();
+        var i = 0;
+        while (i < rows.Count)
+        {
+            var kind = rows[i].Kind;
+            var start = i;
+            while (i < rows.Count && rows[i].Kind == kind)
+                i++;
+            if (kind != RowKind.Equal)
+                runs.Add((start, i - start, kind));
+        }
+        return runs;
     }
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)

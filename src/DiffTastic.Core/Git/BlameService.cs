@@ -41,23 +41,30 @@ public sealed class BlameService(GitRunner git)
     public async Task<IReadOnlyList<CommitInfo>> LineHistoryAsync(string sha, string path, int line, CancellationToken ct = default)
     {
         var output = await git.RunAsync(
-            ["log", $"-L{line},{line}:{path}", "-s", "--format=%H%x1f%an%x1f%at%x1f%B%x1e", sha], ct);
+            ["log", $"-L{line},{line}:{path}", "--no-patch", "--format=%H%x1f%an%x1f%at%x1f%B%x1e", sha], ct);
         return ParseLog(output);
     }
 
+    /// <summary>Parses records of <c>%H%x1f%an%x1f%at%x1f%B%x1e</c>; patch text between records is skipped.</summary>
     public static IReadOnlyList<CommitInfo> ParseLog(string output)
     {
         var commits = new List<CommitInfo>();
         foreach (var record in output.Split('\x1e'))
         {
-            var fields = record.TrimStart('\r', '\n').Split('\x1f');
+            var fields = record.Split('\x1f');
             if (fields.Length < 4)
                 continue;
-            var time = DateTimeOffset.FromUnixTimeSeconds(long.Parse(fields[2])).ToLocalTime();
-            commits.Add(new CommitInfo(fields[0], fields[1], time, fields[3].TrimEnd()));
+            var sha = fields[0].Split('\n')[^1].Trim();
+            if (!IsSha(sha) || !long.TryParse(fields[2], out var seconds))
+                continue;
+            var time = DateTimeOffset.FromUnixTimeSeconds(seconds).ToLocalTime();
+            commits.Add(new CommitInfo(sha, fields[1], time, string.Join('\x1f', fields[3..]).TrimEnd()));
         }
         return commits;
     }
+
+    private static bool IsSha(string value) =>
+        value.Length is 40 or 64 && value.All(char.IsAsciiHexDigitLower);
 
     public static BlameResult ParsePorcelain(string output)
     {

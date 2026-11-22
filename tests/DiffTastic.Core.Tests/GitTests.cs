@@ -131,4 +131,21 @@ public sealed class GitTests : IAsyncLifetime
 
         Assert.Equal(Path.GetFullPath(_root).TrimEnd('\\'), root?.Replace('/', '\\').TrimEnd('\\'), ignoreCase: true);
     }
+
+    [Fact]
+    public void ParseLog_skips_patch_text_between_records()
+    {
+        var a = new string('a', 40);
+        var b = new string('b', 40);
+        var output =
+            $"{a}\u001fAnn\u001f1700000000\u001fFirst\n\u001e\n" +
+            "diff --git a/x.cs b/x.cs\n@@ -1 +1 @@\n-old\n+new\n" +
+            $"{b}\u001fBob\u001f1600000000\u001fSecond\n\u001e\n" +
+            "diff --git a/x.cs b/x.cs\n";
+
+        var commits = BlameService.ParseLog(output);
+
+        Assert.Equal([a, b], commits.Select(c => c.Sha));
+        Assert.Equal("Second", commits[1].Message);
+    }
 }

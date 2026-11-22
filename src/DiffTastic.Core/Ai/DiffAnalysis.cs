@@ -81,14 +81,17 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
         {
             var block = doc.Blocks[i];
             sb.Append($"\n### Hunk {i}\n");
-            for (var r = Math.Max(0, block.StartRow - ContextRows); r < block.StartRow; r++)
+            var first = block.StartRow;
+            while (first > 0 && block.StartRow - first < ContextRows && doc.Rows[first - 1].Kind == RowKind.Equal)
+                first--;
+            for (var r = first; r < block.StartRow; r++)
                 AppendLine(sb, ' ', doc.Rows[r].Right?.Text);
 
             var rows = Enumerable.Range(block.StartRow, block.EndRow - block.StartRow + 1).Select(r => doc.Rows[r]).ToList();
             AppendSide(sb, '-', rows.Select(r => r.Left?.Text), maxLinesPerSide);
             AppendSide(sb, '+', rows.Select(r => r.Right?.Text), maxLinesPerSide);
 
-            for (var r = block.EndRow + 1; r <= Math.Min(doc.Rows.Count - 1, block.EndRow + ContextRows); r++)
+            for (var r = block.EndRow + 1; r < doc.Rows.Count && r <= block.EndRow + ContextRows && doc.Rows[r].Kind == RowKind.Equal; r++)
                 AppendLine(sb, ' ', doc.Rows[r].Right?.Text);
         }
         return sb.ToString();

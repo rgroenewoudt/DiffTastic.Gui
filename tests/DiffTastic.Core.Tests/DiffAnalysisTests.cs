@@ -35,6 +35,23 @@ public class DiffAnalysisTests
     }
 
     [Fact]
+    public void Context_stops_at_the_neighbouring_hunk()
+    {
+        var doc = new DiffDocument(
+        [
+            Equal(0, "a"),
+            Changed(1, "old b", "new b"),
+            Equal(2, "c"),
+            Changed(3, "old d", "new d"),
+            Equal(4, "e"),
+        ], "Text", null);
+
+        var prompt = DiffAnalysis.BuildPrompt(doc, "x.txt");
+
+        Assert.Contains("### Hunk 0\n a\n-old b\n+new b\n c\n\n### Hunk 1\n c\n-old d\n+new d\n e\n", prompt);
+    }
+
+    [Fact]
     public void Prompt_truncates_long_hunks_but_keeps_all_ids()
     {
         var rows = new List<AlignedRow>();

@@ -51,7 +51,7 @@ When [Claude Code](https://claude.com/claude-code) (`claude`) or [Codex](https:/
 - **Skip noise**: previous/next skip differences that only change formatting, names, comments or imports,
 - **Explain (AI)** in the blame popup: what the commit did to that line.
 
-The changed code is sent to Anthropic or OpenAI, so only turn it on when that is allowed for the code. Settings are in `%APPDATA%/DiffTastic/settings.json`:
+The changed code is sent to Anthropic or OpenAI, so only turn it on when that is allowed for the code. Change settings with the gear button in the toolbar; changes apply right away. They are saved in `%APPDATA%/DiffTastic/settings.json`:
 
 ```json
 {

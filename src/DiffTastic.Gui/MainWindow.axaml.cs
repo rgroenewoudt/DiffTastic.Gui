@@ -47,6 +47,7 @@ public sealed partial class MainWindow : Window
         ReloadButton.Click += async (_, _) => await (_vm?.LoadAsync() ?? Task.CompletedTask);
         ExpandAllButton.Click += (_, _) => ExpandAll();
         CollapseUnchangedButton.Click += (_, _) => CollapseUnchanged();
+        SettingsButton.Click += async (_, _) => await ShowSettingsAsync();
         AddHandler(KeyDownEvent, OnKeyDownTunnel, RoutingStrategies.Tunnel);
     }
 
@@ -248,6 +249,18 @@ public sealed partial class MainWindow : Window
         {
             _ = _vm.LoadAsync();
             e.Handled = true;
+        }
+    }
+
+    private async Task ShowSettingsAsync()
+    {
+        if (_vm is null)
+            return;
+        var settings = new SettingsViewModel(_vm.Settings);
+        if (await new SettingsWindow { DataContext = settings }.ShowDialog<bool>(this))
+        {
+            settings.ApplyTo(_vm.Settings);
+            _vm.ApplySettings();
         }
     }
 

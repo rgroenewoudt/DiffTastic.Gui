@@ -13,8 +13,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
 {
     private readonly DiffService _diffService = new(DifftRunner.Locate());
     private readonly AppSettings _settings = settings ?? new AppSettings();
-    private readonly DiffAnalyzer? _analyzer = ai is null ? null : new DiffAnalyzer(ai);
-    private readonly CommitExplainer? _explainer = ai is null ? null : new CommitExplainer(ai);
+    private DiffAnalyzer? _analyzer = ai is null ? null : new DiffAnalyzer(ai);
+    private CommitExplainer? _explainer = ai is null ? null : new CommitExplainer(ai);
     private CancellationTokenSource? _aiCts;
     private BlameService? _blameService;
     private Task<BlameResult?> _leftBlame = Task.FromResult<BlameResult?>(null);
@@ -84,6 +84,30 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     };
 
     public bool IsAiAvailable => _analyzer is not null;
+
+    public AppSettings Settings => _settings;
+
+    /// <summary>Finds the AI tool for the settings; replaceable in tests.</summary>
+    public Func<AppSettings, AiProvider?> LocateAi { get; init; } =
+        s => AiLocator.Locate(s.AiProvider, s.ClaudeModel, s.CodexModel);
+
+    /// <summary>Saves the settings and switches to the AI tool and model they ask for.</summary>
+    public void ApplySettings()
+    {
+        _settings.Save();
+        CancelAnalysis();
+        var ai = LocateAi(_settings);
+        _analyzer = ai is null ? null : new DiffAnalyzer(ai);
+        _explainer = ai is null ? null : new CommitExplainer(ai);
+        OnPropertyChanged(nameof(IsAiAvailable));
+        OnPropertyChanged(nameof(AiToolTip));
+
+        var enabled = _settings.AiEnabled && ai is not null;
+        if (AiEnabled != enabled)
+            AiEnabled = enabled;
+        else
+            AnalysisReady = AnalyzeAsync();
+    }
 
     public string AiToolTip => _analyzer?.Provider is { } p
         ? $"AI analysis with {p.Name} ({p.Model}). Sends the changed code to {p.Vendor}."

@@ -92,7 +92,7 @@ public sealed class BlameService(GitRunner git)
             if (sha is null)
             {
                 var parts = line.Split(' ');
-                if (parts.Length >= 3 && parts[0].Length == 40)
+                if (parts.Length >= 3 && IsSha(parts[0]))
                 {
                     sha = parts[0];
                     origLine = int.Parse(parts[1]);

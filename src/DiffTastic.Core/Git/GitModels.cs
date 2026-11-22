@@ -2,9 +2,7 @@ namespace DiffTastic.Core.Git;
 
 public sealed record CommitInfo(string Sha, string Author, DateTimeOffset AuthorTime, string Message)
 {
-    public const string UncommittedSha = "0000000000000000000000000000000000000000";
-
-    public bool IsUncommitted => Sha == UncommittedSha;
+    public bool IsUncommitted => Sha.Length > 0 && Sha.All(c => c == '0');
     public string ShortSha => Sha[..Math.Min(8, Sha.Length)];
     public string Summary => Message.Split('\n', 2)[0].Trim();
 }

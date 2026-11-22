@@ -148,4 +148,20 @@ public sealed class GitTests : IAsyncLifetime
         Assert.Equal([a, b], commits.Select(c => c.Sha));
         Assert.Equal("Second", commits[1].Message);
     }
+
+    [Fact]
+    public void ParsePorcelain_reads_sha256_hashes()
+    {
+        var sha = new string('c', 64);
+        var zero = new string('0', 64);
+        var output =
+            $"{sha} 1 1 1\nauthor Ann\nauthor-time 1700000000\nsummary First\nfilename x.cs\n\tline one\n" +
+            $"{zero} 2 2 1\nauthor Not Committed Yet\nsummary Version of x.cs\nfilename x.cs\n\tline two\n";
+
+        var blame = BlameService.ParsePorcelain(output);
+
+        Assert.Equal([sha, zero], blame.Lines.Select(l => l.Sha));
+        Assert.True(blame.Commits[zero].IsUncommitted);
+        Assert.False(blame.Commits[sha].IsUncommitted);
+    }
 }

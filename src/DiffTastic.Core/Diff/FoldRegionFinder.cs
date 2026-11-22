@@ -72,31 +72,52 @@ public static class FoldRegionFinder
                 switch (state)
                 {
                     case State.BlockComment:
-                        if (c == '*' && next == '/')
+                        var commentEnd = text.AsSpan(i).IndexOf("*/");
+                        if (commentEnd < 0)
                         {
-                            state = State.Code;
-                            i++;
+                            i = text.Length;
+                            continue;
                         }
+                        state = State.Code;
+                        i += commentEnd + 1;
                         break;
                     case State.VerbatimString:
-                        if (c == '"' && next == '"')
+                        var verbatimQuote = text.AsSpan(i).IndexOf('"');
+                        if (verbatimQuote < 0)
+                        {
+                            i = text.Length;
+                            continue;
+                        }
+                        i += verbatimQuote;
+                        if (i + 1 < text.Length && text[i + 1] == '"')
                             i++;
-                        else if (c == '"')
+                        else
                             state = State.Code;
                         break;
                     case State.RawString:
-                        if (c == '"')
+                        var rawQuote = text.AsSpan(i).IndexOf('"');
+                        if (rawQuote < 0)
                         {
-                            var run = QuoteRun(text, i);
-                            if (run >= rawQuotes)
-                                state = State.Code;
-                            i += run - 1;
+                            i = text.Length;
+                            continue;
                         }
+                        i += rawQuote;
+                        var run = QuoteRun(text, i);
+                        if (run >= rawQuotes)
+                            state = State.Code;
+                        i += run - 1;
                         break;
                     case State.TemplateString:
-                        if (c == '\\')
+                        var templateStop = text.AsSpan(i).IndexOfAny('\\', '`');
+                        if (templateStop < 0)
+                        {
+                            i = text.Length;
+                            continue;
+                        }
+                        i += templateStop;
+                        if (text[i] == '\\')
                             i++;
-                        else if (c == '`')
+                        else
                             state = State.Code;
                         break;
                     default:
@@ -174,21 +195,23 @@ public static class FoldRegionFinder
 
     private static int QuoteRun(string text, int start)
     {
-        var end = start;
-        while (end < text.Length && text[end] == '"')
-            end++;
-        return end - start;
+        var run = text.AsSpan(start).IndexOfAnyExcept('"');
+        return run < 0 ? text.Length - start : run;
     }
 
     private static int SkipQuoted(string text, int start)
     {
         var quote = text[start];
-        for (var i = start + 1; i < text.Length; i++)
+        var i = start + 1;
+        while (i < text.Length)
         {
-            if (text[i] == '\\')
-                i++;
-            else if (text[i] == quote)
+            var stop = text.AsSpan(i).IndexOfAny('\\', quote);
+            if (stop < 0)
+                break;
+            i += stop;
+            if (text[i] == quote)
                 return i;
+            i += 2;
         }
         return text.Length;
     }

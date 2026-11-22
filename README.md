@@ -42,6 +42,28 @@ Then `git difftool HEAD~3 -- some/file.cs`.
 For blame, the app finds which commit each side belongs to:
 the working tree file, `HEAD`, a commit that holds the same blob (`git log --find-object`), or else the content is blamed on top of `HEAD`.
 
+### AI (optional)
+
+When [Claude Code](https://claude.com/claude-code) (`claude`) or [Codex](https://github.com/openai/codex) (`codex`) is on `PATH`, the toolbar shows an **AI** toggle. It is off by default. Turned on, every diff is sent to that tool, which uses its cheapest model and your existing login, and you get:
+
+- a summary of the change,
+- per difference: importance, a short reason and review hints (orange strip in the overview bar, orange dot in the gutter),
+- **Skip noise**: previous/next skip differences that only change formatting, names, comments or imports,
+- **Explain (AI)** in the blame popup: what the commit did to that line.
+
+The changed code is sent to Anthropic or OpenAI, so only turn it on when that is allowed for the code. Settings are in `%APPDATA%/DiffTastic/settings.json`:
+
+```json
+{
+  "AiEnabled": false,
+  "AiProvider": "codex",
+  "ClaudeModel": "haiku",
+  "CodexModel": "gpt-6-luna"
+}
+```
+
+`AiProvider` is `claude` or `codex`; empty picks the first one found.
+
 ## Development
 
 - `tests/DiffTastic.Gui.Tests` renders the window headless and saves PNGs to `%TEMP%/difftastic-screenshots` (override with `DIFFTASTIC_SCREENSHOTS`).

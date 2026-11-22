@@ -47,6 +47,31 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Folds_unchanged_methods_in_both_panes()
+    {
+        var (window, vm) = await OpenAsync("long-old.cs", "long-new.cs");
+        for (var i = 0; i < 5; i++)
+            Dispatcher.UIThread.RunJobs();
+
+        var left = window.LeftPane.GetFoldStates();
+        Assert.Contains(true, left);
+        Assert.Equal(left, window.RightPane.GetFoldStates());
+        Assert.True(window.RightPane.Editor.ExtentHeight < vm.Document!.Rows.Count * window.RightPane.Editor.TextArea.TextView.DefaultLineHeight);
+
+        var block = vm.Document.Blocks[vm.CurrentBlock];
+        var view = window.RightPane.Editor.TextArea.TextView;
+        var top = view.GetVisualTopByDocumentLine(block.StartRow + 1);
+        Assert.InRange(top, view.VerticalOffset, view.VerticalOffset + view.Bounds.Height);
+        Screenshots.Save(window, "06-folded");
+
+        window.KeyPress(Key.End, RawInputModifiers.Control, PhysicalKey.End, null);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(window.LeftPane.GetFoldStates(), window.RightPane.GetFoldStates());
+        Assert.Equal(window.LeftPane.VerticalOffset, window.RightPane.VerticalOffset);
+        await vm.BlameReady;
+    }
+
+    [AvaloniaFact]
     public async Task Scrolls_to_first_difference_in_long_file()
     {
         var dir = Directory.CreateTempSubdirectory("difftastic-long").FullName;
@@ -63,7 +88,7 @@ public class MainWindowTests
             Dispatcher.UIThread.RunJobs();
 
         var view = window.RightPane.Editor.TextArea.TextView;
-        var firstVisible = (int)(view.VerticalOffset / view.DefaultLineHeight);
+        var firstVisible = view.GetDocumentLineByVisualTop(view.VerticalOffset)!.LineNumber - 1;
         Assert.InRange(1500, firstVisible, firstVisible + 30);
         Assert.Equal(window.LeftPane.VerticalOffset, window.RightPane.VerticalOffset);
         Screenshots.Save(window, "03-long-file");

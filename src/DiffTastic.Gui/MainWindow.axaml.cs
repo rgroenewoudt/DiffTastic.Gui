@@ -32,6 +32,7 @@ public partial class MainWindow : Window
             view.ScrollOffsetChanged += (_, _) => SyncScroll(pane);
             view.VisualLinesChanged += (_, _) => UpdateViewport();
             view.PointerPressed += (_, e) => _vm?.SelectBlockAtRow(pane.RowAt(e.GetPosition(view)));
+            pane.FoldsToggled += (_, _) => (pane == LeftPane ? RightPane : LeftPane).ApplyFoldStates(pane.GetFoldStates());
         }
 
         Blame = new BlameHoverController(PanesGrid, (side, row) =>
@@ -87,6 +88,10 @@ public partial class MainWindow : Window
         RightPane.SetLanguageFromFileName(fileName);
         LeftPane.Show(rows);
         RightPane.Show(rows);
+        var regions = FoldRegionFinder.Find(rows);
+        var folded = FoldRegionFinder.DefaultFolded(regions).ToHashSet();
+        LeftPane.SetFoldings(regions, folded);
+        RightPane.SetFoldings(regions, folded);
         Overview.Rows = rows;
         UpdateTitles();
         ShowCurrentBlock();
@@ -108,7 +113,11 @@ public partial class MainWindow : Window
         LeftPane.SetCurrentBlock(block);
         RightPane.SetCurrentBlock(block);
         if (block is { } b)
+        {
+            LeftPane.UnfoldRow(b.StartRow);
+            RightPane.UnfoldRow(b.StartRow);
             ScrollToRow(b.StartRow, center: false);
+        }
     }
 
     /// <summary>Scrolls both panes so the row is visible near the top third (or centered).</summary>
@@ -119,14 +128,14 @@ public partial class MainWindow : Window
         var view = RightPane.Editor.TextArea.TextView;
         var lineHeight = view.DefaultLineHeight;
         var viewport = RightPane.Editor.ViewportHeight;
-        var layoutPending = viewport <= 0 || RightPane.Editor.ExtentHeight < row * lineHeight;
+        var top = view.GetVisualTopByDocumentLine(Math.Clamp(row + 1, 1, Math.Max(1, view.Document?.LineCount ?? 1)));
+        var layoutPending = viewport <= 0 || RightPane.Editor.ExtentHeight < top;
         if (layoutPending && attempts > 0)
         {
             Dispatcher.UIThread.Post(() => ScrollToRow(row, center, attempts - 1), DispatcherPriority.Background);
             return;
         }
 
-        var top = row * lineHeight;
         if (!center && top >= view.VerticalOffset + lineHeight && top + lineHeight * 3 <= view.VerticalOffset + viewport)
             return;
 
@@ -159,11 +168,11 @@ public partial class MainWindow : Window
     private void UpdateViewport()
     {
         var view = RightPane.Editor.TextArea.TextView;
-        var lineHeight = view.DefaultLineHeight;
-        if (lineHeight <= 0)
+        if (view.DefaultLineHeight <= 0 || view.Document is null)
             return;
-        var first = view.VerticalOffset / lineHeight;
-        Overview.Viewport = (first, first + view.Bounds.Height / lineHeight);
+        var first = view.GetDocumentLineByVisualTop(view.VerticalOffset)?.LineNumber - 1 ?? 0;
+        var last = view.GetDocumentLineByVisualTop(view.VerticalOffset + view.Bounds.Height)?.LineNumber ?? first;
+        Overview.Viewport = (first, last);
     }
 
     private void OnKeyDownTunnel(object? sender, KeyEventArgs e)

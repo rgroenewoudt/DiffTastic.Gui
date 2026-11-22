@@ -5,7 +5,10 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.VisualTree;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using AvaloniaEdit;
+using AvaloniaEdit.Folding;
 using AvaloniaEdit.TextMate;
 using DiffTastic.Core.Diff;
 using TextMateSharp.Grammars;
@@ -19,6 +22,9 @@ public sealed class DiffPane : DockPanel
     private readonly DiffBackgroundRenderer _renderer;
     private readonly RowNumberMargin _margin;
     private readonly TextMate.Installation _textMate;
+    private readonly FoldingManager _folding;
+    private IReadOnlyList<FoldRegion> _regions = [];
+    private readonly List<FoldingSection> _sections = [];
 
     private static readonly RegistryOptions Registry = new(ThemeName.LightPlus);
 
@@ -82,7 +88,14 @@ public sealed class DiffPane : DockPanel
         Children.Add(Editor);
 
         _textMate = Editor.InstallTextMate(Registry);
+
+        _folding = FoldingManager.Install(Editor.TextArea);
+        foreach (var margin in Editor.TextArea.LeftMargins.OfType<FoldingMargin>())
+            margin.AddHandler(PointerReleasedEvent, (_, _) => FoldsToggled?.Invoke(this, EventArgs.Empty), RoutingStrategies.Bubble, true);
     }
+
+    /// <summary>Raised after the user clicked the folding margin.</summary>
+    public event EventHandler? FoldsToggled;
 
     public Side Side { get; }
     public TextEditor Editor { get; }
@@ -111,6 +124,41 @@ public sealed class DiffPane : DockPanel
         }
         Editor.Text = sb.ToString();
         Editor.TextArea.TextView.Redraw();
+    }
+
+    /// <summary>Replaces all foldings. Regions are in row space, so both panes fold the same rows.</summary>
+    public void SetFoldings(IReadOnlyList<FoldRegion> regions, IReadOnlySet<FoldRegion> folded)
+    {
+        _folding.Clear();
+        _sections.Clear();
+        _regions = regions;
+        var document = Editor.Document;
+        foreach (var region in regions)
+        {
+            var start = document.GetLineByNumber(region.StartRow + 1).EndOffset;
+            var end = document.GetLineByNumber(region.EndRow + 1).EndOffset;
+            var section = _folding.CreateFolding(start, end);
+            section.IsFolded = folded.Contains(region);
+            _sections.Add(section);
+        }
+    }
+
+    public bool[] GetFoldStates() => _sections.Select(s => s.IsFolded).ToArray();
+
+    public void ApplyFoldStates(bool[] states)
+    {
+        for (var i = 0; i < Math.Min(states.Length, _sections.Count); i++)
+            _sections[i].IsFolded = states[i];
+    }
+
+    /// <summary>Opens every folding that hides the row.</summary>
+    public void UnfoldRow(int row)
+    {
+        for (var i = 0; i < _sections.Count; i++)
+        {
+            if (_regions[i].StartRow < row && row <= _regions[i].EndRow)
+                _sections[i].IsFolded = false;
+        }
     }
 
     /// <summary>Picks a syntax grammar from a file name; plain text when unknown.</summary>

@@ -95,7 +95,7 @@ public sealed class BlameHoverController
         _closeTimer.Stop();
         _pane = pane;
         _row = row;
-        Current?.Cancel();
+        Current?.Dispose();
         _content.DataContext = vm;
 
         var view = pane.Editor.TextArea.TextView;
@@ -112,7 +112,7 @@ public sealed class BlameHoverController
         _closeTimer.Stop();
         _request++;
         _popup.IsOpen = false;
-        Current?.Cancel();
+        Current?.Dispose();
         _pane = null;
         _row = -1;
     }

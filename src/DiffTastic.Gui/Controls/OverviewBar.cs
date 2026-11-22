@@ -45,10 +45,10 @@ public sealed class OverviewBar : Control
         Cursor = new Cursor(StandardCursorType.Hand);
     }
 
-    public override void Render(DrawingContext dc)
+    public override void Render(DrawingContext context)
     {
         var h = Bounds.Height;
-        dc.FillRectangle(Background, new Rect(Bounds.Size));
+        context.FillRectangle(Background, new Rect(Bounds.Size));
         if (Rows.Count == 0)
             return;
 
@@ -57,21 +57,21 @@ public sealed class OverviewBar : Control
         foreach (var (start, count, kind) in _runs)
         {
             var height = Math.Max(3, count * rowHeight);
-            dc.FillRectangle(DiffColors.Marker(kind), new Rect(left, start * rowHeight, Bounds.Width - left - 3, height));
+            context.FillRectangle(DiffColors.Marker(kind), new Rect(left, start * rowHeight, Bounds.Width - left - 3, height));
         }
 
         foreach (var (block, note) in Notes)
         {
             var height = Math.Max(4, (block.EndRow - block.StartRow + 1) * rowHeight);
             if (note.IsImportant)
-                dc.FillRectangle(DiffColors.ImportantMarker, new Rect(1, block.StartRow * rowHeight, StripWidth, height));
+                context.FillRectangle(DiffColors.ImportantMarker, new Rect(1, block.StartRow * rowHeight, StripWidth, height));
             else if (note.IsNoise)
-                dc.FillRectangle(NoiseFade, new Rect(left, block.StartRow * rowHeight, Bounds.Width - left - 3, height));
+                context.FillRectangle(NoiseFade, new Rect(left, block.StartRow * rowHeight, Bounds.Width - left - 3, height));
         }
 
         var vTop = Viewport.First * rowHeight;
         var vHeight = Math.Max(4, (Viewport.Last - Viewport.First) * rowHeight);
-        dc.DrawRectangle(ViewportFill, ViewportPen, new Rect(0.5, vTop, Bounds.Width - 1, vHeight));
+        context.DrawRectangle(ViewportFill, ViewportPen, new Rect(0.5, vTop, Bounds.Width - 1, vHeight));
     }
 
     /// <summary>Runs of consecutive rows with the same non-equal kind.</summary>

@@ -49,10 +49,10 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
         return new Size(text.Width + 14 + MarkerWidth + hintSpace, 0);
     }
 
-    public override void Render(DrawingContext dc)
+    public override void Render(DrawingContext context)
     {
         var textView = TextView;
-        dc.FillRectangle(DiffColors.Gutter, new Rect(Bounds.Size));
+        context.FillRectangle(DiffColors.Gutter, new Rect(Bounds.Size));
         if (textView is not { VisualLinesValid: true })
             return;
 
@@ -67,12 +67,12 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
             var top = visualLine.VisualTop - textView.VerticalOffset;
 
             if (row.Kind != RowKind.Equal)
-                dc.FillRectangle(DiffColors.Marker(row.Kind), new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
+                context.FillRectangle(DiffColors.Marker(row.Kind), new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
 
             if (HintRows.Contains(rowIndex))
             {
                 var center = new Point(3 + HintSize / 2, top + visualLine.Height / 2);
-                dc.DrawEllipse(DiffColors.ImportantMarker, null, center, HintSize / 2, HintSize / 2);
+                context.DrawEllipse(DiffColors.ImportantMarker, null, center, HintSize / 2, HintSize / 2);
             }
 
             if (line is null)
@@ -80,7 +80,7 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
 
             var text = Number(line.LineIndex + 1);
             var x = Bounds.Width - MarkerWidth - 6 - text.Width;
-            dc.DrawText(text, new Point(x, top + (visualLine.Height - text.Height) / 2));
+            context.DrawText(text, new Point(x, top + (visualLine.Height - text.Height) / 2));
         }
     }
 

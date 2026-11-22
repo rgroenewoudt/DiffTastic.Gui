@@ -8,7 +8,7 @@ using DiffTastic.Gui.Controls;
 
 namespace DiffTastic.Gui.ViewModels;
 
-public sealed partial class BlamePopupViewModel : ObservableObject
+public sealed partial class BlamePopupViewModel : ObservableObject, IDisposable
 {
     private readonly BlameService _service;
     private readonly BlameLine _line;
@@ -61,14 +61,23 @@ public sealed partial class BlamePopupViewModel : ObservableObject
     private string? _explainingSha;
 
     /// <summary>Stops a running explanation; called when the popup goes away.</summary>
-    public void Cancel() => _cts.Cancel();
+    public void Dispose()
+    {
+        if (_disposed)
+            return;
+        _disposed = true;
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
-    private bool CanRunExplain() => CanExplain && !IsExplaining;
+    private bool _disposed;
+
+    private bool CanRunExplain() => CanExplain && !IsExplaining && !_disposed;
 
     [RelayCommand(CanExecute = nameof(CanRunExplain))]
     private async Task ExplainAsync()
     {
-        if (_explainer is null)
+        if (_explainer is null || _disposed)
             return;
         var commit = Commit;
         var ct = _cts.Token;

@@ -21,6 +21,7 @@ public sealed partial class App : Application
             var ai = AiLocator.Locate(settings.AiProvider, settings.ClaudeModel, settings.CodexModel);
             var vm = new MainWindowViewModel(StartupArgs.Parse(desktop.Args ?? []), settings, ai);
             desktop.MainWindow = new MainWindow { DataContext = vm };
+            desktop.Exit += (_, _) => vm.Dispose();
             _ = vm.LoadAsync();
         }
 

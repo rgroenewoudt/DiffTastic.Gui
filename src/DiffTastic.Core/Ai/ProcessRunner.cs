@@ -1,3 +1,4 @@
+using System.Buffers;
 using System.Diagnostics;
 using System.Text;
 
@@ -8,7 +9,8 @@ public sealed record ProcessResult(int ExitCode, string Stdout, string Stderr);
 /// <summary>Runs a process with optional stdin, a timeout and UTF-8 output.</summary>
 public static class ProcessRunner
 {
-    private static readonly char[] CmdSpecial = ['&', '|', '<', '>', '^', '%', '!', '\n', '\r'];
+    private static readonly SearchValues<char> CmdSpecial = SearchValues.Create("&|<>^%!\n\r");
+    private static readonly SearchValues<char> NeedsQuotes = SearchValues.Create(" \t\"");
 
     public static async Task<ProcessResult> RunAsync(
         string executable, IReadOnlyList<string> args, string? stdin, string workingDirectory, TimeSpan timeout,
@@ -80,7 +82,7 @@ public static class ProcessRunner
             return psi;
         }
 
-        if (args.Any(a => a.IndexOfAny(CmdSpecial) >= 0))
+        if (args.Any(a => a.AsSpan().ContainsAny(CmdSpecial)))
             throw new InvalidOperationException($"Argument contains characters that cmd.exe would interpret: {executable}");
 
         var line = string.Join(' ', new[] { executable }.Concat(args).Select(Quote));
@@ -90,7 +92,7 @@ public static class ProcessRunner
     /// <summary>Quotes one argument the way the MSVC runtime parses it.</summary>
     internal static string Quote(string arg)
     {
-        if (arg.Length > 0 && arg.IndexOfAny([' ', '\t', '"']) < 0)
+        if (arg.Length > 0 && !arg.AsSpan().ContainsAny(NeedsQuotes))
             return arg;
 
         var sb = new StringBuilder("\"");

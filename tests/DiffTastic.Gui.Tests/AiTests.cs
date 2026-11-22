@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using Avalonia.Controls;
@@ -202,7 +203,7 @@ public sealed partial class AiTests
             if (schema == CommitExplainer.Schema)
                 return JsonSerializer.Serialize(new { explanation = "Fake explanation." });
 
-            var hunks = HunkHeader().Matches(prompt).Select(m => int.Parse(m.Groups[1].Value)).Select(i => new
+            var hunks = HunkHeader().Matches(prompt).Select(m => int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture)).Select(i => new
             {
                 hunk = i,
                 importance = i % 2 == 0 ? 3 : 0,

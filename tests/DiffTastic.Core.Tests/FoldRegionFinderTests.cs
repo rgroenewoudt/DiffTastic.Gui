@@ -57,6 +57,55 @@ public class FoldRegionFinderTests
         Assert.Equal([new FoldRegion(0, 2, false, true), new FoldRegion(3, 9, false, true)], FoldRegionFinder.Find(rows));
     }
 
+    [Theory]
+    [InlineData("    var s = \"a\\\"}\";")]
+    [InlineData("    var s = \"\\\\\" + \"}\";")]
+    [InlineData("    var s = @\"a\"\"}\"\"\";")]
+    [InlineData("    var s = $@\"}\";")]
+    [InlineData("    /* } */ /* } */")]
+    [InlineData("    /* }*/")]
+    [InlineData("    const s = `a\\`}`;")]
+    [InlineData("    var s = \"\"\"\"}\"\"\"\";")]
+    [InlineData("    var s = \"\" + \"}\";")]
+    [InlineData("    var c = '\\'' + '}';")]
+    public void Skips_braces_in_tricky_literals(string line)
+    {
+        var rows = Equal("void M()", "{", line, "    X();", "}");
+
+        Assert.Equal([new FoldRegion(0, 4, false, true)], FoldRegionFinder.Find(rows));
+    }
+
+    [Fact]
+    public void Multiline_literals_and_comments_hide_braces()
+    {
+        var rows = Equal(
+            "void M()",           // 0
+            "{",
+            "    var a = @\"",
+            "        } \"\" }",
+            "        \";",
+            "    /*",
+            "     } *",
+            "     */",
+            "    var b = \"\"\"\"",
+            "        } \"\"\" }",
+            "        \"\"\"\";",
+            "    const t = `",
+            "        } \\` }",
+            "    `;",
+            "}");                 // 14
+
+        Assert.Equal([new FoldRegion(0, 14, false, true)], FoldRegionFinder.Find(rows));
+    }
+
+    [Fact]
+    public void Unterminated_string_ends_at_line_end()
+    {
+        var rows = Equal("void M()", "{", "    var s = \"{ \\", "    X();", "}");
+
+        Assert.Equal([new FoldRegion(0, 4, false, true)], FoldRegionFinder.Find(rows));
+    }
+
     [Fact]
     public void Control_flow_and_initializers_are_not_declarations()
     {

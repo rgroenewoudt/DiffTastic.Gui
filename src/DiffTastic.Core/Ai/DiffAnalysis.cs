@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -80,12 +81,12 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
     private static string Render(DiffDocument doc, string fileName, int maxLinesPerSide, int budget = int.MaxValue)
     {
         var sb = new StringBuilder(Instructions);
-        sb.Append($"\nFile: {fileName} ({doc.Language}), {doc.Blocks.Count} hunks.\n");
+        sb.Append(CultureInfo.InvariantCulture, $"\nFile: {fileName} ({doc.Language}), {doc.Blocks.Count} hunks.\n");
         for (var i = 0; i < doc.Blocks.Count; i++)
         {
             var block = doc.Blocks[i];
             var hunkStart = sb.Length;
-            sb.Append($"\n### Hunk {i}\n");
+            sb.Append(CultureInfo.InvariantCulture, $"\n### Hunk {i}\n");
             var first = block.StartRow;
             while (first > 0 && block.StartRow - first < ContextRows && doc.Rows[first - 1].Kind == RowKind.Equal)
                 first--;
@@ -102,7 +103,7 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
             if (sb.Length > budget - OmittedNoteLength)
             {
                 sb.Length = hunkStart;
-                sb.Append($"\n… {doc.Blocks.Count - i} more hunks not shown.\n");
+                sb.Append(CultureInfo.InvariantCulture, $"\n… {doc.Blocks.Count - i} more hunks not shown.\n");
                 break;
             }
         }
@@ -115,7 +116,7 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
         foreach (var line in lines.Take(maxLines))
             AppendLine(sb, prefix, line);
         if (lines.Count > maxLines)
-            sb.Append($"{prefix}… ({lines.Count - maxLines} more lines)\n");
+            sb.Append(CultureInfo.InvariantCulture, $"{prefix}… ({lines.Count - maxLines} more lines)\n");
     }
 
     private static void AppendLine(StringBuilder sb, char prefix, string? text)

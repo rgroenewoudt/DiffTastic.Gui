@@ -19,6 +19,7 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
         if (Rows.Count == 0 || !textView.VisualLinesValid)
             return;
 
+        var colors = DiffColors.For(textView.ActualThemeVariant);
         var width = Math.Max(textView.Bounds.Width, 1);
         foreach (var visualLine in textView.VisualLines)
         {
@@ -33,11 +34,11 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
 
             if (line is null)
             {
-                DrawFiller(drawingContext, rect);
+                DrawFiller(drawingContext, colors, rect);
                 continue;
             }
 
-            if (DiffColors.RowBackground(row.Kind, side) is { } bg)
+            if (colors.RowBackground(row.Kind, side) is { } bg)
                 drawingContext.FillRectangle(bg, rect);
 
             if (row.Kind == RowKind.Changed)
@@ -47,24 +48,24 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
                 {
                     var segment = new TextSegment { StartOffset = lineStart + change.Start, Length = change.Length };
                     foreach (var r in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment, false))
-                        drawingContext.FillRectangle(DiffColors.CharHighlight(side), r, 2);
+                        drawingContext.FillRectangle(colors.CharHighlight(side), r, 2);
                 }
             }
         }
 
-        DrawHiddenChanges(textView, drawingContext, width);
-        DrawCurrentBlock(textView, drawingContext, width);
+        DrawHiddenChanges(textView, drawingContext, colors, width);
+        DrawCurrentBlock(textView, drawingContext, colors, width);
     }
 
-    private void DrawHiddenChanges(TextView textView, DrawingContext dc, double width)
+    private void DrawHiddenChanges(TextView textView, DrawingContext dc, DiffColors colors, double width)
     {
         foreach (var visualLine in textView.VisualLines)
         {
             if (HiddenChange(visualLine) is not { } kind)
                 continue;
             var top = visualLine.VisualTop - textView.VerticalOffset;
-            dc.DrawLine(DiffColors.HiddenChangePen(kind), new Point(0, top + visualLine.Height - 1), new Point(width, top + visualLine.Height - 1));
-            dc.FillRectangle(DiffColors.Marker(kind), new Rect(0, top, 3, visualLine.Height));
+            dc.DrawLine(colors.HiddenChangePen(kind), new Point(0, top + visualLine.Height - 1), new Point(width, top + visualLine.Height - 1));
+            dc.FillRectangle(colors.Marker(kind), new Rect(0, top, 3, visualLine.Height));
         }
     }
 
@@ -80,7 +81,7 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
         return null;
     }
 
-    private void DrawCurrentBlock(TextView textView, DrawingContext dc, double width)
+    private void DrawCurrentBlock(TextView textView, DrawingContext dc, DiffColors colors, double width)
     {
         if (CurrentBlock is not { } block)
             return;
@@ -91,13 +92,13 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
         if (block.EndRow + 2 > Rows.Count)
             bottom += textView.DefaultLineHeight;
 
-        dc.DrawLine(DiffColors.CurrentBlockPen, new Point(0, top), new Point(width, top));
-        dc.DrawLine(DiffColors.CurrentBlockPen, new Point(0, bottom), new Point(width, bottom));
+        dc.DrawLine(colors.CurrentBlockPen, new Point(0, top), new Point(width, top));
+        dc.DrawLine(colors.CurrentBlockPen, new Point(0, bottom), new Point(width, bottom));
     }
 
-    private static void DrawFiller(DrawingContext dc, Rect rect)
+    private static void DrawFiller(DrawingContext dc, DiffColors colors, Rect rect)
     {
-        dc.FillRectangle(DiffColors.Filler, rect);
-        dc.FillRectangle(DiffColors.FillerHatch, rect);
+        dc.FillRectangle(colors.Filler, rect);
+        dc.FillRectangle(colors.FillerHatch, rect);
     }
 }

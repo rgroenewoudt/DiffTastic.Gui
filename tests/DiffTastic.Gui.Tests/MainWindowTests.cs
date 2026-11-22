@@ -1,8 +1,10 @@
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
+using Avalonia.Styling;
 using Avalonia.Threading;
 using DiffTastic.Core.Diff;
+using DiffTastic.Gui.Controls;
 using DiffTastic.Gui.ViewModels;
 
 namespace DiffTastic.Gui.Tests;
@@ -32,6 +34,24 @@ public class MainWindowTests
         Assert.Equal(vm.Document.Rows.Count, window.LeftPane.Editor.LineCount);
         Assert.Equal(vm.Document.Rows.Count, window.RightPane.Editor.LineCount);
         Screenshots.Save(window, "01-side-by-side");
+    }
+
+    [AvaloniaFact]
+    public async Task Dark_theme_switches_diff_colors_and_syntax_theme()
+    {
+        var (window, _) = await OpenAsync("old.cs", "new.cs");
+
+        window.RequestedThemeVariant = ThemeVariant.Dark;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(DiffColors.Dark.EditorBackground, window.LeftPane.Editor.Background);
+        Assert.Same(DiffColors.Dark.EditorBackground, window.RightPane.Editor.Background);
+        Screenshots.Save(window, "08-dark");
+
+        window.RequestedThemeVariant = ThemeVariant.Light;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Same(DiffColors.Light.EditorBackground, window.LeftPane.Editor.Background);
     }
 
     [AvaloniaFact]

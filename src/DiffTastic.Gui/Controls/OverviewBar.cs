@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Media.Immutable;
 using DiffTastic.Core.Ai;
 using DiffTastic.Core.Diff;
 
@@ -11,11 +10,6 @@ namespace DiffTastic.Gui.Controls;
 /// <summary>KDiff3-style overview: all differences of the file in one column, plus the visible range.</summary>
 public sealed class OverviewBar : Control
 {
-    private static readonly IBrush Background = new ImmutableSolidColorBrush(Color.Parse("#F7F7F7"));
-    private static readonly IBrush ViewportFill = new ImmutableSolidColorBrush(Color.FromArgb(40, 58, 111, 216));
-    private static readonly IBrush NoiseFade = new ImmutableSolidColorBrush(Color.FromArgb(180, 247, 247, 247));
-    private static readonly IPen ViewportPen = new ImmutablePen(new ImmutableSolidColorBrush(Color.Parse("#3A6FD8")), 1);
-
     public event EventHandler<int>? RowRequested;
 
     private List<(int Start, int Count, RowKind Kind)> _runs = [];
@@ -43,12 +37,14 @@ public sealed class OverviewBar : Control
     {
         Width = 22;
         Cursor = new Cursor(StandardCursorType.Hand);
+        ActualThemeVariantChanged += (_, _) => InvalidateVisual();
     }
 
     public override void Render(DrawingContext context)
     {
+        var colors = DiffColors.For(ActualThemeVariant);
         var h = Bounds.Height;
-        context.FillRectangle(Background, new Rect(Bounds.Size));
+        context.FillRectangle(colors.OverviewBackground, new Rect(Bounds.Size));
         if (Rows.Count == 0)
             return;
 
@@ -57,21 +53,21 @@ public sealed class OverviewBar : Control
         foreach (var (start, count, kind) in _runs)
         {
             var height = Math.Max(3, count * rowHeight);
-            context.FillRectangle(DiffColors.Marker(kind), new Rect(left, start * rowHeight, Bounds.Width - left - 3, height));
+            context.FillRectangle(colors.Marker(kind), new Rect(left, start * rowHeight, Bounds.Width - left - 3, height));
         }
 
         foreach (var (block, note) in Notes)
         {
             var height = Math.Max(4, (block.EndRow - block.StartRow + 1) * rowHeight);
             if (note.IsImportant)
-                context.FillRectangle(DiffColors.ImportantMarker, new Rect(1, block.StartRow * rowHeight, StripWidth, height));
+                context.FillRectangle(colors.ImportantMarker, new Rect(1, block.StartRow * rowHeight, StripWidth, height));
             else if (note.IsNoise)
-                context.FillRectangle(NoiseFade, new Rect(left, block.StartRow * rowHeight, Bounds.Width - left - 3, height));
+                context.FillRectangle(colors.OverviewNoiseFade, new Rect(left, block.StartRow * rowHeight, Bounds.Width - left - 3, height));
         }
 
         var vTop = Viewport.First * rowHeight;
         var vHeight = Math.Max(4, (Viewport.Last - Viewport.First) * rowHeight);
-        context.DrawRectangle(ViewportFill, ViewportPen, new Rect(0.5, vTop, Bounds.Width - 1, vHeight));
+        context.DrawRectangle(colors.ViewportFill, colors.ViewportPen, new Rect(0.5, vTop, Bounds.Width - 1, vHeight));
     }
 
     /// <summary>Runs of consecutive rows with the same non-equal kind.</summary>

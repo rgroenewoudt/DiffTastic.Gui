@@ -1,5 +1,6 @@
 using System.Globalization;
 using Avalonia;
+using Avalonia.Controls;
 using Avalonia.Media;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Rendering;
@@ -41,6 +42,16 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
 
     private const double HintSize = 7;
 
+    protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
+    {
+        base.OnPropertyChanged(change);
+        if (change.Property == ThemeVariantScope.ActualThemeVariantProperty)
+        {
+            _numbers.Clear();
+            InvalidateVisual();
+        }
+    }
+
     protected override Size MeasureOverride(Size availableSize)
     {
         var digits = Math.Max(3, Rows.Count.ToString(CultureInfo.InvariantCulture).Length);
@@ -51,8 +62,9 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
 
     public override void Render(DrawingContext context)
     {
+        var colors = DiffColors.For(ActualThemeVariant);
         var textView = TextView;
-        context.FillRectangle(DiffColors.Gutter, new Rect(Bounds.Size));
+        context.FillRectangle(colors.Gutter, new Rect(Bounds.Size));
         if (textView is not { VisualLinesValid: true })
             return;
 
@@ -67,12 +79,12 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
             var top = visualLine.VisualTop - textView.VerticalOffset;
 
             if (row.Kind != RowKind.Equal)
-                context.FillRectangle(DiffColors.Marker(row.Kind), new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
+                context.FillRectangle(colors.Marker(row.Kind), new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
 
             if (HintRows.Contains(rowIndex))
             {
                 var center = new Point(3 + HintSize / 2, top + visualLine.Height / 2);
-                context.DrawEllipse(DiffColors.ImportantMarker, null, center, HintSize / 2, HintSize / 2);
+                context.DrawEllipse(colors.ImportantMarker, null, center, HintSize / 2, HintSize / 2);
             }
 
             if (line is null)
@@ -102,6 +114,6 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
         return text;
     }
 
-    private static FormattedText Format(string s) =>
-        new(s, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Font, FontSize, DiffColors.GutterText);
+    private FormattedText Format(string s) =>
+        new(s, CultureInfo.InvariantCulture, FlowDirection.LeftToRight, Font, FontSize, DiffColors.For(ActualThemeVariant).GutterText);
 }

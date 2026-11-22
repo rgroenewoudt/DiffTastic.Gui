@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Styling;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using AvaloniaEdit.Folding;
@@ -17,6 +18,8 @@ namespace DiffTastic.Gui.Controls;
 public sealed class DiffPane : DockPanel
 {
     private readonly TextBlock _title;
+    private readonly Border _header;
+    private readonly Border _badge;
     private readonly DiffBackgroundRenderer _renderer;
     private readonly RowNumberMargin _margin;
     private readonly TextMate.Installation _textMate;
@@ -37,9 +40,14 @@ public sealed class DiffPane : DockPanel
             TextTrimming = TextTrimming.CharacterEllipsis,
             VerticalAlignment = VerticalAlignment.Center,
         };
-        var header = new Border
+        _badge = new Border
         {
-            Background = side == Side.Left ? DiffColors.LeftHeader : DiffColors.RightHeader,
+            CornerRadius = new CornerRadius(3),
+            Padding = new Thickness(6, 0),
+            Child = new TextBlock { Text = side == Side.Left ? "A" : "B", Foreground = Brushes.White, FontWeight = FontWeight.Bold },
+        };
+        _header = new Border
+        {
             Padding = new Thickness(8, 4),
             Child = new StackPanel
             {
@@ -47,19 +55,13 @@ public sealed class DiffPane : DockPanel
                 Spacing = 8,
                 Children =
                 {
-                    new Border
-                    {
-                        Background = side == Side.Left ? DiffColors.RemovedMarker : DiffColors.AddedMarker,
-                        CornerRadius = new CornerRadius(3),
-                        Padding = new Thickness(6, 0),
-                        Child = new TextBlock { Text = side == Side.Left ? "A" : "B", Foreground = Brushes.White, FontWeight = FontWeight.Bold },
-                    },
+                    _badge,
                     _title,
                 },
             },
         };
-        SetDock(header, Dock.Top);
-        Children.Add(header);
+        SetDock(_header, Dock.Top);
+        Children.Add(_header);
 
         Editor = new TextEditor
         {
@@ -69,7 +71,6 @@ public sealed class DiffPane : DockPanel
             FontSize = 13,
             HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
             VerticalScrollBarVisibility = side == Side.Left ? ScrollBarVisibility.Hidden : ScrollBarVisibility.Auto,
-            Background = Brushes.White,
             Padding = new Thickness(4, 0, 0, 0),
         };
         Editor.Options.EnableHyperlinks = false;
@@ -88,6 +89,9 @@ public sealed class DiffPane : DockPanel
 
         _textMate = Editor.InstallTextMate(Registry);
 
+        ApplyTheme();
+        ActualThemeVariantChanged += (_, _) => ApplyTheme();
+
         _folding = FoldingManager.Install(Editor.TextArea);
         Editor.TextArea.TextView.VisualLinesChanged += (_, _) =>
         {
@@ -97,6 +101,17 @@ public sealed class DiffPane : DockPanel
                 FoldsToggled?.Invoke(this, EventArgs.Empty);
             }
         };
+    }
+
+    private void ApplyTheme()
+    {
+        var dark = ActualThemeVariant == ThemeVariant.Dark;
+        var colors = DiffColors.For(ActualThemeVariant);
+        _textMate.SetTheme(Registry.LoadTheme(dark ? ThemeName.DarkPlus : ThemeName.LightPlus));
+        _header.Background = Side == Side.Left ? colors.LeftHeader : colors.RightHeader;
+        _badge.Background = Side == Side.Left ? colors.RemovedMarker : colors.AddedMarker;
+        Editor.Background = colors.EditorBackground;
+        Editor.TextArea.TextView.Redraw();
     }
 
     /// <summary>Raised after the user opened or closed a folding.</summary>

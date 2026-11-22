@@ -76,4 +76,28 @@ public class MainWindowTests
         Screenshots.Save(window, "04-long-file-wheel");
         Directory.Delete(dir, recursive: true);
     }
+
+    [AvaloniaFact]
+    public async Task Horizontal_scroll_reaches_end_of_long_line_on_one_side()
+    {
+        var dir = Directory.CreateTempSubdirectory("difftastic-wide").FullName;
+        await File.WriteAllLinesAsync(Path.Combine(dir, "a.cs"), ["int a = 1;", "int b = 2;"]);
+        await File.WriteAllLinesAsync(Path.Combine(dir, "b.cs"), ["int a = 1;", "int b = " + new string('9', 600) + ";"]);
+
+        var vm = new MainWindowViewModel(new StartupArgs(Path.Combine(dir, "a.cs"), Path.Combine(dir, "b.cs"), null));
+        var window = new MainWindow { DataContext = vm, Width = 1200, Height = 600 };
+        window.Show();
+        await vm.LoadAsync();
+        for (var i = 0; i < 5; i++)
+            Dispatcher.UIThread.RunJobs();
+
+        window.RightPane.ScrollTo(1500, 0);
+        for (var i = 0; i < 5; i++)
+            Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(1500, window.RightPane.Editor.TextArea.TextView.ScrollOffset.X, 1);
+        Assert.True(window.LeftPane.Editor.TextArea.TextView.ScrollOffset.X < 1500, "left pane is clamped to its own width");
+        Screenshots.Save(window, "05-wide-line");
+        Directory.Delete(dir, recursive: true);
+    }
 }

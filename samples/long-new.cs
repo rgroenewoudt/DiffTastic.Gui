@@ -1,0 +1,202 @@
+using System.ComponentModel;
+using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Input;
+using Avalonia.Interactivity;
+using Avalonia.Platform.Storage;
+using Avalonia.Threading;
+using DiffTastic.Core.Diff;
+using DiffTastic.Gui.Controls;
+using DiffTastic.Gui.ViewModels;
+
+namespace DiffTastic.Gui;
+
+public partial class MainWindow : Window
+{
+    private bool _syncing;
+    private MainWindowViewModel? _vm;
+
+    public MainWindow()
+    {
+        InitializeComponent();
+
+        LeftPane = new DiffPane(Side.Left);
+        RightPane = new DiffPane(Side.Right);
+        Grid.SetColumn(RightPane, 2);
+        PanesGrid.Children.Insert(0, LeftPane);
+        PanesGrid.Children.Insert(1, RightPane);
+
+        foreach (var pane in new[] { LeftPane, RightPane })
+        {
+            var view = pane.Editor.TextArea.TextView;
+            view.ScrollOffsetChanged += (_, _) => SyncScroll(pane);
+            view.VisualLinesChanged += (_, _) => UpdateViewport();
+            view.PointerPressed += (_, e) => _vm?.SelectBlockAtRow(pane.RowAt(e.GetPosition(view)));
+        }
+
+        Overview.RowRequested += (_, row) => ScrollToRow(row, center: true);
+        OpenButton.Click += async (_, _) => await OpenFilesAsync();
+        ReloadButton.Click += async (_, _) => await (_vm?.LoadAsync() ?? Task.CompletedTask);
+        AddHandler(KeyDownEvent, OnKeyDownTunnel, RoutingStrategies.Tunnel);
+    }
+
+    public DiffPane LeftPane { get; }
+    public DiffPane RightPane { get; }
+
+    protected override void OnDataContextChanged(EventArgs e)
+    {
+        base.OnDataContextChanged(e);
+        if (_vm != null)
+            _vm.PropertyChanged -= OnViewModelChanged;
+        _vm = DataContext as MainWindowViewModel;
+        if (_vm != null)
+        {
+            _vm.PropertyChanged += OnViewModelChanged;
+            ShowDocument();
+        }
+    }
+
+    private void OnViewModelChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        switch (e.PropertyName)
+        {
+            case nameof(MainWindowViewModel.Document):
+                ShowDocument();
+                break;
+            case nameof(MainWindowViewModel.CurrentBlock):
+                ShowCurrentBlock();
+                break;
+            case nameof(MainWindowViewModel.LeftTitle) or nameof(MainWindowViewModel.RightTitle):
+                UpdateTitles();
+                break;
+        }
+    }
+
+    private void ShowDocument()
+    {
+        var rows = _vm?.Document?.Rows ?? [];
+        LeftPane.Show(rows);
+        RightPane.Show(rows);
+        Overview.Rows = rows;
+        UpdateTitles();
+        ShowCurrentBlock();
+    }
+
+    private void UpdateTitles()
+    {
+        LeftPane.Title = _vm?.LeftTitle ?? "";
+        RightPane.Title = _vm?.RightTitle ?? "";
+        var name = _vm?.RepoPath ?? (_vm?.RightPath is { } p ? Path.GetFileName(p) : null);
+        Title = name is null ? "DiffTastic" : $"{name} - DiffTastic";
+    }
+
+    private void ShowCurrentBlock()
+    {
+        DiffBlock? block = _vm is { Document: { } doc, CurrentBlock: var i } && i >= 0 && i < doc.Blocks.Count
+            ? doc.Blocks[i]
+            : null;
+        LeftPane.SetCurrentBlock(block);
+        RightPane.SetCurrentBlock(block);
+        if (block is { } b)
+            ScrollToRow(b.StartRow, center: false);
+    }
+
+    /// <summary>Scrolls both panes so the row is visible near the top third (or centered).</summary>
+    public void ScrollToRow(int row, bool center)
+    {
+        var view = RightPane.Editor.TextArea.TextView;
+        var lineHeight = view.DefaultLineHeight;
+        var viewport = RightPane.Editor.ViewportHeight;
+        if (viewport <= 0)
+        {
+            Dispatcher.UIThread.Post(() => ScrollToRow(row, center), DispatcherPriority.Loaded);
+            return;
+        }
+
+        var top = row * lineHeight;
+        if (!center && top >= view.VerticalOffset + lineHeight && top + lineHeight * 3 <= view.VerticalOffset + viewport)
+            return;
+
+        var offset = Math.Max(0, top - (center ? viewport / 2 : viewport / 3));
+        RightPane.Editor.ScrollToVerticalOffset(offset);
+        LeftPane.Editor.ScrollToVerticalOffset(offset);
+    }
+
+    private void SyncScroll(DiffPane source)
+    {
+        if (_syncing)
+            return;
+        _syncing = true;
+        try
+        {
+            var target = source == LeftPane ? RightPane : LeftPane;
+            var offset = source.Editor.TextArea.TextView.ScrollOffset;
+            target.Editor.ScrollToVerticalOffset(offset.Y);
+            target.Editor.ScrollToHorizontalOffset(offset.X);
+        }
+        finally
+        {
+            _syncing = false;
+        }
+        UpdateViewport();
+    }
+
+    private void UpdateViewport()
+    {
+        var view = RightPane.Editor.TextArea.TextView;
+        var lineHeight = view.DefaultLineHeight;
+        if (lineHeight <= 0)
+            return;
+        var first = view.VerticalOffset / lineHeight;
+        Overview.Viewport = (first, first + view.Bounds.Height / lineHeight);
+    }
+
+    private void OnKeyDownTunnel(object? sender, KeyEventArgs e)
+    {
+        if (_vm is null)
+            return;
+
+        var ctrl = e.KeyModifiers.HasFlag(KeyModifiers.Control);
+        System.Windows.Input.ICommand? command = (e.Key, ctrl) switch
+        {
+            (Key.Down, true) => _vm.NextDiffCommand,
+            (Key.Up, true) => _vm.PreviousDiffCommand,
+            (Key.Home, true) => _vm.FirstDiffCommand,
+            (Key.End, true) => _vm.LastDiffCommand,
+            _ => null,
+        };
+
+        if (command is not null)
+        {
+            if (command.CanExecute(null))
+                command.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F5)
+        {
+            _ = _vm.LoadAsync();
+            e.Handled = true;
+        }
+    }
+
+    private async Task OpenFilesAsync()
+    {
+        if (_vm is null)
+            return;
+
+        var left = await PickFileAsync("Open file A (left)");
+        if (left is null)
+            return;
+        var right = await PickFileAsync("Open file B (right)");
+        if (right is null)
+            return;
+
+        await _vm.OpenAsync(left, right);
+    }
+
+    private async Task<string?> PickFileAsync(string title)
+    {
+        var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions { Title = title, AllowMultiple = false });
+        return files.Count > 0 ? files[0].TryGetLocalPath() : null;
+    }
+}

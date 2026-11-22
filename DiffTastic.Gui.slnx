@@ -1,2 +1,9 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/DiffTastic.Core/DiffTastic.Core.csproj" />
+    <Project Path="src/DiffTastic.Gui/DiffTastic.Gui.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/DiffTastic.Gui.Tests/DiffTastic.Gui.Tests.csproj" />
+  </Folder>
 </Solution>

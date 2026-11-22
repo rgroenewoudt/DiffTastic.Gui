@@ -66,6 +66,20 @@ public class FoldRegionFinderTests
         Assert.False(regions.Single(r => r.StartRow == 10).IsDeclaration);
     }
 
+    [Theory]
+    [InlineData("    items.Add(new Item")]
+    [InlineData("    yield return new Item")]
+    [InlineData("    throw new Error")]
+    [InlineData("    await Run(new Options")]
+    [InlineData("    new Item")]
+    [InlineData("    Call(); // note")]
+    public void Expression_headers_are_not_declarations(string header)
+    {
+        var rows = Equal(header, "    {", "        A = 1,", "    });");
+
+        Assert.False(FoldRegionFinder.Find(rows).Single().IsDeclaration);
+    }
+
     [Fact]
     public void Default_folds_unchanged_declarations_outermost_only()
     {

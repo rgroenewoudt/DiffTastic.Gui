@@ -10,6 +10,7 @@ public static class FoldRegionFinder
     [
         "if", "else", "for", "foreach", "while", "do", "switch", "try", "catch", "finally",
         "using", "lock", "case", "default", "return", "checked", "unchecked", "unsafe", "fixed",
+        "new", "throw", "yield", "await", "delegate",
     ];
 
     public static IReadOnlyList<FoldRegion> Find(IReadOnlyList<AlignedRow> rows)
@@ -165,8 +166,9 @@ public static class FoldRegionFinder
 
     private static bool IsDeclaration(string header)
     {
-        var text = header.Trim().TrimStart('}').Trim();
-        if (text.Length == 0)
+        var comment = header.IndexOf("//", StringComparison.Ordinal);
+        var text = (comment >= 0 ? header[..comment] : header).Trim().TrimStart('}').Trim();
+        if (text.Length == 0 || text.EndsWith(';'))
             return false;
 
         var firstWord = new string(text.TakeWhile(char.IsLetter).ToArray());
@@ -176,9 +178,11 @@ public static class FoldRegionFinder
             return false;
 
         var depth = 0;
+        var parens = 0;
         for (var i = 0; i < text.Length; i++)
         {
             var c = text[i];
+            parens += c == '(' ? 1 : c == ')' ? -1 : 0;
             if (c is '(' or '[' or '<')
                 depth++;
             else if (c is ')' or ']' or '>' && depth > 0 && text[i - 1] != '=')
@@ -191,7 +195,7 @@ public static class FoldRegionFinder
                     return false;
             }
         }
-        return true;
+        return parens == 0;
     }
 
     private static bool HasChanges(IReadOnlyList<AlignedRow> rows, int start, int end)

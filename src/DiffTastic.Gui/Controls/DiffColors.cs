@@ -22,6 +22,10 @@ public static class DiffColors
     public static readonly IBrush RemovedMarker = Brush("#D9534F");
     public static readonly IBrush AddedMarker = Brush("#3FA34D");
 
+    private static readonly IPen ChangedHiddenPen = DashedPen(ChangedMarker);
+    private static readonly IPen RemovedHiddenPen = DashedPen(RemovedMarker);
+    private static readonly IPen AddedHiddenPen = DashedPen(AddedMarker);
+
     public static readonly IBrush LeftHeader = Brush("#DCE6F7");
     public static readonly IBrush RightHeader = Brush("#DDF1DD");
     public static readonly IBrush Gutter = Brush("#F4F4F4");
@@ -43,6 +47,16 @@ public static class DiffColors
         RowKind.Added => AddedMarker,
         _ => ChangedMarker,
     };
+
+    /// <summary>Dashed line under a folded line that hides changes of this kind.</summary>
+    public static IPen HiddenChangePen(RowKind kind) => kind switch
+    {
+        RowKind.Removed => RemovedHiddenPen,
+        RowKind.Added => AddedHiddenPen,
+        _ => ChangedHiddenPen,
+    };
+
+    private static IPen DashedPen(IBrush brush) => new Pen(brush, 1, DashStyle.Dash).ToImmutable();
 
     private static ImmutableSolidColorBrush Brush(string hex) => new(Color.Parse(hex));
 

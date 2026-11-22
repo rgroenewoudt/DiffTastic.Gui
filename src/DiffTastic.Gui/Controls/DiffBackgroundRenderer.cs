@@ -63,7 +63,7 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
             if (HiddenChange(visualLine) is not { } kind)
                 continue;
             var top = visualLine.VisualTop - textView.VerticalOffset;
-            dc.DrawLine(new Pen(DiffColors.Marker(kind), 1, DashStyle.Dash), new Point(0, top + visualLine.Height - 1), new Point(width, top + visualLine.Height - 1));
+            dc.DrawLine(DiffColors.HiddenChangePen(kind), new Point(0, top + visualLine.Height - 1), new Point(width, top + visualLine.Height - 1));
             dc.FillRectangle(DiffColors.Marker(kind), new Rect(0, top, 3, visualLine.Height));
         }
     }

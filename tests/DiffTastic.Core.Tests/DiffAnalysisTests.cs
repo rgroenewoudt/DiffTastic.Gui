@@ -70,6 +70,25 @@ public class DiffAnalysisTests
     }
 
     [Fact]
+    public void Prompt_leaves_out_hunks_over_budget()
+    {
+        var rows = new List<AlignedRow>();
+        for (var i = 0; i < 3000; i++)
+        {
+            rows.Add(Equal(2 * i, "same"));
+            rows.Add(Changed(2 * i + 1, $"old {i}", $"new {i}"));
+        }
+        var doc = new DiffDocument(rows, "Text", null);
+
+        var prompt = DiffAnalysis.BuildPrompt(doc, "gen.txt", budget: 10_000);
+
+        Assert.True(prompt.Length <= 10_000, $"length {prompt.Length}");
+        Assert.Contains("### Hunk 0\n", prompt);
+        Assert.DoesNotContain("### Hunk 2999\n", prompt);
+        Assert.Contains("more hunks not shown.", prompt);
+    }
+
+    [Fact]
     public void Parse_drops_unknown_and_duplicate_hunks()
     {
         const string json = """

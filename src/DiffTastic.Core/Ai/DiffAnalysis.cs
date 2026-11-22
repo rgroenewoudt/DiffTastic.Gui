@@ -45,6 +45,7 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
 
     public const int PromptBudget = 60_000;
     private const int ContextRows = 3;
+    private const int OmittedNoteLength = 40;
 
     private const string Instructions = """
         Analyze this diff of one file. Each hunk starts with "### Hunk <id>". Lines start with "-" (old version),
@@ -67,19 +68,23 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
         while (true)
         {
             var prompt = Render(doc, fileName, maxLines);
-            if (prompt.Length <= budget || maxLines <= 4)
+            if (prompt.Length <= budget)
                 return prompt;
+            if (maxLines <= 4)
+                return Render(doc, fileName, maxLines, budget);
             maxLines /= 2;
         }
     }
 
-    private static string Render(DiffDocument doc, string fileName, int maxLinesPerSide)
+    /// <summary>Renders hunks until <paramref name="budget"/> is reached; the rest is left out.</summary>
+    private static string Render(DiffDocument doc, string fileName, int maxLinesPerSide, int budget = int.MaxValue)
     {
         var sb = new StringBuilder(Instructions);
         sb.Append($"\nFile: {fileName} ({doc.Language}), {doc.Blocks.Count} hunks.\n");
         for (var i = 0; i < doc.Blocks.Count; i++)
         {
             var block = doc.Blocks[i];
+            var hunkStart = sb.Length;
             sb.Append($"\n### Hunk {i}\n");
             var first = block.StartRow;
             while (first > 0 && block.StartRow - first < ContextRows && doc.Rows[first - 1].Kind == RowKind.Equal)
@@ -93,6 +98,13 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
 
             for (var r = block.EndRow + 1; r < doc.Rows.Count && r <= block.EndRow + ContextRows && doc.Rows[r].Kind == RowKind.Equal; r++)
                 AppendLine(sb, ' ', doc.Rows[r].Right?.Text);
+
+            if (sb.Length > budget - OmittedNoteLength)
+            {
+                sb.Length = hunkStart;
+                sb.Append($"\n… {doc.Blocks.Count - i} more hunks not shown.\n");
+                break;
+            }
         }
         return sb.ToString();
     }

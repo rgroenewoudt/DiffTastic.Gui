@@ -130,6 +130,44 @@ public sealed class BlamePopupTests : IAsyncLifetime
     }
 
     [AvaloniaFact]
+    public async Task Running_explanation_survives_navigation_and_stops_on_close()
+    {
+        var ai = new AiTests.FakeAi();
+        var vm = new MainWindowViewModel(
+            new StartupArgs(_oldCopy, Path.Combine(_root, "Calculator.cs"), "Calculator.cs"),
+            new AppSettings { AiEnabled = true }, ai);
+        var window = new MainWindow { DataContext = vm, Width = 1200, Height = 600 };
+        window.Show();
+        await vm.LoadAsync();
+        await vm.BlameReady;
+        await vm.AnalysisReady;
+        ai.Gate = new TaskCompletionSource();
+
+        var row = vm.Document!.Rows.ToList().FindIndex(r => r.Right?.LineIndex == 2);
+        await window.Blame.ShowAsync(window.RightPane, row, 300);
+        var popup = window.Blame.Current!;
+        var explain = popup.ExplainCommand.ExecuteAsync(null);
+        Assert.Equal("Explaining…", popup.Explanation);
+        for (var i = 0; i < 500 && ai.Calls < 2; i++)
+        {
+            await Task.Delay(10);
+            Dispatcher.UIThread.RunJobs();
+        }
+        Assert.Equal(2, ai.Calls);
+
+        popup.OlderCommand.Execute(null);
+        Assert.Null(popup.Explanation);
+        popup.NewerCommand.Execute(null);
+        Assert.Equal("Explaining…", popup.Explanation);
+
+        window.Blame.Close();
+        await explain;
+
+        Assert.True(ai.Cancelled);
+        Assert.Null(popup.Explanation);
+    }
+
+    [AvaloniaFact]
     public async Task Explain_is_hidden_without_ai()
     {
         var vm = new MainWindowViewModel(new StartupArgs(_oldCopy, Path.Combine(_root, "Calculator.cs"), "Calculator.cs"));

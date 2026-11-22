@@ -151,24 +151,56 @@ public sealed partial class AiTests
         }
     }
 
+    [AvaloniaFact]
+    public async Task Closing_the_window_stops_the_analysis()
+    {
+        var ai = new FakeAi { Gate = new TaskCompletionSource() };
+        var vm = new MainWindowViewModel(new StartupArgs(Sample("old.cs"), Sample("new.cs"), null), new AppSettings { AiEnabled = true }, ai);
+        var window = new MainWindow { DataContext = vm };
+        window.Show();
+        await vm.LoadAsync();
+
+        window.Close();
+        await vm.AnalysisReady;
+
+        Assert.True(ai.Cancelled);
+        Assert.Null(vm.Analysis);
+    }
+
     /// <summary>Answers for every hunk in the prompt: even hunks important with a hint, odd hunks noise.</summary>
     public sealed partial class FakeAi : AiProvider
     {
         public int Calls { get; private set; }
         public string? Error { get; init; }
         public string? LastPrompt { get; private set; }
+
+        /// <summary>When set, answers wait for it, so tests can act while a call runs.</summary>
+        public TaskCompletionSource? Gate { get; set; }
+        public bool Cancelled { get; private set; }
         public override string Name => "Fake";
         public override string Model => "fake-1";
         public override string Vendor => "nobody";
 
-        public override Task<string> CompleteJsonAsync(string prompt, string schema, CancellationToken ct = default)
+        public override async Task<string> CompleteJsonAsync(string prompt, string schema, CancellationToken ct = default)
         {
             Calls++;
             LastPrompt = prompt;
+            if (Gate is not null)
+            {
+                try
+                {
+                    await Gate.Task.WaitAsync(ct);
+                }
+                catch (OperationCanceledException)
+                {
+                    Cancelled = true;
+                    throw;
+                }
+            }
             if (Error is not null)
                 throw new InvalidOperationException(Error);
             if (schema == CommitExplainer.Schema)
-                return Task.FromResult(JsonSerializer.Serialize(new { explanation = "Fake explanation." }));
+                return JsonSerializer.Serialize(new { explanation = "Fake explanation." });
 
             var hunks = HunkHeader().Matches(prompt).Select(m => int.Parse(m.Groups[1].Value)).Select(i => new
             {
@@ -178,7 +210,7 @@ public sealed partial class AiTests
                 reason = i % 2 == 0 ? $"Hunk {i} changes behavior." : $"Hunk {i} only moves code.",
                 reviewHints = i % 2 == 0 ? new[] { $"Check callers of hunk {i}." } : [],
             });
-            return Task.FromResult(JsonSerializer.Serialize(new { summary = "Fake summary of the change.", hunks }));
+            return JsonSerializer.Serialize(new { summary = "Fake summary of the change.", hunks });
         }
 
         [GeneratedRegex(@"^### Hunk (\d+)$", RegexOptions.Multiline)]

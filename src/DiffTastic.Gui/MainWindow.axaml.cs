@@ -64,6 +64,13 @@ public sealed partial class MainWindow : Window
     public DiffPane RightPane { get; }
     public BlameHoverController Blame { get; }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        Blame.Close();
+        _vm?.CancelAnalysis();
+        base.OnClosed(e);
+    }
+
     protected override void OnDataContextChanged(EventArgs e)
     {
         base.OnDataContextChanged(e);

@@ -164,7 +164,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
             CancelAnalysis();
     }
 
-    private void CancelAnalysis()
+    /// <summary>Stops a running AI analysis and clears its result.</summary>
+    public void CancelAnalysis()
     {
         _aiCts?.Cancel();
         _aiCts = null;

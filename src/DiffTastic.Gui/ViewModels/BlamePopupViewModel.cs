@@ -14,6 +14,7 @@ public sealed partial class BlamePopupViewModel : ObservableObject
     private readonly BlameLine _line;
     private readonly CommitExplainer? _explainer;
     private readonly string _lineText;
+    private readonly CancellationTokenSource _cts = new();
 
     public BlamePopupViewModel(
         BlameService service, BlameLine line, CommitInfo commit, RowKind kind, Side side, int lineNumber,
@@ -50,11 +51,17 @@ public sealed partial class BlamePopupViewModel : ObservableObject
         OnPropertyChanged(nameof(CanExplain));
         ExplainCommand.NotifyCanExecuteChanged();
         if (IsExplaining && _explainingSha == value.Sha)
+        {
+            Explanation = "Explaining…";
             return;
+        }
         Explanation = _explainer is not null && _explainer.TryGetCached(value.Sha, _lineText, out var cached) ? cached : null;
     }
 
     private string? _explainingSha;
+
+    /// <summary>Stops a running explanation; called when the popup goes away.</summary>
+    public void Cancel() => _cts.Cancel();
 
     private bool CanRunExplain() => CanExplain && !IsExplaining;
 
@@ -64,20 +71,23 @@ public sealed partial class BlamePopupViewModel : ObservableObject
         if (_explainer is null)
             return;
         var commit = Commit;
+        var ct = _cts.Token;
         _explainingSha = commit.Sha;
         IsExplaining = true;
         Explanation = "Explaining…";
         try
         {
-            var diff = await _service.GetCommitDiffAsync(commit.Sha, _line.OriginalPath);
-            var full = await _service.GetCommitAsync(commit);
-            var text = await Task.Run(() => _explainer.ExplainAsync(full, diff, _lineText));
+            var diff = await _service.GetCommitDiffAsync(commit.Sha, _line.OriginalPath, ct);
+            var full = await _service.GetCommitAsync(commit, ct);
+            var text = await Task.Run(() => _explainer.ExplainAsync(full, diff, _lineText, ct), ct);
             if (Commit.Sha == commit.Sha)
                 Explanation = text;
         }
         catch (Exception ex)
         {
-            if (Commit.Sha == commit.Sha)
+            if (ct.IsCancellationRequested)
+                Explanation = null;
+            else if (Commit.Sha == commit.Sha)
                 Explanation = "AI failed: " + ex.Message.Split('\n', 2)[0].Trim();
         }
         finally

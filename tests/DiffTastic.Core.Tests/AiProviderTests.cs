@@ -72,6 +72,28 @@ public class AiProviderTests
     }
 
     [Fact]
+    public void Exe_later_on_path_wins_over_cmd_shim()
+    {
+        if (!OperatingSystem.IsWindows())
+            return;
+        var shims = Path.Combine(Path.GetTempPath(), "difftastic-shims-" + Guid.NewGuid().ToString("N")[..8]);
+        var native = Path.Combine(Path.GetTempPath(), "difftastic-native-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(shims);
+        Directory.CreateDirectory(native);
+        try
+        {
+            File.WriteAllText(Path.Combine(shims, "fakeai.cmd"), "");
+            File.WriteAllText(Path.Combine(native, "fakeai.exe"), "");
+            Assert.Equal(Path.Combine(native, "fakeai.exe"), AiLocator.FindOnPath("fakeai", shims + Path.PathSeparator + native));
+        }
+        finally
+        {
+            Directory.Delete(shims, true);
+            Directory.Delete(native, true);
+        }
+    }
+
+    [Fact]
     public void Claude_schema_is_minified()
     {
         Assert.Equal("""{"a":[1,2]}""", ClaudeProvider.MinifyJson("{ \"a\" : [ 1, 2 ] }"));

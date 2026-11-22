@@ -23,15 +23,15 @@ public static class AiLocator
         return null;
     }
 
-    /// <summary>Full path of a command on PATH. On Windows an .exe wins over an npm .cmd shim.</summary>
+    /// <summary>Full path of a command on PATH. On Windows an .exe anywhere on PATH wins over an npm .cmd shim.</summary>
     public static string? FindOnPath(string command, string? pathVariable = null)
     {
         string[] extensions = OperatingSystem.IsWindows() ? [".exe", ".cmd", ".bat"] : [""];
         var dirs = (pathVariable ?? Environment.GetEnvironmentVariable("PATH") ?? "")
             .Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
-        foreach (var dir in dirs)
+        foreach (var extension in extensions)
         {
-            foreach (var extension in extensions)
+            foreach (var dir in dirs)
             {
                 try
                 {

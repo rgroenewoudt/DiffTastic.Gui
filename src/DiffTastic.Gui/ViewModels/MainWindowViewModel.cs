@@ -96,6 +96,10 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     public void ApplySettings()
     {
         _settings.Save();
+        var languageChanged = Localization.Resolve(_settings.Language) != Localization.Current;
+        Localization.Apply(_settings.Language);
+        if (languageChanged)
+            OnPropertyChanged(string.Empty);
         var ai = LocateAi(_settings);
         var changed = ai?.Name != _analyzer?.Provider.Name || ai?.Model != _analyzer?.Provider.Model;
         if (changed)

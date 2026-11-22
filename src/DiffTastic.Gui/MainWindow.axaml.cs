@@ -50,6 +50,13 @@ public sealed partial class MainWindow : Window
         CollapseUnchangedButton.Click += (_, _) => CollapseUnchanged();
         SettingsButton.Click += async (_, _) => await ShowSettingsAsync();
         AddHandler(KeyDownEvent, OnKeyDownTunnel, RoutingStrategies.Tunnel);
+        Localization.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        Blame.Close();
+        UpdateTitles();
     }
 
     public void ExpandAll() => ApplyFoldStates(new bool[_foldRegions.Count]);
@@ -68,6 +75,7 @@ public sealed partial class MainWindow : Window
 
     protected override void OnClosed(EventArgs e)
     {
+        Localization.LanguageChanged -= OnLanguageChanged;
         Blame.Close();
         _vm?.CancelAnalysis();
         base.OnClosed(e);

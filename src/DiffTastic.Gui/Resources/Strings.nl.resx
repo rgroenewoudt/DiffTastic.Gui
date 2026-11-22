@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="SettingsTip" xml:space="preserve">
+    <value>Instellingen…</value>
+  </data>
+  <data name="OpenTip" xml:space="preserve">
+    <value>Bestanden openen…</value>
+  </data>
+  <data name="ReloadTip" xml:space="preserve">
+    <value>Opnieuw laden (F5)</value>
+  </data>
+  <data name="FirstDiffTip" xml:space="preserve">
+    <value>Eerste verschil (Ctrl+Home)</value>
+  </data>
+  <data name="PreviousDiffTip" xml:space="preserve">
+    <value>Vorige verschil (Ctrl+Omhoog)</value>
+  </data>
+  <data name="NextDiffTip" xml:space="preserve">
+    <value>Volgende verschil (Ctrl+Omlaag)</value>
+  </data>
+  <data name="LastDiffTip" xml:space="preserve">
+    <value>Laatste verschil (Ctrl+End)</value>
+  </data>
+  <data name="ExpandAllTip" xml:space="preserve">
+    <value>Alles uitklappen</value>
+  </data>
+  <data name="CollapseUnchangedTip" xml:space="preserve">
+    <value>Ongewijzigd inklappen</value>
+  </data>
+  <data name="SkipNoise" xml:space="preserve">
+    <value>Ruis overslaan</value>
+  </data>
+  <data name="SkipNoiseTip" xml:space="preserve">
+    <value>Vorige/volgende verschil slaat wijzigingen over die de AI als ruis heeft gemarkeerd (opmaak, hernoemingen, commentaar)</value>
+  </data>
+  <data name="OpenLeftTitle" xml:space="preserve">
+    <value>Bestand A openen (links)</value>
+  </data>
+  <data name="OpenRightTitle" xml:space="preserve">
+    <value>Bestand B openen (rechts)</value>
+  </data>
+  <data name="Comparing" xml:space="preserve">
+    <value>Vergelijken…</value>
+  </data>
+  <data name="OpenTwoFiles" xml:space="preserve">
+    <value>Open twee bestanden om te vergelijken.</value>
+  </data>
+  <data name="FilesIdentical" xml:space="preserve">
+    <value>Bestanden zijn identiek</value>
+  </data>
+  <data name="DifferenceOf" xml:space="preserve">
+    <value>Verschil {0} van {1}</value>
+  </data>
+  <data name="DifferenceCount" xml:space="preserve">
+    <value>{0} verschillen</value>
+  </data>
+  <data name="Difference" xml:space="preserve">
+    <value>Verschil {0}</value>
+  </data>
+  <data name="ImportanceNoise" xml:space="preserve">
+    <value>ruis</value>
+  </data>
+  <data name="ImportanceCritical" xml:space="preserve">
+    <value>kritiek</value>
+  </data>
+  <data name="ImportanceNotable" xml:space="preserve">
+    <value>belangrijk</value>
+  </data>
+  <data name="ImportanceMinor" xml:space="preserve">
+    <value>klein</value>
+  </data>
+  <data name="ImportanceTrivial" xml:space="preserve">
+    <value>triviaal</value>
+  </data>
+  <data name="AiToolTip" xml:space="preserve">
+    <value>AI-analyse met {0} ({1}). Stuurt de gewijzigde code naar {2}.</value>
+  </data>
+  <data name="AiNotFound" xml:space="preserve">
+    <value>Geen AI-tool gevonden (claude of codex in PATH).</value>
+  </data>
+  <data name="AiAnalyzing" xml:space="preserve">
+    <value>AI: analyseren met {0}…</value>
+  </data>
+  <data name="AiDone" xml:space="preserve">
+    <value>AI: {0} ({1})</value>
+  </data>
+  <data name="AiFailed" xml:space="preserve">
+    <value>AI mislukt: {0}</value>
+  </data>
+  <data name="BlameLoading" xml:space="preserve">
+    <value>blame laden…</value>
+  </data>
+  <data name="BlameNone" xml:space="preserve">
+    <value>geen blame</value>
+  </data>
+  <data name="BlameFor" xml:space="preserve">
+    <value>blame: {0}</value>
+  </data>
+  <data name="RevisionWorkingTree" xml:space="preserve">
+    <value>working tree</value>
+  </data>
+  <data name="RevisionUncommitted" xml:space="preserve">
+    <value>niet gecommit</value>
+  </data>
+  <data name="SettingsTitle" xml:space="preserve">
+    <value>Instellingen - DiffTastic</value>
+  </data>
+  <data name="Ok" xml:space="preserve">
+    <value>OK</value>
+  </data>
+  <data name="Cancel" xml:space="preserve">
+    <value>Annuleren</value>
+  </data>
+  <data name="General" xml:space="preserve">
+    <value>Algemeen</value>
+  </data>
+  <data name="Language" xml:space="preserve">
+    <value>Taal</value>
+  </data>
+  <data name="SystemLanguage" xml:space="preserve">
+    <value>Systeemtaal</value>
+  </data>
+  <data name="AiHeader" xml:space="preserve">
+    <value>AI</value>
+  </data>
+  <data name="AiEnabled" xml:space="preserve">
+    <value>Diffs analyseren met AI</value>
+  </data>
+  <data name="AiPrivacyHint" xml:space="preserve">
+    <value>Stuurt de gewijzigde code naar Anthropic of OpenAI. Zet het alleen aan als dat voor de code is toegestaan.</value>
+  </data>
+  <data name="Provider" xml:space="preserve">
+    <value>Provider</value>
+  </data>
+  <data name="ProviderAuto" xml:space="preserve">
+    <value>Automatisch (eerst gevonden)</value>
+  </data>
+  <data name="ClaudeModel" xml:space="preserve">
+    <value>Claude-model</value>
+  </data>
+  <data name="CodexModel" xml:space="preserve">
+    <value>Codex-model</value>
+  </data>
+  <data name="ModelHint" xml:space="preserve">
+    <value>Leeg model gebruikt de goedkoopste standaard.</value>
+  </data>
+  <data name="ToolFound" xml:space="preserve">
+    <value>{0} gevonden in PATH</value>
+  </data>
+  <data name="ToolNotFound" xml:space="preserve">
+    <value>{0} niet gevonden in PATH</value>
+  </data>
+  <data name="KindAdded" xml:space="preserve">
+    <value>Toegevoegd</value>
+  </data>
+  <data name="KindRemoved" xml:space="preserve">
+    <value>Verwijderd</value>
+  </data>
+  <data name="KindChanged" xml:space="preserve">
+    <value>Gewijzigd</value>
+  </data>
+  <data name="KindUnchanged" xml:space="preserve">
+    <value>Ongewijzigd</value>
+  </data>
+  <data name="LineLabel" xml:space="preserve">
+    <value>{0} · regel {1}</value>
+  </data>
+  <data name="ExplainTip" xml:space="preserve">
+    <value>Leg deze commit uit met {0}. Stuurt de commit naar {1}.</value>
+  </data>
+  <data name="Explaining" xml:space="preserve">
+    <value>Uitleggen…</value>
+  </data>
+  <data name="NotCommitted" xml:space="preserve">
+    <value>Deze regel is nog niet gecommit.</value>
+  </data>
+  <data name="LineFromCommit" xml:space="preserve">
+    <value>Regel komt uit commit {0} van {1}, geschreven {2} met bericht:</value>
+  </data>
+  <data name="BeforeThatCommit" xml:space="preserve">
+    <value>Daarvoor wijzigde commit {0} van {1} deze regel, geschreven {2} met bericht:</value>
+  </data>
+  <data name="UncommittedMessage" xml:space="preserve">
+    <value>Niet-gecommitte wijziging in de working copy.</value>
+  </data>
+  <data name="Older" xml:space="preserve">
+    <value>◀ Ouder</value>
+  </data>
+  <data name="OlderTip" xml:space="preserve">
+    <value>Vorige commit die deze regel wijzigde</value>
+  </data>
+  <data name="Newer" xml:space="preserve">
+    <value>Nieuwer ▶</value>
+  </data>
+  <data name="NewerTip" xml:space="preserve">
+    <value>Volgende commit die deze regel wijzigde</value>
+  </data>
+  <data name="CopySha" xml:space="preserve">
+    <value>SHA kopiëren</value>
+  </data>
+  <data name="CopyShaTip" xml:space="preserve">
+    <value>Commit-SHA kopiëren</value>
+  </data>
+  <data name="Explain" xml:space="preserve">
+    <value>Uitleggen (AI)</value>
+  </data>
+  <data name="MinutesAgo" xml:space="preserve">
+    <value>{0} min geleden</value>
+  </data>
+  <data name="HoursAgo" xml:space="preserve">
+    <value>{0} uur geleden</value>
+  </data>
+  <data name="DaysAgo" xml:space="preserve">
+    <value>{0} dagen geleden</value>
+  </data>
+  <data name="MonthsAgo" xml:space="preserve">
+    <value>{0} maanden geleden</value>
+  </data>
+  <data name="YearsAgo" xml:space="preserve">
+    <value>{0} jaar geleden</value>
+  </data>
+  <data name="TimeFormat" xml:space="preserve">
+    <value>{0:HH:mm} op {0:d MMM yyyy} ({1})</value>
+  </data>
+</root>

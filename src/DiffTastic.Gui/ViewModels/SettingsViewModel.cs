@@ -4,6 +4,11 @@ using DiffTastic.Gui.Resources;
 
 namespace DiffTastic.Gui.ViewModels;
 
+public sealed record LanguageOption(string? Code, string Name)
+{
+    public override string ToString() => Name;
+}
+
 /// <summary>Editable copy of <see cref="AppSettings"/> for the settings dialog.</summary>
 public sealed partial class SettingsViewModel : ObservableObject
 {
@@ -15,6 +20,15 @@ public sealed partial class SettingsViewModel : ObservableObject
         ClaudeFound = find(AiLocator.Claude) is not null;
         CodexFound = find(AiLocator.Codex) is not null;
 
+        Languages =
+        [
+            new(null, Strings.SystemLanguage),
+            new("en", "English"),
+            new("de", "Deutsch"),
+            new("nl", "Nederlands"),
+            new("fr", "Français"),
+        ];
+        _language = Languages.FirstOrDefault(l => l.Code == settings.Language?.ToLowerInvariant()) ?? Languages[0];
         _aiEnabled = settings.AiEnabled;
         _provider = settings.AiProvider?.ToLowerInvariant() switch
         {
@@ -26,6 +40,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         _codexModel = settings.CodexModel;
     }
 
+    public IReadOnlyList<LanguageOption> Languages { get; }
+
     public IReadOnlyList<string> Providers { get; } = [Auto, "Claude", "Codex"];
 
     public bool ClaudeFound { get; }
@@ -35,6 +51,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     public string ClaudeStatus => Localization.Format(ClaudeFound ? Strings.ToolFound : Strings.ToolNotFound, AiLocator.Claude);
     public string CodexStatus => Localization.Format(CodexFound ? Strings.ToolFound : Strings.ToolNotFound, AiLocator.Codex);
 
+    [ObservableProperty] private LanguageOption _language;
     [ObservableProperty] private bool _aiEnabled;
     [ObservableProperty] private string _provider;
     [ObservableProperty] private string? _claudeModel;
@@ -42,6 +59,7 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     public void ApplyTo(AppSettings settings)
     {
+        settings.Language = Language.Code;
         settings.AiEnabled = AiEnabled;
         settings.AiProvider = Provider switch
         {

@@ -18,6 +18,7 @@ public sealed partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var settings = AppSettings.Load(AppSettings.DefaultPath);
+            Localization.Apply(settings.Language);
             var ai = AiLocator.Locate(settings.AiProvider, settings.ClaudeModel, settings.CodexModel);
             var vm = new MainWindowViewModel(StartupArgs.Parse(desktop.Args ?? []), settings, ai);
             desktop.MainWindow = new MainWindow { DataContext = vm };

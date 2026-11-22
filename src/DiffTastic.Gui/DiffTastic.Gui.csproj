@@ -28,6 +28,9 @@
                       StronglyTypedNamespace="DiffTastic.Gui.Resources" StronglyTypedFileName="$(IntermediateOutputPath)Strings.Designer.cs" />
   </ItemGroup>
   <ItemGroup>
+    <InternalsVisibleTo Include="DiffTastic.Gui.Tests" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="../DiffTastic.Core/DiffTastic.Core.csproj" />
   </ItemGroup>
 

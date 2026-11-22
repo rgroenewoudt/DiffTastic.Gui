@@ -8,6 +8,9 @@ public sealed class AppSettings
 {
     private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
 
+    /// <summary>"en", "de", "nl" or "fr"; null follows the system language.</summary>
+    public string? Language { get; set; }
+
     public bool AiEnabled { get; set; }
 
     /// <summary>"claude" or "codex"; null picks the first installed one.</summary>

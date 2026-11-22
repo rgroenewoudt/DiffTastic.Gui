@@ -98,7 +98,7 @@ public sealed class BlameHoverController
         _content.DataContext = vm;
 
         var view = pane.Editor.TextArea.TextView;
-        var top = row * view.DefaultLineHeight - view.VerticalOffset;
+        var top = view.GetVisualTopByDocumentLine(Math.Max(1, row + 1)) - view.VerticalOffset;
         _popup.PlacementTarget = view;
         _popup.PlacementRect = new Rect(x, top, 1, view.DefaultLineHeight);
         _popup.IsOpen = true;

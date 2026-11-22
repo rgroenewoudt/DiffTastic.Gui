@@ -9,10 +9,8 @@ public sealed record DifftResult(
     [property: JsonPropertyName("language")] string? Language,
     [property: JsonPropertyName("status")] string? Status)
 {
-    private static readonly JsonSerializerOptions Options = new() { PropertyNameCaseInsensitive = true };
-
     public static DifftResult Parse(string json) =>
-        JsonSerializer.Deserialize<DifftResult>(json, Options)
+        JsonSerializer.Deserialize(json, DifftJsonContext.Default.DifftResult)
         ?? throw new InvalidDataException("Empty difft output.");
 }
 
@@ -30,3 +28,7 @@ public sealed record DifftChange(
     [property: JsonPropertyName("end")] int End,
     [property: JsonPropertyName("content")] string Content,
     [property: JsonPropertyName("highlight")] string Highlight);
+
+[JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)]
+[JsonSerializable(typeof(DifftResult))]
+internal sealed partial class DifftJsonContext : JsonSerializerContext;

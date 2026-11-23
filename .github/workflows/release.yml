@@ -48,7 +48,7 @@ jobs:
         run: >
           dotnet publish src/DiffTastic.Gui -c Release -r ${{ matrix.rid }} --self-contained
           -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
-          -p:EnableCompressionInSingleFile=true -p:DebugType=none
+          -p:EnableCompressionInSingleFile=true -p:PublishReadyToRun=true -p:DebugType=none
           -p:Version=${{ env.VERSION }} -o publish
       - name: Remove native symbols
         shell: pwsh

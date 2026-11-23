@@ -97,8 +97,17 @@
         </Border>
 
         <Border DockPanel.Dock="Top" Name="AiBar" Background="{DynamicResource AiBackgroundBrush}" BorderBrush="{DynamicResource AiBarBorderBrush}" BorderThickness="0,0,0,1"
-                Padding="10,5" IsVisible="{Binding Analysis, Converter={x:Static ObjectConverters.IsNotNull}}">
-            <StackPanel Spacing="3">
+                IsVisible="{Binding Analysis, Converter={x:Static ObjectConverters.IsNotNull}}">
+            <DockPanel>
+            <Border DockPanel.Dock="Left" Width="3" Background="{DynamicResource AiAccentBrush}" />
+            <Border DockPanel.Dock="Left" Name="AiBadge" Background="{DynamicResource AiAccentBrush}" CornerRadius="3"
+                    Padding="6,1" Margin="8,5,0,0" VerticalAlignment="Top" ToolTip.Tip="{Binding AiToolTip}">
+                <StackPanel Orientation="Horizontal" Spacing="3">
+                    <TextBlock Text="✦" FontSize="11" Foreground="White" />
+                    <TextBlock Text="{l:Tr AiHeader}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
+                </StackPanel>
+            </Border>
+            <StackPanel Spacing="3" Margin="8,5,10,5">
                 <SelectableTextBlock Name="AiSummary" Text="{Binding Summary}" TextWrapping="Wrap" FontSize="12.5"
                                      Foreground="{DynamicResource AiTextBrush}" />
                 <SelectableTextBlock Name="AiNote" Text="{Binding CurrentNoteText}" TextWrapping="Wrap" FontSize="12"
@@ -108,6 +117,7 @@
                                      Foreground="{DynamicResource AiHintTextBrush}"
                                      IsVisible="{Binding CurrentHintsText, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </StackPanel>
+            </DockPanel>
         </Border>
 
         <Border DockPanel.Dock="Top" Name="GoToLineBar" IsVisible="False" Background="{DynamicResource BarBackgroundBrush}"

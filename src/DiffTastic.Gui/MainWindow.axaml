@@ -84,6 +84,8 @@
                 <Button Classes="tool" Name="CollapseUnchangedButton" ToolTip.Tip="{l:Tr CollapseUnchangedTip}">
                     <PathIcon Data="{StaticResource IconCollapse}" />
                 </Button>
+                <ToggleButton Classes="tool" Name="ShowWhitespaceToggle" Content="¶"
+                              IsChecked="{Binding ShowWhitespace}" ToolTip.Tip="{l:Tr ShowWhitespaceTip}" />
                 <Separator Width="1" Height="20" Background="{DynamicResource BarBorderBrush}" Margin="6,0" IsVisible="{Binding IsAiAvailable}" />
                 <ToggleButton Classes="tool" Name="AiToggle" Content="{l:Tr AiHeader}" IsVisible="{Binding IsAiAvailable}"
                               IsChecked="{Binding AiEnabled}" ToolTip.Tip="{Binding AiToolTip}" />

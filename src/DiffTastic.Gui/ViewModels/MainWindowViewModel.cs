@@ -59,12 +59,23 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
     private DiffAnalysis? _analysis;
 
-    /// <summary>Next/previous skip hunks the AI marked as noise.</summary>
+    /// <summary>Next/previous skip noise hunks, see <see cref="IsNoise"/>.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
     private bool _skipNoise = true;
 
-    public bool HasNoise => Analysis?.Hunks.Any(h => h.IsNoise) == true;
+    [ObservableProperty] private bool _showWhitespace = settings?.ShowWhitespace ?? false;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasNoise))]
+    [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
+    private bool _whitespaceIsNoise = settings?.WhitespaceIsNoise ?? false;
+
+    public bool HasNoise => Document is { } doc && Enumerable.Range(0, doc.Blocks.Count).Any(IsNoise);
+
+    /// <summary>The AI marked the block as noise, or it only changes whitespace and that counts as noise.</summary>
+    public bool IsNoise(int block) =>
+        Analysis?.IsNoise(block) == true || WhitespaceIsNoise && Document?.IsWhitespaceOnly(block) == true;
 
     public HunkNote? CurrentNote => Analysis?.NoteFor(CurrentBlock);
 
@@ -96,6 +107,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     public void ApplySettings()
     {
         _settings.Save();
+        WhitespaceIsNoise = _settings.WhitespaceIsNoise;
         var languageChanged = Localization.Resolve(_settings.Language) != Localization.Current;
         Localization.Apply(_settings.Language);
         App.ApplyTheme(_settings.Theme);
@@ -157,7 +169,25 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
 
     partial void OnLeftPathChanged(string? value) => OnPropertyChanged(nameof(LeftTitle));
     partial void OnRightPathChanged(string? value) => OnPropertyChanged(nameof(RightTitle));
-    partial void OnDocumentChanged(DiffDocument? value) => OnPropertyChanged(nameof(StatusText));
+    partial void OnDocumentChanged(DiffDocument? value)
+    {
+        OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(HasNoise));
+    }
+
+    partial void OnShowWhitespaceChanged(bool value)
+    {
+        _settings.ShowWhitespace = value;
+        _settings.Save();
+    }
+
+    partial void OnWhitespaceIsNoiseChanged(bool value) => MoveOffSkippedBlock();
+
+    private void MoveOffSkippedBlock()
+    {
+        if (IsSkipped(CurrentBlock) && NearestBlock(CurrentBlock) is >= 0 and var nearest)
+            CurrentBlock = nearest;
+    }
     partial void OnIsBusyChanged(bool value) => OnPropertyChanged(nameof(StatusText));
     partial void OnErrorChanged(string? value) => OnPropertyChanged(nameof(StatusText));
 
@@ -174,7 +204,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
             CancelAnalysis();
             Document = await Task.Run(() => _diffService.CompareAsync(LeftPath, RightPath));
             if (Document.Blocks.Count > 0)
-                CurrentBlock = 0;
+                CurrentBlock = Math.Max(0, FindBlock(0, 1));
             BlameReady = LoadBlameAsync(LeftPath, RightPath);
             AnalysisReady = AnalyzeAsync();
         }
@@ -226,8 +256,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
             if (cts.IsCancellationRequested)
                 return;
             Analysis = analysis;
-            if (IsSkipped(CurrentBlock) && NearestBlock(CurrentBlock) is >= 0 and var nearest)
-                CurrentBlock = nearest;
+            MoveOffSkippedBlock();
             AiStatus = () => Localization.Format(Strings.AiDone, provider.Name, provider.Model);
         }
         catch (Exception ex)
@@ -368,7 +397,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     /// <summary>First block that is not skipped at or after <paramref name="block"/>, else before it; -1 if none.</summary>
     private int NearestBlock(int block) => FindBlock(block, 1) is >= 0 and var next ? next : FindBlock(block, -1);
 
-    private bool IsSkipped(int block) => SkipNoise && Analysis?.IsNoise(block) == true;
+    private bool IsSkipped(int block) => SkipNoise && IsNoise(block);
 
     [RelayCommand(CanExecute = nameof(CanGoNext))]
     private void NextDiff() => CurrentBlock = FindBlock(CurrentBlock + 1, 1);

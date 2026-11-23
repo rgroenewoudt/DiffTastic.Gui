@@ -260,4 +260,41 @@ public class MainWindowTests
         await vm.BlameReady;
         Directory.Delete(dir, recursive: true);
     }
+
+    [AvaloniaFact]
+    public async Task Whitespace_only_changes_count_as_noise_when_set()
+    {
+        var dir = Directory.CreateTempSubdirectory("difftastic-ws").FullName;
+        var left = Path.Combine(dir, "old.txt");
+        var right = Path.Combine(dir, "new.txt");
+        await File.WriteAllTextAsync(left, "one\n    two\nthree\nfour\nfive\nsix\n");
+        await File.WriteAllTextAsync(right, "one\n\ttwo\nthree\nfour\nfive\nSIX\n");
+        var settings = new AppSettings { WhitespaceIsNoise = true, ShowWhitespace = true };
+        var vm = new MainWindowViewModel(new StartupArgs(left, right, null), settings);
+        var window = new MainWindow { DataContext = vm, Width = 1200, Height = 600 };
+        window.Show();
+        await vm.LoadAsync();
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(2, vm.Document!.Blocks.Count);
+        Assert.True(vm.IsNoise(0));
+        Assert.False(vm.IsNoise(1));
+        Assert.True(vm.HasNoise);
+        Assert.Equal(1, vm.CurrentBlock);
+        Assert.False(vm.PreviousDiffCommand.CanExecute(null));
+        Assert.True(window.LeftPane.ShowWhitespace);
+        Assert.True(window.RightPane.Editor.Options.ShowSpaces);
+        Screenshots.Save(window, "40-whitespace");
+
+        vm.ShowWhitespace = false;
+        Assert.False(window.RightPane.Editor.Options.ShowTabs);
+        Assert.False(settings.ShowWhitespace);
+
+        settings.WhitespaceIsNoise = false;
+        vm.ApplySettings();
+        Assert.False(vm.HasNoise);
+        Assert.True(vm.PreviousDiffCommand.CanExecute(null));
+        await vm.BlameReady;
+        Directory.Delete(dir, recursive: true);
+    }
 }

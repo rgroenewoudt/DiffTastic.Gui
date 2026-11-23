@@ -43,7 +43,7 @@
     <value>Rauschen überspringen</value>
   </data>
   <data name="SkipNoiseTip" xml:space="preserve">
-    <value>Vorheriger/nächster Unterschied überspringt Änderungen, die die KI als Rauschen markiert hat (Formatierung, Umbenennungen, Kommentare)</value>
+    <value>Vorheriger/nächster Unterschied überspringt Rauschen: Änderungen, die die KI als Rauschen markiert hat (Formatierung, Umbenennungen, Kommentare), und, falls eingestellt, reine Leerraum-Änderungen</value>
   </data>
   <data name="OpenLeftTitle" xml:space="preserve">
     <value>Datei A öffnen (links)</value>
@@ -248,5 +248,11 @@
   </data>
   <data name="GoToLine" xml:space="preserve">
     <value>Gehe zu Zeile</value>
+  </data>
+  <data name="ShowWhitespaceTip" xml:space="preserve">
+    <value>Tabs und Leerzeichen anzeigen</value>
+  </data>
+  <data name="WhitespaceIsNoise" xml:space="preserve">
+    <value>Nur-Leerraum-Änderungen als Rauschen zählen</value>
   </data>
 </root>

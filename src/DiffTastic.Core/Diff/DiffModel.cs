@@ -21,7 +21,10 @@ public sealed class DiffDocument
         Language = language;
         EngineNote = engineNote;
         Blocks = BuildBlocks(rows);
+        _whitespaceOnly = Blocks.Select(IsWhitespaceOnly).ToArray();
     }
+
+    private readonly bool[] _whitespaceOnly;
 
     public IReadOnlyList<AlignedRow> Rows { get; }
     public IReadOnlyList<DiffBlock> Blocks { get; }
@@ -29,6 +32,18 @@ public sealed class DiffDocument
 
     /// <summary>Set when difftastic was not used, explains why.</summary>
     public string? EngineNote { get; }
+
+    /// <summary>True when both sides of the block are the same after removing all whitespace.</summary>
+    public bool IsWhitespaceOnly(int block) => block >= 0 && block < _whitespaceOnly.Length && _whitespaceOnly[block];
+
+    private bool IsWhitespaceOnly(DiffBlock block)
+    {
+        var rows = Rows.Skip(block.StartRow).Take(block.EndRow - block.StartRow + 1).ToList();
+        return WithoutWhitespace(rows.Select(r => r.Left)) == WithoutWhitespace(rows.Select(r => r.Right));
+    }
+
+    private static string WithoutWhitespace(IEnumerable<DiffLine?> lines) =>
+        string.Concat(lines.SelectMany(l => l?.Text ?? "").Where(c => !char.IsWhiteSpace(c)));
 
     private static List<DiffBlock> BuildBlocks(IReadOnlyList<AlignedRow> rows)
     {

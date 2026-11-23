@@ -16,6 +16,12 @@ public sealed class AppSettings
 
     public bool AiEnabled { get; set; }
 
+    /// <summary>Shows tabs and spaces as visible marks.</summary>
+    public bool ShowWhitespace { get; set; }
+
+    /// <summary>Differences in whitespace only count as noise.</summary>
+    public bool WhitespaceIsNoise { get; set; }
+
     /// <summary>"claude" or "codex"; null picks the first installed one.</summary>
     public string? AiProvider { get; set; }
 

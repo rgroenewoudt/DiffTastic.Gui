@@ -43,7 +43,7 @@
     <value>Ignorer le bruit</value>
   </data>
   <data name="SkipNoiseTip" xml:space="preserve">
-    <value>Différence précédente/suivante ignore les changements que l'IA a marqués comme bruit (mise en forme, renommages, commentaires)</value>
+    <value>Différence précédente/suivante ignore le bruit : changements marqués comme bruit par l'IA (mise en forme, renommages, commentaires) et, si activé, changements d'espaces seuls</value>
   </data>
   <data name="OpenLeftTitle" xml:space="preserve">
     <value>Ouvrir le fichier A (gauche)</value>
@@ -248,5 +248,11 @@
   </data>
   <data name="GoToLine" xml:space="preserve">
     <value>Aller à la ligne</value>
+  </data>
+  <data name="ShowWhitespaceTip" xml:space="preserve">
+    <value>Afficher les tabulations et espaces</value>
+  </data>
+  <data name="WhitespaceIsNoise" xml:space="preserve">
+    <value>Compter les changements d'espaces seuls comme du bruit</value>
   </data>
 </root>

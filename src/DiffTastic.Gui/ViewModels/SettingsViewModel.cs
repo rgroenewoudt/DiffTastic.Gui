@@ -41,6 +41,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             new("dark", Strings.ThemeDark),
         ];
         _theme = Themes.FirstOrDefault(t => t.Code == settings.Theme?.ToLowerInvariant()) ?? Themes[0];
+        _whitespaceIsNoise = settings.WhitespaceIsNoise;
         _aiEnabled = settings.AiEnabled;
         _provider = settings.AiProvider?.ToLowerInvariant() switch
         {
@@ -67,6 +68,7 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     [ObservableProperty] private LanguageOption _language;
     [ObservableProperty] private ThemeOption _theme;
+    [ObservableProperty] private bool _whitespaceIsNoise;
     [ObservableProperty] private bool _aiEnabled;
     [ObservableProperty] private string _provider;
     [ObservableProperty] private string? _claudeModel;
@@ -76,6 +78,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         settings.Language = Language.Code;
         settings.Theme = Theme.Code;
+        settings.WhitespaceIsNoise = WhitespaceIsNoise;
         settings.AiEnabled = AiEnabled;
         settings.AiProvider = Provider switch
         {

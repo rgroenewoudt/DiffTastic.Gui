@@ -95,6 +95,7 @@ public sealed partial class MainWindow : Window
         if (_vm != null)
         {
             _vm.PropertyChanged += OnViewModelChanged;
+            ShowWhitespace();
             ShowDocument();
         }
     }
@@ -112,8 +113,11 @@ public sealed partial class MainWindow : Window
             case nameof(MainWindowViewModel.LeftTitle) or nameof(MainWindowViewModel.RightTitle):
                 UpdateTitles();
                 break;
-            case nameof(MainWindowViewModel.Analysis):
+            case nameof(MainWindowViewModel.Analysis) or nameof(MainWindowViewModel.WhitespaceIsNoise):
                 ShowAnalysis();
+                break;
+            case nameof(MainWindowViewModel.ShowWhitespace):
+                ShowWhitespace();
                 break;
         }
     }
@@ -126,9 +130,16 @@ public sealed partial class MainWindow : Window
             .Select(n => (Block: blocks[n.Hunk], Note: n))
             .ToList() ?? [];
         Overview.Notes = notes;
+        Overview.NoiseBlocks = blocks.Where((_, i) => _vm!.IsNoise(i)).ToList();
         var hintRows = notes.Where(n => n.Note.ReviewHints.Count > 0).Select(n => n.Block.StartRow).ToHashSet();
         LeftPane.SetHintRows(hintRows);
         RightPane.SetHintRows(hintRows);
+    }
+
+    private void ShowWhitespace()
+    {
+        LeftPane.ShowWhitespace = _vm?.ShowWhitespace ?? false;
+        RightPane.ShowWhitespace = _vm?.ShowWhitespace ?? false;
     }
 
     private void ShowDocument()

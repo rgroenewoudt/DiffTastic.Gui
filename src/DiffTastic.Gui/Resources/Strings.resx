@@ -43,7 +43,7 @@
     <value>Skip noise</value>
   </data>
   <data name="SkipNoiseTip" xml:space="preserve">
-    <value>Previous/next difference skip changes the AI marked as noise (formatting, renames, comments)</value>
+    <value>Previous/next difference skip noise: changes the AI marked as noise (formatting, renames, comments) and, when set, whitespace-only changes</value>
   </data>
   <data name="OpenLeftTitle" xml:space="preserve">
     <value>Open file A (left)</value>
@@ -248,5 +248,11 @@
   </data>
   <data name="GoToLine" xml:space="preserve">
     <value>Go to line</value>
+  </data>
+  <data name="ShowWhitespaceTip" xml:space="preserve">
+    <value>Show tabs and spaces</value>
+  </data>
+  <data name="WhitespaceIsNoise" xml:space="preserve">
+    <value>Whitespace-only changes count as noise</value>
   </data>
 </root>

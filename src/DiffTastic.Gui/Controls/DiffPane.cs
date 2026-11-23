@@ -124,6 +124,17 @@ public sealed class DiffPane : DockPanel
 
     public string Title => _title.Text ?? "";
 
+    /// <summary>Shows tabs and spaces as visible marks.</summary>
+    public bool ShowWhitespace
+    {
+        get => Editor.Options.ShowTabs;
+        set
+        {
+            Editor.Options.ShowTabs = value;
+            Editor.Options.ShowSpaces = value;
+        }
+    }
+
     public void SetTitle(string title, string? fullPath)
     {
         _title.Text = title;

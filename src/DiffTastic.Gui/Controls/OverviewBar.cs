@@ -31,6 +31,9 @@ public sealed class OverviewBar : Control
     /// <summary>AI notes per block; important blocks get a strip on the left.</summary>
     public IReadOnlyList<(DiffBlock Block, HunkNote Note)> Notes { get; set { field = value; InvalidateVisual(); } } = [];
 
+    /// <summary>Blocks drawn faded because they are noise.</summary>
+    public IReadOnlyList<DiffBlock> NoiseBlocks { get; set { field = value; InvalidateVisual(); } } = [];
+
     private const double StripWidth = 4;
 
     public OverviewBar()
@@ -56,13 +59,17 @@ public sealed class OverviewBar : Control
             context.FillRectangle(colors.Marker(kind), new Rect(left, start * rowHeight, Bounds.Width - left - 3, height));
         }
 
+        foreach (var block in NoiseBlocks)
+        {
+            var height = Math.Max(4, (block.EndRow - block.StartRow + 1) * rowHeight);
+            context.FillRectangle(colors.OverviewNoiseFade, new Rect(left, block.StartRow * rowHeight, Bounds.Width - left - 3, height));
+        }
+
         foreach (var (block, note) in Notes)
         {
             var height = Math.Max(4, (block.EndRow - block.StartRow + 1) * rowHeight);
             if (note.IsImportant)
                 context.FillRectangle(colors.ImportantMarker, new Rect(1, block.StartRow * rowHeight, StripWidth, height));
-            else if (note.IsNoise)
-                context.FillRectangle(colors.OverviewNoiseFade, new Rect(left, block.StartRow * rowHeight, Bounds.Width - left - 3, height));
         }
 
         var vTop = Viewport.First * rowHeight;

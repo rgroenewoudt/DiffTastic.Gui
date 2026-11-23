@@ -43,7 +43,7 @@
     <value>Ruis overslaan</value>
   </data>
   <data name="SkipNoiseTip" xml:space="preserve">
-    <value>Vorige/volgende verschil slaat wijzigingen over die de AI als ruis heeft gemarkeerd (opmaak, hernoemingen, commentaar)</value>
+    <value>Vorige/volgende verschil slaat ruis over: wijzigingen die de AI als ruis heeft gemarkeerd (opmaak, hernoemingen, commentaar) en, indien ingesteld, wijzigingen in alleen whitespace</value>
   </data>
   <data name="OpenLeftTitle" xml:space="preserve">
     <value>Bestand A openen (links)</value>
@@ -248,5 +248,11 @@
   </data>
   <data name="GoToLine" xml:space="preserve">
     <value>Ga naar regel</value>
+  </data>
+  <data name="ShowWhitespaceTip" xml:space="preserve">
+    <value>Tabs en spaties tonen</value>
+  </data>
+  <data name="WhitespaceIsNoise" xml:space="preserve">
+    <value>Wijzigingen in alleen whitespace tellen als ruis</value>
   </data>
 </root>

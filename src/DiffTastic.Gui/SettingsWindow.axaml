@@ -43,6 +43,8 @@
                           SelectedItem="{Binding Theme}" HorizontalAlignment="Stretch" />
             </Grid>
 
+            <CheckBox Name="WhitespaceIsNoiseBox" Content="{l:Tr WhitespaceIsNoise}" IsChecked="{Binding WhitespaceIsNoise}" />
+
             <TextBlock Text="{l:Tr AiHeader}" FontSize="15" FontWeight="SemiBold" Margin="0,6,0,0" />
 
             <StackPanel Spacing="4">

@@ -48,7 +48,7 @@ public sealed class DiffQuestioner(AiProvider provider, string language = "Engli
         {context.TrimEnd()}
 
         Question: {question.Trim()}
-        """;
+        """.ReplaceLineEndings("\n");
 
     /// <summary>One difference block with a few unchanged lines around it.</summary>
     public static string BlockContext(DiffDocument doc, int block)

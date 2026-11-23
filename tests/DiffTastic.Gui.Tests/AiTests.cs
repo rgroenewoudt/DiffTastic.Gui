@@ -1,10 +1,13 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Threading;
 using DiffTastic.Core.Ai;
+using DiffTastic.Gui.Controls;
 using DiffTastic.Gui.ViewModels;
 
 namespace DiffTastic.Gui.Tests;
@@ -50,13 +53,38 @@ public sealed partial class AiTests
         Assert.Equal("⚠ Check callers of hunk 0.", vm.CurrentHintsText);
 
         var firstBlock = vm.Document!.Blocks[0];
-        Assert.Contains(firstBlock.StartRow, window.LeftPane.HintRows);
-        Assert.Contains(firstBlock.StartRow, window.RightPane.HintRows);
+        Assert.Equal("⚠ Check callers of hunk 0.", window.LeftPane.Hints[firstBlock.StartRow]);
+        Assert.Equal("⚠ Check callers of hunk 0.", window.RightPane.Hints[firstBlock.StartRow]);
         Screenshots.Save(window, "21-ai-note");
 
         vm.CurrentBlock = 1;
         Assert.Contains("noise", vm.CurrentNoteText);
         Assert.Null(vm.CurrentHintsText);
+    }
+
+    [AvaloniaFact]
+    public async Task Hovering_hint_marker_shows_hints_as_tooltip()
+    {
+        var (window, vm, _) = await OpenAsync();
+        var block = vm.Document!.Blocks[0];
+        window.ScrollToRow(block.StartRow, center: true);
+        Dispatcher.UIThread.RunJobs();
+
+        var margin = window.RightPane.Editor.TextArea.LeftMargins.OfType<RowNumberMargin>().Single();
+        var view = window.RightPane.Editor.TextArea.TextView;
+        var y = view.GetVisualTopByDocumentLine(block.StartRow + 1) - view.VerticalOffset + view.DefaultLineHeight / 2;
+        var onMarker = margin.TranslatePoint(new Point(6, y), window)!.Value;
+
+        window.MouseMove(onMarker);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal("⚠ Check callers of hunk 0.", ToolTip.GetTip(margin));
+        Assert.True(ToolTip.GetIsOpen(margin));
+        Screenshots.Save(window, "21b-ai-hint-tooltip");
+
+        window.MouseMove(onMarker + new Point(0, view.DefaultLineHeight * 3));
+        Dispatcher.UIThread.RunJobs();
+        Assert.Null(ToolTip.GetTip(margin));
+        Assert.False(ToolTip.GetIsOpen(margin));
     }
 
     [AvaloniaFact]

@@ -256,9 +256,12 @@ public sealed partial class MainWindow : Window
             .ToList() ?? [];
         Overview.Notes = notes;
         Overview.NoiseBlocks = blocks.Where((_, i) => _vm!.IsNoise(i)).ToList();
-        var hintRows = notes.Where(n => n.Note.ReviewHints.Count > 0).Select(n => n.Block.StartRow).ToHashSet();
-        LeftPane.SetHintRows(hintRows);
-        RightPane.SetHintRows(hintRows);
+        var hints = notes
+            .Select(n => (n.Block.StartRow, Text: MainWindowViewModel.HintsText(n.Note)))
+            .Where(h => h.Text is not null)
+            .ToDictionary(h => h.StartRow, h => h.Text!);
+        LeftPane.SetHints(hints);
+        RightPane.SetHints(hints);
     }
 
     private void ShowWhitespace()

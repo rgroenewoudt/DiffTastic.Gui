@@ -91,7 +91,9 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         ? $"{Localization.Format(Strings.Difference, note.Hunk + 1)}   ·   {ImportanceLabel(note)}   ·   {note.Reason}"
         : null;
 
-    public string? CurrentHintsText => CurrentNote is { ReviewHints.Count: > 0 } note
+    public string? CurrentHintsText => HintsText(CurrentNote);
+
+    public static string? HintsText(HunkNote? note) => note is { ReviewHints.Count: > 0 }
         ? string.Join('\n', note.ReviewHints.Select(h => "⚠ " + h))
         : null;
 

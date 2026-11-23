@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Rendering;
@@ -29,7 +30,7 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
         }
     } = [];
 
-    public IReadOnlySet<int> HintRows
+    public IReadOnlyDictionary<int, string> Hints
     {
         get;
         set
@@ -38,7 +39,7 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
             InvalidateMeasure();
             InvalidateVisual();
         }
-    } = new HashSet<int>();
+    } = new Dictionary<int, string>();
 
     /// <summary>Rows come from a <see cref="UnifiedLayout"/>: shows the old and the new line number.</summary>
     public bool Unified
@@ -67,7 +68,7 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        var hintSpace = HintRows.Count > 0 ? HintSize + 3 : 0;
+        var hintSpace = Hints.Count > 0 ? HintSize + 3 : 0;
         var numbers = Unified ? NumberWidth * 2 + ColumnGap : NumberWidth;
         return new Size(numbers + 14 + MarkerWidth + hintSpace, 0);
     }
@@ -94,7 +95,7 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
             if (kind != RowKind.Equal)
                 context.FillRectangle(colors.Marker(kind), new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
 
-            if (HintRows.Contains(rowIndex))
+            if (Hints.ContainsKey(rowIndex))
             {
                 var center = new Point(3 + HintSize / 2, top + visualLine.Height / 2);
                 context.DrawEllipse(colors.ImportantMarker, null, center, HintSize / 2, HintSize / 2);
@@ -109,6 +110,35 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
             else
                 DrawNumber(context, side == Side.Left ? row.Left : row.Right, right, top, visualLine.Height);
         }
+    }
+
+    protected override void OnPointerMoved(PointerEventArgs e)
+    {
+        base.OnPointerMoved(e);
+        ShowHint(HintAt(e.GetPosition(this)));
+    }
+
+    protected override void OnPointerExited(PointerEventArgs e)
+    {
+        base.OnPointerExited(e);
+        ShowHint(null);
+    }
+
+    private void ShowHint(string? hint)
+    {
+        if (Equals(ToolTip.GetTip(this), hint))
+            return;
+        ToolTip.SetTip(this, hint);
+        ToolTip.SetIsOpen(this, hint is not null);
+    }
+
+    /// <summary>Hint text when the point is on a hint marker, else null.</summary>
+    public string? HintAt(Point point)
+    {
+        if (point.X > HintSize + 6 || TextView is not { VisualLinesValid: true } view)
+            return null;
+        var line = view.GetDocumentLineByVisualTop(point.Y + view.VerticalOffset);
+        return line is not null && Hints.TryGetValue(line.LineNumber - 1, out var hint) ? hint : null;
     }
 
     private double NumberWidth => Format(new string('9', Math.Max(3, Rows.Count.ToString(CultureInfo.InvariantCulture).Length))).Width;

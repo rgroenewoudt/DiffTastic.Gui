@@ -9,7 +9,7 @@ Windows diff viewer in KDiff3 style, built on [difftastic](https://difftastic.wi
 - Search in both panes (Ctrl+F), next/previous match with F3 / Shift+F3 or Enter / Shift+Enter.
 - Go to a line of the left or right file (Ctrl+G).
 - Syntax highlighting (TextMate).
-- Shows encoding (UTF-8 / UTF-8 BOM / UTF-16) and line endings (CRLF / LF) in the pane header when they differ between the files.
+- Shows encoding (UTF-8 / UTF-8 BOM / UTF-16 / ANSI) and line endings (CRLF / LF) in the pane header when they differ between the files. Files without BOM that are not valid UTF-8 are read as Windows-1252 (ANSI).
 - Hover a line to see the commit that last changed it. Use **Older / Newer** to walk through the line's history (`git log -L`).
 - Falls back to a plain line diff when difft is missing, fails or takes longer than 15 s.
 

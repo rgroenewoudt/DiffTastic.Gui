@@ -10,8 +10,18 @@ public class TextFormatTests
     [InlineData(new byte[] { 0xFF, 0xFE, (byte)'a', 0 }, "UTF-16 LE")]
     [InlineData(new byte[] { 0xFE, 0xFF, 0, (byte)'a' }, "UTF-16 BE")]
     [InlineData(new byte[] { (byte)'a' }, "UTF-8")]
-    public void Detect_encoding_from_bom(byte[] bytes, string expected) =>
+    [InlineData(new byte[] { (byte)'c', (byte)'a', (byte)'f', 0xC3, 0xA9 }, "UTF-8")]
+    [InlineData(new byte[] { (byte)'c', (byte)'a', (byte)'f', 0xE9 }, "ANSI")]
+    public void Detect_encoding(byte[] bytes, string expected) =>
         Assert.Equal(expected, TextFormat.Detect(bytes).Encoding);
+
+    [Theory]
+    [InlineData(new byte[] { (byte)'c', (byte)'a', (byte)'f', 0xC3, 0xA9 }, "café")]
+    [InlineData(new byte[] { (byte)'c', (byte)'a', (byte)'f', 0xE9, (byte)' ', 0x80 }, "café €")]
+    [InlineData(new byte[] { 0xEF, 0xBB, 0xBF, (byte)'a' }, "a")]
+    [InlineData(new byte[] { 0xFF, 0xFE, (byte)'a', 0 }, "a")]
+    public void Decode_uses_detected_encoding(byte[] bytes, string expected) =>
+        Assert.Equal(expected, TextFormat.Detect(bytes).Decode(bytes));
 
     [Theory]
     [InlineData("a\r\nb\r\n", "CRLF")]

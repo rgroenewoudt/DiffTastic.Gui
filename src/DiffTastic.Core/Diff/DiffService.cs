@@ -37,8 +37,8 @@ public sealed class DiffService(DifftRunner? difft)
             return ("", null);
 
         var bytes = await File.ReadAllBytesAsync(path, ct);
-        using var reader = new StreamReader(new MemoryStream(bytes), detectEncodingFromByteOrderMarks: true);
-        return (await reader.ReadToEndAsync(ct), TextFormat.Detect(bytes));
+        var format = TextFormat.Detect(bytes);
+        return (format.Decode(bytes), format);
     }
 
     private static string EmptyIfMissing(string path) =>

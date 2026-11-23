@@ -12,7 +12,7 @@ public sealed class OverviewBar : Control
 {
     public event EventHandler<int>? RowRequested;
 
-    private List<(int Start, int Count, RowKind Kind)> _runs = [];
+    private List<(int Start, int Count, RowKind Kind, bool Moved)> _runs = [];
 
     public IReadOnlyList<AlignedRow> Rows
     {
@@ -53,10 +53,10 @@ public sealed class OverviewBar : Control
 
         var rowHeight = h / Rows.Count;
         var left = StripWidth + 3;
-        foreach (var (start, count, kind) in _runs)
+        foreach (var (start, count, kind, moved) in _runs)
         {
             var height = Math.Max(3, count * rowHeight);
-            context.FillRectangle(colors.Marker(kind), new Rect(left, start * rowHeight, Bounds.Width - left - 3, height));
+            context.FillRectangle(moved ? colors.MovedMarker : colors.Marker(kind), new Rect(left, start * rowHeight, Bounds.Width - left - 3, height));
         }
 
         foreach (var block in NoiseBlocks)
@@ -77,22 +77,25 @@ public sealed class OverviewBar : Control
         context.DrawRectangle(colors.ViewportFill, colors.ViewportPen, new Rect(0.5, vTop, Bounds.Width - 1, vHeight));
     }
 
-    /// <summary>Runs of consecutive rows with the same non-equal kind.</summary>
-    private static List<(int Start, int Count, RowKind Kind)> ChangedRuns(IReadOnlyList<AlignedRow> rows)
+    /// <summary>Runs of consecutive rows with the same non-equal kind and moved state.</summary>
+    private static List<(int Start, int Count, RowKind Kind, bool Moved)> ChangedRuns(IReadOnlyList<AlignedRow> rows)
     {
-        var runs = new List<(int, int, RowKind)>();
+        var runs = new List<(int, int, RowKind, bool)>();
         var i = 0;
         while (i < rows.Count)
         {
             var kind = rows[i].Kind;
+            var moved = IsMoved(rows[i]);
             var start = i;
-            while (i < rows.Count && rows[i].Kind == kind)
+            while (i < rows.Count && rows[i].Kind == kind && IsMoved(rows[i]) == moved)
                 i++;
             if (kind != RowKind.Equal)
-                runs.Add((start, i - start, kind));
+                runs.Add((start, i - start, kind, moved));
         }
         return runs;
     }
+
+    private static bool IsMoved(AlignedRow row) => row.Left?.Moved != false && row.Right?.Moved != false;
 
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {

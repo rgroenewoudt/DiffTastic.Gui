@@ -5,8 +5,8 @@ public enum RowKind { Equal, Changed, Added, Removed }
 /// <summary>Character range in UTF-16 units.</summary>
 public readonly record struct TextRange(int Start, int Length);
 
-/// <summary>One line of a file. LineIndex is 0-based.</summary>
-public sealed record DiffLine(int LineIndex, string Text, IReadOnlyList<TextRange> Changes);
+/// <summary>One line of a file. LineIndex is 0-based. Moved: the line is part of code moved to or from another block.</summary>
+public sealed record DiffLine(int LineIndex, string Text, IReadOnlyList<TextRange> Changes, bool Moved = false);
 
 public sealed record AlignedRow(DiffLine? Left, DiffLine? Right, RowKind Kind);
 
@@ -18,7 +18,7 @@ public sealed class DiffDocument
     public DiffDocument(IReadOnlyList<AlignedRow> rows, string language, string? engineNote,
         TextFormat? leftFormat = null, TextFormat? rightFormat = null)
     {
-        Rows = rows;
+        Rows = MoveDetector.Mark(rows);
         Language = language;
         EngineNote = engineNote;
         LeftFormat = leftFormat;
@@ -26,6 +26,7 @@ public sealed class DiffDocument
         Blocks = BuildBlocks(rows);
         AddedLines = rows.Count(r => r.Kind != RowKind.Equal && r.Right is not null);
         RemovedLines = rows.Count(r => r.Kind != RowKind.Equal && r.Left is not null);
+        MovedLines = Rows.Count(r => r.Right?.Moved == true);
         _whitespaceOnly = Blocks.Select(IsWhitespaceOnly).ToArray();
     }
 
@@ -40,6 +41,9 @@ public sealed class DiffDocument
 
     /// <summary>Lines of the left file that are removed or changed.</summary>
     public int RemovedLines { get; }
+
+    /// <summary>Lines of the right file that were moved from another place.</summary>
+    public int MovedLines { get; }
 
     /// <summary>Set when difftastic was not used, explains why.</summary>
     public string? EngineNote { get; }

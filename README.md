@@ -5,6 +5,8 @@ Windows diff viewer in KDiff3 style, built on [difftastic](https://difftastic.wi
 ![Side-by-side diff with AI summary](docs/side-by-side.png)
 
 - Side-by-side diff with aligned rows, filler rows and per-character changes from difftastic.
+- Moved code (3 or more lines removed in one place and added in another) is shown in purple.
+- Status bar shows added, removed and moved line counts.
 - Overview bar, previous/next difference (Ctrl+Up / Ctrl+Down, Ctrl+Home / Ctrl+End).
 - Search in both panes (Ctrl+F), next/previous match with F3 / Shift+F3 or Enter / Shift+Enter.
 - Go to a line of the left or right file (Ctrl+G).

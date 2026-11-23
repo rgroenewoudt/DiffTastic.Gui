@@ -66,6 +66,9 @@
   <data name="DifferenceCount" xml:space="preserve">
     <value>{0} Unterschiede</value>
   </data>
+  <data name="MovedLines" xml:space="preserve">
+    <value>{0} verschoben</value>
+  </data>
   <data name="Difference" xml:space="preserve">
     <value>Unterschied {0}</value>
   </data>

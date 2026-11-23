@@ -12,7 +12,7 @@ public sealed class DiffColors
 {
     public static readonly DiffColors Light = new(
         changedRow: "#FFF6D5", removedRow: "#FFE4E1", addedRow: "#E3F6E3",
-        removedText: "#F7A8A8", addedText: "#9EDC9E",
+        removedText: "#F7A8A8", addedText: "#9EDC9E", movedRow: "#ECE6FA", movedMarker: "#8A63D2",
         filler: "#EEEEEE", fillerHatch: "#D4D4D4", accent: "#3A6FD8",
         changedMarker: "#E0B000", removedMarker: "#D9534F", addedMarker: "#3FA34D", importantMarker: "#E8590C",
         leftHeader: "#DCE6F7", rightHeader: "#DDF1DD",
@@ -20,7 +20,7 @@ public sealed class DiffColors
 
     public static readonly DiffColors Dark = new(
         changedRow: "#3A3520", removedRow: "#4B2626", addedRow: "#233D27",
-        removedText: "#7A3434", addedText: "#2F6B37",
+        removedText: "#7A3434", addedText: "#2F6B37", movedRow: "#33294A", movedMarker: "#A387E8",
         filler: "#252526", fillerHatch: "#38383C", accent: "#5B8DEF",
         changedMarker: "#C9A227", removedMarker: "#E06C66", addedMarker: "#4CB860", importantMarker: "#F07A3A",
         leftHeader: "#23324A", rightHeader: "#233A28",
@@ -29,7 +29,7 @@ public sealed class DiffColors
     public static DiffColors For(ThemeVariant variant) => variant == ThemeVariant.Dark ? Dark : Light;
 
     private DiffColors(
-        string changedRow, string removedRow, string addedRow, string removedText, string addedText,
+        string changedRow, string removedRow, string addedRow, string removedText, string addedText, string movedRow, string movedMarker,
         string filler, string fillerHatch, string accent,
         string changedMarker, string removedMarker, string addedMarker, string importantMarker,
         string leftHeader, string rightHeader, string editor, string search, string gutter, string gutterText, string overview)
@@ -39,6 +39,8 @@ public sealed class DiffColors
         AddedRow = Brush(addedRow);
         RemovedText = Brush(removedText);
         AddedText = Brush(addedText);
+        MovedRow = Brush(movedRow);
+        MovedMarker = Brush(movedMarker);
         Filler = Brush(filler);
         FillerHatch = Hatch(fillerHatch, 8);
         CurrentBlockPen = new ImmutablePen(Brush(accent), 1.5);
@@ -68,6 +70,8 @@ public sealed class DiffColors
     public IBrush AddedRow { get; }
     public IBrush RemovedText { get; }
     public IBrush AddedText { get; }
+    public IBrush MovedRow { get; }
+    public IBrush MovedMarker { get; }
     public IBrush Filler { get; }
     public IBrush FillerHatch { get; }
     public IPen CurrentBlockPen { get; }

@@ -42,6 +42,12 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
                 continue;
             }
 
+            if (line.Moved)
+            {
+                drawingContext.FillRectangle(colors.MovedRow, rect);
+                continue;
+            }
+
             if (colors.RowBackground(Unified ? UnifiedRow.KindOf(row) : row.Kind, lineSide) is { } bg)
                 drawingContext.FillRectangle(bg, rect);
 

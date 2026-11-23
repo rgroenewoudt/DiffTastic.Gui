@@ -91,9 +91,11 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
             var row = Rows[rowIndex];
             var top = visualLine.VisualTop - textView.VerticalOffset;
             var kind = Unified ? UnifiedRow.KindOf(row) : row.Kind;
+            var line = Unified ? row.Right ?? row.Left : side == Side.Left ? row.Left : row.Right;
+            var marker = line?.Moved == true ? colors.MovedMarker : kind != RowKind.Equal ? colors.Marker(kind) : null;
 
-            if (kind != RowKind.Equal)
-                context.FillRectangle(colors.Marker(kind), new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
+            if (marker is not null)
+                context.FillRectangle(marker, new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
 
             if (Hints.ContainsKey(rowIndex))
             {

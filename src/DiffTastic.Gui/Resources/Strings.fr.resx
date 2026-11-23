@@ -258,4 +258,22 @@
   <data name="WhitespaceIsNoise" xml:space="preserve">
     <value>Compter les changements d'espaces seuls comme du bruit</value>
   </data>
+  <data name="AskAi" xml:space="preserve">
+    <value>Demander à l’IA…</value>
+  </data>
+  <data name="AskAiTip" xml:space="preserve">
+    <value>Interroger {0} sur ce code. L’envoie à {1}.</value>
+  </data>
+  <data name="Ask" xml:space="preserve">
+    <value>Demander</value>
+  </data>
+  <data name="AskAiWatermark" xml:space="preserve">
+    <value>Poser une question sur ce code</value>
+  </data>
+  <data name="Thinking" xml:space="preserve">
+    <value>Réflexion…</value>
+  </data>
+  <data name="AskAiSelection" xml:space="preserve">
+    <value>Sélection, {0} lignes</value>
+  </data>
 </root>

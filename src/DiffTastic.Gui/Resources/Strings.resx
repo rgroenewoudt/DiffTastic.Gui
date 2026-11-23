@@ -258,4 +258,22 @@
   <data name="WhitespaceIsNoise" xml:space="preserve">
     <value>Whitespace-only changes count as noise</value>
   </data>
+  <data name="AskAi" xml:space="preserve">
+    <value>Ask AI…</value>
+  </data>
+  <data name="AskAiTip" xml:space="preserve">
+    <value>Ask {0} about this code. Sends it to {1}.</value>
+  </data>
+  <data name="Ask" xml:space="preserve">
+    <value>Ask</value>
+  </data>
+  <data name="AskAiWatermark" xml:space="preserve">
+    <value>Ask a question about this code</value>
+  </data>
+  <data name="Thinking" xml:space="preserve">
+    <value>Thinking…</value>
+  </data>
+  <data name="AskAiSelection" xml:space="preserve">
+    <value>Selection, {0} lines</value>
+  </data>
 </root>

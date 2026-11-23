@@ -217,6 +217,8 @@ public sealed partial class AiTests
                 throw new InvalidOperationException(Error);
             if (schema == CommitExplainer.Schema)
                 return JsonSerializer.Serialize(new { explanation = "Fake explanation." });
+            if (schema == DiffQuestioner.Schema)
+                return JsonSerializer.Serialize(new { answer = "Fake answer." });
 
             var hunks = HunkHeader().Matches(prompt).Select(m => int.Parse(m.Groups[1].Value, CultureInfo.InvariantCulture)).Select(i => new
             {

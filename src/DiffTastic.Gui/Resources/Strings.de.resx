@@ -258,4 +258,22 @@
   <data name="WhitespaceIsNoise" xml:space="preserve">
     <value>Nur-Leerraum-Änderungen als Rauschen zählen</value>
   </data>
+  <data name="AskAi" xml:space="preserve">
+    <value>KI fragen…</value>
+  </data>
+  <data name="AskAiTip" xml:space="preserve">
+    <value>{0} zu diesem Code fragen. Sendet ihn an {1}.</value>
+  </data>
+  <data name="Ask" xml:space="preserve">
+    <value>Fragen</value>
+  </data>
+  <data name="AskAiWatermark" xml:space="preserve">
+    <value>Eine Frage zu diesem Code stellen</value>
+  </data>
+  <data name="Thinking" xml:space="preserve">
+    <value>Denkt nach…</value>
+  </data>
+  <data name="AskAiSelection" xml:space="preserve">
+    <value>Auswahl, {0} Zeilen</value>
+  </data>
 </root>

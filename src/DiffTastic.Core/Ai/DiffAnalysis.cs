@@ -88,18 +88,7 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
             var block = doc.Blocks[i];
             var hunkStart = sb.Length;
             sb.Append(CultureInfo.InvariantCulture, $"\n### Hunk {i}\n");
-            var first = block.StartRow;
-            while (first > 0 && block.StartRow - first < ContextRows && doc.Rows[first - 1].Kind == RowKind.Equal)
-                first--;
-            for (var r = first; r < block.StartRow; r++)
-                AppendLine(sb, ' ', doc.Rows[r].Right?.Text);
-
-            var rows = Enumerable.Range(block.StartRow, block.EndRow - block.StartRow + 1).Select(r => doc.Rows[r]).ToList();
-            AppendSide(sb, '-', rows.Select(r => r.Left?.Text), maxLinesPerSide);
-            AppendSide(sb, '+', rows.Select(r => r.Right?.Text), maxLinesPerSide);
-
-            for (var r = block.EndRow + 1; r < doc.Rows.Count && r <= block.EndRow + ContextRows && doc.Rows[r].Kind == RowKind.Equal; r++)
-                AppendLine(sb, ' ', doc.Rows[r].Right?.Text);
+            AppendHunk(sb, doc, block, maxLinesPerSide);
 
             if (sb.Length > budget - OmittedNoteLength)
             {
@@ -109,6 +98,23 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
             }
         }
         return sb.ToString();
+    }
+
+    /// <summary>Old lines ("-"), new lines ("+") and a few unchanged lines (" ") around them.</summary>
+    internal static void AppendHunk(StringBuilder sb, DiffDocument doc, DiffBlock block, int maxLinesPerSide)
+    {
+        var first = block.StartRow;
+        while (first > 0 && block.StartRow - first < ContextRows && doc.Rows[first - 1].Kind == RowKind.Equal)
+            first--;
+        for (var r = first; r < block.StartRow; r++)
+            AppendLine(sb, ' ', doc.Rows[r].Right?.Text);
+
+        var rows = Enumerable.Range(block.StartRow, block.EndRow - block.StartRow + 1).Select(r => doc.Rows[r]).ToList();
+        AppendSide(sb, '-', rows.Select(r => r.Left?.Text), maxLinesPerSide);
+        AppendSide(sb, '+', rows.Select(r => r.Right?.Text), maxLinesPerSide);
+
+        for (var r = block.EndRow + 1; r < doc.Rows.Count && r <= block.EndRow + ContextRows && doc.Rows[r].Kind == RowKind.Equal; r++)
+            AppendLine(sb, ' ', doc.Rows[r].Right?.Text);
     }
 
     private static void AppendSide(StringBuilder sb, char prefix, IEnumerable<string?> texts, int maxLines)
@@ -122,7 +128,7 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
 
     public const int MaxLineLength = 500;
 
-    private static void AppendLine(StringBuilder sb, char prefix, string? text)
+    internal static void AppendLine(StringBuilder sb, char prefix, string? text)
     {
         if (text is null)
             return;

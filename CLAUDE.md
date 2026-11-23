@@ -37,3 +37,4 @@ dotnet run --project src/DiffTastic.Gui -- samples/old.cs samples/new.cs [--path
 - Unified view (`UnifiedView` setting): the left pane is hidden and the right pane shows `UnifiedLayout` rows; `MainWindow` maps shown rows to document rows for block selection and blame.
 - `DiffPane` wraps an AvaloniaEdit `TextEditor`. Each pane's text is one line per aligned row (filler rows are empty lines), so row index == document line index in both panes. Highlighting is drawn by `DiffBackgroundRenderer`; real line numbers by `RowNumberMargin`; syntax by TextMate.
 - `BlameHoverController` + `BlamePopup` show the commit for the hovered line, with Older/Newer history navigation.
+- Right-click "Ask AI…" (`MainWindow.OnContextRequested`) opens `AskAiPopup`: a free question about the selection when the clicked row is in it, else about the block; answered by `Core/Ai/DiffQuestioner`.

@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:DiffTastic.Gui.ViewModels"
+             xmlns:l="using:DiffTastic.Gui"
+             x:Class="DiffTastic.Gui.Controls.AskAiPopup"
+             x:DataType="vm:AskAiViewModel">
+
+    <Border Background="{DynamicResource PopupBackgroundBrush}" CornerRadius="8" Padding="16,12" Width="560"
+            BorderBrush="{DynamicResource PopupBorderBrush}" BorderThickness="1"
+            BoxShadow="0 6 24 0 #40000000" Margin="12">
+        <StackPanel Spacing="10">
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Border Background="{DynamicResource AiAccentBrush}" CornerRadius="3" Padding="6,1" VerticalAlignment="Center"
+                        ToolTip.Tip="{Binding ToolTip}">
+                    <StackPanel Orientation="Horizontal" Spacing="3">
+                        <TextBlock Text="✦" FontSize="11" Foreground="White" />
+                        <TextBlock Text="{l:Tr AiHeader}" FontSize="11" FontWeight="SemiBold" Foreground="White" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Name="ContextLabel" Text="{Binding ContextLabel}" FontWeight="SemiBold" FontSize="13"
+                           VerticalAlignment="Center" Foreground="{DynamicResource PopupTextBrush}" />
+            </StackPanel>
+
+            <DockPanel>
+                <Button DockPanel.Dock="Right" Name="AskButton" Margin="6,0,0,0" Content="{l:Tr Ask}"
+                        Command="{Binding AskCommand}" ToolTip.Tip="{Binding ToolTip}" />
+                <TextBox Name="QuestionBox" Text="{Binding Question}" PlaceholderText="{l:Tr AskAiWatermark}" />
+            </DockPanel>
+
+            <Border Name="AnswerBox" Background="{DynamicResource AiBackgroundBrush}" BorderBrush="{DynamicResource AiAccentBrush}"
+                    BorderThickness="3,0,0,0" Padding="12,8" IsVisible="{Binding HasAnswer}">
+                <ScrollViewer MaxHeight="320" HorizontalScrollBarVisibility="Disabled">
+                    <SelectableTextBlock Name="AnswerText" Text="{Binding Answer}" TextWrapping="Wrap" FontSize="12.5"
+                                         Foreground="{DynamicResource AiTextBrush}" />
+                </ScrollViewer>
+            </Border>
+        </StackPanel>
+    </Border>
+</UserControl>

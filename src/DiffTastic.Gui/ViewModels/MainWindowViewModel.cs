@@ -18,6 +18,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     private readonly AppSettings _settings = settings ?? new AppSettings();
     private DiffAnalyzer? _analyzer = ai is null ? null : new DiffAnalyzer(ai, Localization.AiLanguage);
     private CommitExplainer? _explainer = ai is null ? null : new CommitExplainer(ai, Localization.AiLanguage);
+    private DiffQuestioner? _questioner = ai is null ? null : new DiffQuestioner(ai, Localization.AiLanguage);
     private CancellationTokenSource? _aiCts;
     private BlameService? _blameService;
     private Task<BlameResult?> _leftBlame = Task.FromResult<BlameResult?>(null);
@@ -127,6 +128,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
             CancelAnalysis();
             _analyzer = ai is null ? null : new DiffAnalyzer(ai, Localization.AiLanguage);
             _explainer = ai is null ? null : new CommitExplainer(ai, Localization.AiLanguage);
+            _questioner = ai is null ? null : new DiffQuestioner(ai, Localization.AiLanguage);
             OnPropertyChanged(nameof(IsAiAvailable));
             OnPropertyChanged(nameof(AiToolTip));
         }
@@ -411,17 +413,38 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
 
     public void SelectBlockAtRow(int row)
     {
-        if (Document is null)
-            return;
-        for (var i = 0; i < Document.Blocks.Count; i++)
-        {
-            if (Document.Blocks[i].StartRow <= row && row <= Document.Blocks[i].EndRow)
-            {
-                CurrentBlock = i;
-                return;
-            }
-        }
+        if (BlockAtRow(row) is >= 0 and var block)
+            CurrentBlock = block;
     }
+
+    /// <summary>Index of the block that holds a document row, or -1.</summary>
+    public int BlockAtRow(int row)
+    {
+        var blocks = Document?.Blocks ?? [];
+        for (var i = 0; i < blocks.Count; i++)
+        {
+            if (blocks[i].StartRow <= row && row <= blocks[i].EndRow)
+                return i;
+        }
+        return -1;
+    }
+
+    public bool CanAskAi => AiEnabled && _questioner is not null && Document is not null;
+
+    /// <summary>Question popup about one difference block, or null when AI is off.</summary>
+    public AskAiViewModel? AskAboutBlock(int block) =>
+        CanAskAi && block >= 0 && block < Document!.Blocks.Count
+            ? CreateAskAi(DiffQuestioner.BlockContext(Document, block), Localization.Format(Strings.Difference, block + 1))
+            : null;
+
+    /// <summary>Question popup about selected lines, or null when AI is off.</summary>
+    public AskAiViewModel? AskAboutSelection(IReadOnlyList<(char Prefix, string Text)> lines, string? selectedText) =>
+        CanAskAi && lines.Count > 0
+            ? CreateAskAi(DiffQuestioner.SelectionContext(lines, selectedText), Localization.Format(Strings.AskAiSelection, lines.Count))
+            : null;
+
+    private AskAiViewModel CreateAskAi(string context, string label) =>
+        new(_questioner!, RepoPath ?? Path.GetFileName(RightPath ?? LeftPath ?? ""), context, label);
 
     private bool HasBlocks() => Document is { Blocks.Count: > 0 };
     private bool CanGoNext() => FindBlock(CurrentBlock + 1, 1) >= 0;

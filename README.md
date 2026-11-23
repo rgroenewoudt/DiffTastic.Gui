@@ -52,6 +52,7 @@ When [Claude Code](https://claude.com/claude-code) (`claude`) or [Codex](https:/
 - per difference: importance, a short reason and review hints (orange strip in the overview bar, orange dot in the gutter),
 - **Skip noise**: previous/next skip differences that only change formatting, names, comments or imports,
 - **Explain (AI)** in the blame popup: what the commit did to that line.
+- **Ask AI…** in the right-click menu: a free question about the difference under the pointer, or about the selected code.
 
 The changed code is sent to Anthropic or OpenAI, so only turn it on when that is allowed for the code. Change settings with the gear button in the toolbar; changes apply right away. They are saved in `%APPDATA%/DiffTastic/settings.json`:
 

@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using Avalonia.Controls.Primitives.PopupPositioning;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
@@ -23,6 +25,7 @@ public sealed partial class MainWindow : Window
     private (string? Left, string? Right)? _shownPaths;
     private UnifiedLayout? _unified;
     private GridLength _leftWidth = new(1, GridUnitType.Star);
+    private readonly Popup _askPopup;
 
     public MainWindow()
     {
@@ -41,7 +44,22 @@ public sealed partial class MainWindow : Window
             view.VisualLinesChanged += (_, _) => UpdateViewport();
             view.PointerPressed += (_, e) => _vm?.SelectBlockAtRow(SourceRow(pane.RowAt(e.GetPosition(view))));
             pane.FoldsToggled += (_, _) => (pane == LeftPane ? RightPane : LeftPane).ApplyFoldStates(pane.GetFoldStates());
+            view.ContextRequested += (_, e) => OnContextRequested(pane, e);
         }
+
+        _askPopup = new Popup
+        {
+            Child = AskAiContent,
+            ShouldUseOverlayLayer = true,
+            IsLightDismissEnabled = true,
+            Placement = PlacementMode.AnchorAndGravity,
+            PlacementAnchor = PopupAnchor.BottomLeft,
+            PlacementGravity = PopupGravity.BottomRight,
+            HorizontalOffset = -24,
+            PlacementConstraintAdjustment = PopupPositionerConstraintAdjustment.FlipY | PopupPositionerConstraintAdjustment.SlideX,
+        };
+        _askPopup.Closed += (_, _) => (AskAiContent.DataContext as IDisposable)?.Dispose();
+        PanesGrid.Children.Add(_askPopup);
 
         Blame = new BlameHoverController(PanesGrid, CreateBlamePopupAsync);
         Blame.Attach(LeftPane);
@@ -93,11 +111,99 @@ public sealed partial class MainWindow : Window
     public DiffPane RightPane { get; }
     public BlameHoverController Blame { get; }
     public DiffSearch Search { get; }
+    public AskAiPopup AskAiContent { get; } = new();
+    public bool IsAskAiOpen => _askPopup.IsOpen;
+
+    private void OnContextRequested(DiffPane pane, ContextRequestedEventArgs e)
+    {
+        if (_vm is not { CanAskAi: true })
+            return;
+        e.Handled = true;
+        var view = pane.Editor.TextArea.TextView;
+        var point = e.TryGetPosition(view, out var p) ? p : CaretPoint(pane);
+        var row = pane.RowAt(point);
+        var item = new MenuItem { Header = Strings.AskAi, Name = "AskAiItem", IsEnabled = CanAskAt(pane, row) };
+        item.Click += (_, _) => OpenAskAi(pane, row, point.X);
+        new ContextMenu { Items = { item } }.Open(view);
+    }
+
+    private static Point CaretPoint(DiffPane pane)
+    {
+        var view = pane.Editor.TextArea.TextView;
+        var caret = pane.Editor.TextArea.Caret.CalculateCaretRectangle();
+        return new Point(caret.X - view.HorizontalOffset, caret.Y - view.VerticalOffset);
+    }
+
+    private bool CanAskAt(DiffPane pane, int row) => SelectedRows(pane, row) is not null || _vm?.BlockAtRow(SourceRow(row)) >= 0;
+
+    /// <summary>Asks about the selection when <paramref name="row"/> is in it, otherwise about the block at the row.</summary>
+    public void OpenAskAi(DiffPane pane, int row, double x)
+    {
+        if (_vm is null)
+            return;
+        var vm = SelectedRows(pane, row) is { } rows
+            ? _vm.AskAboutSelection(SelectedLines(pane, rows.First, rows.Last), PartialSelection(pane, rows.First))
+            : _vm.AskAboutBlock(_vm.BlockAtRow(SourceRow(row)));
+        if (vm is null)
+            return;
+
+        _askPopup.IsOpen = false;
+        Blame.Close();
+        AskAiContent.DataContext = vm;
+        var view = pane.Editor.TextArea.TextView;
+        var top = view.GetVisualTopByDocumentLine(Math.Max(1, row + 1)) - view.VerticalOffset;
+        _askPopup.PlacementTarget = view;
+        _askPopup.PlacementRect = new Rect(x, top, 1, view.DefaultLineHeight);
+        _askPopup.IsOpen = true;
+        Dispatcher.UIThread.Post(AskAiContent.FocusQuestion, DispatcherPriority.Loaded);
+    }
+
+    public void CloseAskAi() => _askPopup.IsOpen = false;
+
+    /// <summary>First and last shown row of the selection when it holds <paramref name="row"/>, else null.</summary>
+    private static (int First, int Last)? SelectedRows(DiffPane pane, int row)
+    {
+        var area = pane.Editor.TextArea;
+        if (area.Selection.IsEmpty || area.Selection.SurroundingSegment is not { } segment)
+            return null;
+        var document = pane.Editor.Document;
+        var first = document.GetLineByOffset(segment.Offset);
+        var last = document.GetLineByOffset(segment.EndOffset);
+        if (last.LineNumber > first.LineNumber && segment.EndOffset == last.Offset && last.Length > 0)
+            last = last.PreviousLine;
+        var rows = (First: first.LineNumber - 1, Last: last.LineNumber - 1);
+        return row >= rows.First && row <= rows.Last ? rows : null;
+    }
+
+    private static List<(char Prefix, string Text)> SelectedLines(DiffPane pane, int first, int last)
+    {
+        var lines = new List<(char, string)>();
+        for (var r = first; r <= last && r < pane.Rows.Count; r++)
+        {
+            var row = pane.Rows[r];
+            var line = pane.Unified ? row.Right ?? row.Left : pane.Side == Side.Left ? row.Left : row.Right;
+            if (line is null)
+                continue;
+            var kind = pane.Unified ? UnifiedRow.KindOf(row) : row.Kind;
+            var side = pane.Unified ? UnifiedRow.SideOf(row) : pane.Side;
+            lines.Add((kind == RowKind.Equal ? ' ' : side == Side.Left ? '-' : '+', line.Text));
+        }
+        return lines;
+    }
+
+    /// <summary>The selected text when it is only part of one line.</summary>
+    private static string? PartialSelection(DiffPane pane, int firstRow)
+    {
+        var text = pane.Editor.SelectedText;
+        var line = pane.Editor.Document.GetLineByNumber(firstRow + 1);
+        return text.Contains('\n') || text.Trim() == pane.Editor.Document.GetText(line).Trim() ? null : text;
+    }
 
     protected override void OnClosed(EventArgs e)
     {
         Localization.LanguageChanged -= OnLanguageChanged;
         Blame.Close();
+        CloseAskAi();
         _vm?.CancelAnalysis();
         base.OnClosed(e);
     }
@@ -164,6 +270,7 @@ public sealed partial class MainWindow : Window
     private void ShowDocument()
     {
         Blame.Close();
+        CloseAskAi();
         var paths = (_vm?.LeftPath, _vm?.RightPath);
         int? keepRow = _shownPaths == paths ? SourceRow(AnchorRow()) : null;
         _shownPaths = _vm?.Document is null ? null : paths;
@@ -313,6 +420,11 @@ public sealed partial class MainWindow : Window
         {
             if (command.CanExecute(null))
                 command.Execute(null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape && IsAskAiOpen)
+        {
+            CloseAskAi();
             e.Handled = true;
         }
         else if (e.Key == Key.Escape && Blame.IsOpen)

@@ -258,4 +258,22 @@
   <data name="WhitespaceIsNoise" xml:space="preserve">
     <value>Wijzigingen in alleen whitespace tellen als ruis</value>
   </data>
+  <data name="AskAi" xml:space="preserve">
+    <value>Vraag het AI…</value>
+  </data>
+  <data name="AskAiTip" xml:space="preserve">
+    <value>Vraag {0} over deze code. Stuurt de code naar {1}.</value>
+  </data>
+  <data name="Ask" xml:space="preserve">
+    <value>Vraag</value>
+  </data>
+  <data name="AskAiWatermark" xml:space="preserve">
+    <value>Stel een vraag over deze code</value>
+  </data>
+  <data name="Thinking" xml:space="preserve">
+    <value>Bezig met nadenken…</value>
+  </data>
+  <data name="AskAiSelection" xml:space="preserve">
+    <value>Selectie, {0} regels</value>
+  </data>
 </root>

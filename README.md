@@ -2,6 +2,8 @@
 
 Windows diff viewer in KDiff3 style, built on [difftastic](https://difftastic.wilfred.me.uk/) and Avalonia.
 
+![Side-by-side diff with AI summary](docs/side-by-side.png)
+
 - Side-by-side diff with aligned rows, filler rows and per-character changes from difftastic.
 - Overview bar, previous/next difference (Ctrl+Up / Ctrl+Down, Ctrl+Home / Ctrl+End).
 - Search in both panes (Ctrl+F), next/previous match with F3 / Shift+F3 or Enter / Shift+Enter.
@@ -9,6 +11,10 @@ Windows diff viewer in KDiff3 style, built on [difftastic](https://difftastic.wi
 - Syntax highlighting (TextMate).
 - Hover a line to see the commit that last changed it. Use **Older / Newer** to walk through the line's history (`git log -L`).
 - Falls back to a plain line diff when difft is missing, fails or takes longer than 15 s.
+
+![Blame popup with line history](docs/blame.png)
+
+![Unified view](docs/unified.png)
 
 ## Download
 

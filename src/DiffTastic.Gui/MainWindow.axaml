@@ -9,6 +9,7 @@
         x:Class="DiffTastic.Gui.MainWindow"
         x:DataType="vm:MainWindowViewModel"
         Title="DiffTastic"
+        Icon="/Assets/app.ico"
         Width="1400" Height="850"
         Background="{DynamicResource WindowBackgroundBrush}">
 

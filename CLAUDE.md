@@ -13,6 +13,7 @@ dotnet test
 dotnet test tests/DiffTastic.Core.Tests --filter "FullyQualifiedName~LineAlignerTests"
 dotnet run --project src/DiffTastic.Gui -- samples/old.cs samples/new.cs [--path <repo-relative path>]
 ./tools/screenshot.ps1 -ProcessId <pid> -OutFile x.png   # capture the real running window
+./tools/make-icon.ps1                     # regenerate src/DiffTastic.Gui/Assets/app.ico
 ```
 
 - `DiffTastic.Core.Tests` uses xunit v2; `DiffTastic.Gui.Tests` uses xunit v3 (`OutputType Exe`) with Avalonia headless + Skia.

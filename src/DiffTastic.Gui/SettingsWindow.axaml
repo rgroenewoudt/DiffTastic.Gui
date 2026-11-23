@@ -6,6 +6,7 @@
         x:Class="DiffTastic.Gui.SettingsWindow"
         x:DataType="vm:SettingsViewModel"
         Title="{l:Tr SettingsTitle}"
+        Icon="/Assets/app.ico"
         Width="480" SizeToContent="Height" CanResize="False"
         WindowStartupLocation="CenterOwner" ShowInTaskbar="False"
         Background="{DynamicResource DialogBackgroundBrush}">

@@ -1,45 +1,72 @@
 # DiffTastic
 
-Windows diff viewer in KDiff3 style, built on [difftastic](https://difftastic.wilfred.me.uk/) and Avalonia.
+A side-by-side diff viewer for Windows and Linux that understands your code. It is built on [difftastic](https://difftastic.wilfred.me.uk/), so it compares code by its structure instead of line by line: you see what really changed, not just which lines moved around.
 
 ![Side-by-side diff with AI summary](docs/side-by-side.png)
 
-- Side-by-side diff with aligned rows, filler rows and per-character changes from difftastic.
-- Moved code (3 or more lines removed in one place and added in another) is shown in purple. Hover or click the gutter (or right-click the line) to jump to the other place.
-- Status bar shows added, removed and moved line counts.
-- Overview bar, previous/next difference (Ctrl+Up / Ctrl+Down, Ctrl+Home / Ctrl+End).
-- Search in both panes (Ctrl+F), next/previous match with F3 / Shift+F3 or Enter / Shift+Enter.
-- Go to a line of the left or right file (Ctrl+G).
-- Syntax highlighting (TextMate).
-- Shows encoding (UTF-8 / UTF-8 BOM / UTF-16 / ANSI) and line endings (CRLF / LF) in the pane header when they differ between the files. Files without BOM that are not valid UTF-8 are read as Windows-1252 (ANSI).
-- Hover a line to see the commit that last changed it. Use **Older / Newer** to walk through the line's history (`git log -L`).
-- Falls back to a plain line diff when difft is missing, fails or takes longer than 15 s.
+## Why DiffTastic
 
-![Blame popup with line history](docs/blame.png)
+- **See the real change.** Both files are shown next to each other, lined up, with the changed characters highlighted. Formatting-only changes don't drown out the real ones.
+- **Spot moved code.** Code that was cut from one place and pasted in another is shown in purple. Click it to jump to where it came from or went to.
+- **Know who changed it and why.** Hover a line to see the commit that last touched it, and step back through its full history.
+- **Get a second opinion.** Optionally let AI summarize the change, point out the differences that matter, and answer your questions about the code.
+- **Works with git.** Use it as your `git difftool`.
+
+## Features
+
+### Navigating a diff
+
+- Jump to the previous or next difference (Ctrl+Up / Ctrl+Down, first and last with Ctrl+Home / Ctrl+End).
+- The overview bar shows where all differences are in the file.
+- Search both files at once (Ctrl+F, then F3 / Shift+F3).
+- Go to a line in either file (Ctrl+G).
+- Switch between side-by-side and unified view.
+- The status bar counts added, removed and moved lines.
 
 ![Unified view](docs/unified.png)
 
+### Line history
+
+Hover a line to see the commit that last changed it. Use **Older / Newer** to walk through every commit that touched that line.
+
+![Blame popup with line history](docs/blame.png)
+
+### AI review (optional)
+
+If you have [Claude Code](https://claude.com/claude-code) or [Codex](https://github.com/openai/codex) installed, an **AI** toggle appears in the toolbar. It is off by default. Turn it on to get:
+
+- a short summary of the change,
+- per difference: how important it is, why, and what to check when reviewing,
+- **Skip noise**: jump past differences that only change formatting, names, comments or imports,
+- **Explain (AI)** in the line history: what a commit did to that line,
+- **Ask AI…** in the right-click menu: ask anything about a difference or the selected code.
+
+It uses your existing login and the cheapest model by default. Your changed code is sent to Anthropic or OpenAI, so only turn it on when that is allowed for your code. Use the gear button in the toolbar to change the settings.
+
+### Details that help
+
+- Syntax highlighting for many languages.
+- Shows when the files differ in encoding (UTF-8, UTF-16, ANSI) or line endings (CRLF / LF).
+- Still works without difftastic: it then falls back to a plain line diff.
+
 ## Download
 
-Every push to `master` creates a [release](https://github.com/rgroenewoudt/DiffTastic.Gui/releases) with self-contained builds for Windows (`win-x64`) and Linux (`linux-x64`). difft is included; no .NET install needed.
+Get the latest version from [Releases](https://github.com/rgroenewoudt/DiffTastic.Gui/releases):
 
-## Build
+- Windows: `win-x64` zip
+- Linux: `linux-x64` tar.gz
 
-```powershell
-./tools/get-difft.ps1          # downloads difft.exe (pinned version) into tools/difft
-dotnet build
-dotnet test
-```
-
-`difft.exe` is copied next to `DiffTastic.Gui.exe`. Without it, the app looks on `PATH`.
+Unpack and run. Everything is included; no installation of .NET or difftastic needed.
 
 ## Usage
 
 ```
-DiffTastic.Gui.exe <left> <right> [--path <repo-relative path>]
+DiffTastic.Gui <left file> <right file>
 ```
 
 ### As git difftool
+
+Add this to your git config (use the path where you unpacked DiffTastic):
 
 ```ini
 [difftool "difftastic-gui"]
@@ -48,39 +75,26 @@ DiffTastic.Gui.exe <left> <right> [--path <repo-relative path>]
     tool = difftastic-gui
 ```
 
-Then `git difftool HEAD~3 -- some/file.cs`.
+On Linux use the path to `DiffTastic.Gui` instead. Then run, for example:
 
-For blame, the app finds which commit each side belongs to:
-the working tree file, `HEAD`, a commit that holds the same blob (`git log --find-object`), or else the content is blamed on top of `HEAD`.
-
-### AI (optional)
-
-When [Claude Code](https://claude.com/claude-code) (`claude`) or [Codex](https://github.com/openai/codex) (`codex`) is on `PATH`, the toolbar shows an **AI** toggle. It is off by default. Turned on, every diff is sent to that tool, which uses its cheapest model and your existing login, and you get:
-
-- a summary of the change,
-- per difference: importance, a short reason and review hints (orange strip in the overview bar, orange dot in the gutter),
-- **Skip noise**: previous/next skip differences that only change formatting, names, comments or imports,
-- **Explain (AI)** in the blame popup: what the commit did to that line.
-- **Ask AI…** in the right-click menu: a free question about the difference under the pointer, or about the selected code.
-
-The changed code is sent to Anthropic or OpenAI, so only turn it on when that is allowed for the code. Change settings with the gear button in the toolbar; changes apply right away. They are saved in `%APPDATA%/DiffTastic/settings.json`:
-
-```json
-{
-  "AiEnabled": false,
-  "AiProvider": "codex",
-  "ClaudeModel": "haiku",
-  "CodexModel": "gpt-6-luna"
-}
+```
+git difftool HEAD~3 -- some/file.cs
 ```
 
-`AiProvider` is `claude` or `codex`; empty picks the first one found.
+The `--path` argument lets DiffTastic show line history for both sides of the diff.
 
-## Development
+## Building from source
 
-- `tests/DiffTastic.Gui.Tests` renders the window headless and saves PNGs to `%TEMP%/difftastic-screenshots` (override with `DIFFTASTIC_SCREENSHOTS`).
-- `tools/screenshot.ps1 -ProcessId <pid> -OutFile x.png` captures the real running window.
+Requires the .NET SDK.
+
+```powershell
+./tools/get-difft.ps1   # downloads difftastic into tools/difft
+dotnet build
+dotnet test
+```
+
+See [CLAUDE.md](CLAUDE.md) for an overview of the code.
 
 ## License
 
-MIT. difftastic (downloaded separately) is also MIT licensed.
+MIT. difftastic is also MIT licensed.

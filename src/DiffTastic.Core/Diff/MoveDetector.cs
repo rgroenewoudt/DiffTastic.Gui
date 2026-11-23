@@ -8,7 +8,7 @@ public static class MoveDetector
 
     private readonly record struct Entry(int Row, int Block, string Text, bool Changed);
 
-    /// <summary>The rows, with <see cref="DiffLine.Moved"/> set on lines that are part of a move.</summary>
+    /// <summary>The rows, with <see cref="DiffLine.Move"/> set on lines that are part of a move.</summary>
     public static IReadOnlyList<AlignedRow> Mark(IReadOnlyList<AlignedRow> rows)
     {
         var blocks = BlockIds(rows);
@@ -28,8 +28,8 @@ public static class MoveDetector
         }
 
         var usedRight = new bool[right.Count];
-        var movedLeft = new HashSet<int>();
-        var movedRight = new HashSet<int>();
+        var movedLeft = new Dictionary<int, MoveLink>();
+        var movedRight = new Dictionary<int, MoveLink>();
         var i = 0;
         while (i < left.Count)
         {
@@ -52,8 +52,9 @@ public static class MoveDetector
 
             for (var k = 0; k < bestLength; k++)
             {
-                movedLeft.Add(left[i + k].Row);
-                movedRight.Add(right[bestStart + k].Row);
+                var (l, r) = (left[i + k].Row, right[bestStart + k].Row);
+                movedLeft[l] = new MoveLink(r, rows[r].Right!.LineIndex);
+                movedRight[r] = new MoveLink(l, rows[l].Left!.LineIndex);
                 usedRight[bestStart + k] = true;
             }
             i += bestLength;
@@ -66,10 +67,10 @@ public static class MoveDetector
         for (var r = 0; r < rows.Count; r++)
         {
             var row = rows[r];
-            if (movedLeft.Contains(r))
-                row = row with { Left = row.Left! with { Moved = true } };
-            if (movedRight.Contains(r))
-                row = row with { Right = row.Right! with { Moved = true } };
+            if (movedLeft.TryGetValue(r, out var toRight))
+                row = row with { Left = row.Left! with { Move = toRight } };
+            if (movedRight.TryGetValue(r, out var toLeft))
+                row = row with { Right = row.Right! with { Move = toLeft } };
             result.Add(row);
         }
         return result;

@@ -26,7 +26,7 @@ dotnet run --project src/DiffTastic.Gui -- samples/old.cs samples/new.cs [--path
 - `Difft/DifftRunner` runs `difft --display json` with `DFT_UNSTABLE=yes`; looks for `difft.exe` next to the app, then on `PATH`.
 - `Diff/LineAligner` turns difft's `aligned_lines` + per-line changes into `AlignedRow`s (left/right `DiffLine` or null = filler row).
 - `Diff/DiffService` is the entry point. When difft is missing, fails or exceeds 15 s it falls back to a DiffPlex line diff and sets `DiffDocument.EngineNote` (shown in the status bar).
-- `Diff/MoveDetector` marks `DiffLine.Moved` on runs of ≥3 changed lines that appear in another block on the other side; runs in the `DiffDocument` constructor.
+- `Diff/MoveDetector` sets `DiffLine.Move` (row and line of the matching line) on runs of ≥3 changed lines that appear in another block on the other side; runs in the `DiffDocument` constructor.
 - `DiffDocument` holds rows plus `Blocks` (runs of non-equal rows) used for next/previous navigation and the overview bar.
 - `UnifiedLayout` turns a document into one-column rows (per block old lines, then new lines) with row mapping both ways; block indexes stay the same.
 - `Git/`: `GitRunner` shells out to `git`; `RevisionLocator` finds which version a (temp) difftool file is: working tree, `HEAD`, a commit holding the same blob (`git log --find-object`), or else raw contents. `BlameService` does blame and line history (`git log -L`).
@@ -38,4 +38,5 @@ dotnet run --project src/DiffTastic.Gui -- samples/old.cs samples/new.cs [--path
 - Unified view (`UnifiedView` setting): the left pane is hidden and the right pane shows `UnifiedLayout` rows; `MainWindow` maps shown rows to document rows for block selection and blame.
 - `DiffPane` wraps an AvaloniaEdit `TextEditor`. Each pane's text is one line per aligned row (filler rows are empty lines), so row index == document line index in both panes. Highlighting is drawn by `DiffBackgroundRenderer`; real line numbers by `RowNumberMargin`; syntax by TextMate.
 - `BlameHoverController` + `BlamePopup` show the commit for the hovered line, with Older/Newer history navigation.
+- Moved lines: gutter tooltip/click and right-click "Moved to line N" call `MainWindow.GoToMove`.
 - Right-click "Ask AI…" (`MainWindow.OnContextRequested`) opens `AskAiPopup`: a free question about the selection when the clicked row is in it, else about the block; answered by `Core/Ai/DiffQuestioner`.

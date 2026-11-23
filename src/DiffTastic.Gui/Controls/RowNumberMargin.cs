@@ -6,6 +6,7 @@ using Avalonia.Media;
 using AvaloniaEdit.Editing;
 using AvaloniaEdit.Rendering;
 using DiffTastic.Core.Diff;
+using DiffTastic.Gui.Resources;
 
 namespace DiffTastic.Gui.Controls;
 
@@ -13,10 +14,14 @@ namespace DiffTastic.Gui.Controls;
 public sealed class RowNumberMargin(Side side) : AbstractMargin
 {
     private const double MarkerWidth = 4;
+    private static readonly Cursor HandCursor = new(StandardCursorType.Hand);
     private static readonly Typeface Font = new("Cascadia Mono, Consolas, monospace");
     private const double FontSize = 12;
 
     private readonly Dictionary<int, FormattedText> _numbers = [];
+
+    /// <summary>Raised with the row when a moved line is clicked.</summary>
+    public event EventHandler<int>? MoveRequested;
 
     public IReadOnlyList<AlignedRow> Rows
     {
@@ -117,7 +122,41 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
     protected override void OnPointerMoved(PointerEventArgs e)
     {
         base.OnPointerMoved(e);
-        ShowHint(HintAt(e.GetPosition(this)));
+        var point = e.GetPosition(this);
+        var movedRow = MovedRowAt(point);
+        Cursor = movedRow is null ? Cursor.Default : HandCursor;
+        ShowHint(HintAt(point) ?? (movedRow is { } row ? MoveText(Rows[row], Unified, side) : null));
+    }
+
+    protected override void OnPointerPressed(PointerPressedEventArgs e)
+    {
+        base.OnPointerPressed(e);
+        if (e.GetCurrentPoint(this).Properties.IsLeftButtonPressed && MovedRowAt(e.GetPosition(this)) is { } row)
+        {
+            e.Handled = true;
+            MoveRequested?.Invoke(this, row);
+        }
+    }
+
+    /// <summary>"Moved to/from line N" for the line a row shows, or null when it is not moved.</summary>
+    public static string? MoveText(AlignedRow row, bool unified, Side side)
+    {
+        var lineSide = unified ? UnifiedRow.SideOf(row) : side;
+        var line = lineSide == Side.Left ? row.Left : row.Right;
+        return line?.Move is { } move
+            ? Localization.Format(lineSide == Side.Left ? Strings.MovedTo : Strings.MovedFrom, move.LineIndex + 1)
+            : null;
+    }
+
+    private int? MovedRowAt(Point point)
+    {
+        if (TextView is not { VisualLinesValid: true } view)
+            return null;
+        var line = view.GetDocumentLineByVisualTop(point.Y + view.VerticalOffset);
+        if (line is null || line.LineNumber > Rows.Count)
+            return null;
+        var row = line.LineNumber - 1;
+        return MoveText(Rows[row], Unified, side) is null ? null : row;
     }
 
     protected override void OnPointerExited(PointerEventArgs e)

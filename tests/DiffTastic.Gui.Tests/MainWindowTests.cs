@@ -131,6 +131,46 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Moved_line_jumps_to_where_the_code_went()
+    {
+        var (window, vm) = await OpenAsync("moved-old.cs", "moved-new.cs");
+        var rows = vm.Document!.Rows;
+        var row = rows.ToList().FindIndex(r => r.Left?.Move is not null);
+        var move = rows[row].Left!.Move!.Value;
+
+        Assert.Equal("Moved to line 14", window.LeftPane.MoveTextAt(row));
+        Assert.Equal(13, move.LineIndex);
+        window.GoToMove(window.LeftPane, row);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.Equal(move.Row, window.RightPane.Editor.TextArea.Caret.Line - 1);
+        Assert.Equal(vm.BlockAtRow(move.Row), vm.CurrentBlock);
+        Screenshots.Save(window, "51-moved-code");
+
+        window.GoToMove(window.RightPane, move.Row);
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal(row, window.LeftPane.Editor.TextArea.Caret.Line - 1);
+    }
+
+    [AvaloniaFact]
+    public async Task Moved_line_jumps_in_unified_view()
+    {
+        var (window, vm) = await OpenAsync("moved-old.cs", "moved-new.cs");
+        vm.UnifiedView = true;
+        Dispatcher.UIThread.RunJobs();
+        var pane = window.RightPane;
+        var row = Enumerable.Range(0, pane.Rows.Count).First(r => pane.SideAt(r) == Side.Left && pane.LineAt(r)?.Move is not null);
+        var move = pane.LineAt(row)!.Move!.Value;
+
+        window.GoToMove(pane, row);
+        Dispatcher.UIThread.RunJobs();
+
+        var target = pane.Editor.TextArea.Caret.Line - 1;
+        Assert.Equal(Side.Right, pane.SideAt(target));
+        Assert.Equal(move.LineIndex, pane.LineAt(target)!.LineIndex);
+    }
+
+    [AvaloniaFact]
     public async Task Folds_unchanged_methods_in_both_panes()
     {
         var (window, vm) = await OpenAsync("long-old.cs", "long-new.cs");

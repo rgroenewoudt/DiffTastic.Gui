@@ -69,6 +69,12 @@
   <data name="MovedLines" xml:space="preserve">
     <value>{0} verplaatst</value>
   </data>
+  <data name="MovedTo" xml:space="preserve">
+    <value>Verplaatst naar regel {0}</value>
+  </data>
+  <data name="MovedFrom" xml:space="preserve">
+    <value>Verplaatst van regel {0}</value>
+  </data>
   <data name="Difference" xml:space="preserve">
     <value>Verschil {0}</value>
   </data>

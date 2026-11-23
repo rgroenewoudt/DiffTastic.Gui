@@ -32,6 +32,25 @@ public class MoveDetectorTests
     }
 
     [Fact]
+    public void Links_each_moved_line_to_its_match()
+    {
+        string[] left = [.. Method, "", "int a;", "int b;", "int c;"];
+        string[] right = ["int a;", "int b;", "int c;", "", .. Method.Select(l => "    " + l)];
+
+        var doc = DiffService.Fallback(left, right, "test");
+
+        foreach (var row in doc.Rows)
+        {
+            if (row.Left?.Move is { } toRight)
+                Assert.Equal(row.Left.LineIndex + 4, doc.Rows[toRight.Row].Right!.LineIndex);
+            if (row.Right?.Move is { } toLeft)
+                Assert.Equal(row.Right.LineIndex - 4, doc.Rows[toLeft.Row].Left!.LineIndex);
+        }
+        Assert.Equal(new MoveLink(doc.Rows.ToList().FindIndex(r => r.Right?.LineIndex == 4), 4),
+            doc.Rows.First(r => r.Left?.LineIndex == 0).Left!.Move);
+    }
+
+    [Fact]
     public void Ignores_short_runs()
     {
         var doc = DiffService.Fallback(

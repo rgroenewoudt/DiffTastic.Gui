@@ -45,6 +45,7 @@ public sealed partial class MainWindow : Window
             view.PointerPressed += (_, e) => _vm?.SelectBlockAtRow(SourceRow(pane.RowAt(e.GetPosition(view))));
             pane.FoldsToggled += (_, _) => (pane == LeftPane ? RightPane : LeftPane).ApplyFoldStates(pane.GetFoldStates());
             view.ContextRequested += (_, e) => OnContextRequested(pane, e);
+            pane.MoveRequested += (_, row) => GoToMove(pane, row);
         }
 
         _askPopup = new Popup
@@ -116,15 +117,49 @@ public sealed partial class MainWindow : Window
 
     private void OnContextRequested(DiffPane pane, ContextRequestedEventArgs e)
     {
-        if (_vm is not { CanAskAi: true })
-            return;
-        e.Handled = true;
         var view = pane.Editor.TextArea.TextView;
         var point = e.TryGetPosition(view, out var p) ? p : CaretPoint(pane);
         var row = pane.RowAt(point);
-        var item = new MenuItem { Header = Strings.AskAi, Name = "AskAiItem", IsEnabled = CanAskAt(pane, row) };
-        item.Click += (_, _) => OpenAskAi(pane, row, point.X);
-        new ContextMenu { Items = { item } }.Open(view);
+        var menu = new ContextMenu();
+        if (pane.MoveTextAt(row) is { } moveText)
+        {
+            var item = new MenuItem { Header = moveText, Name = "GoToMoveItem" };
+            item.Click += (_, _) => GoToMove(pane, row);
+            menu.Items.Add(item);
+        }
+        if (_vm is { CanAskAi: true })
+        {
+            var item = new MenuItem { Header = Strings.AskAi, Name = "AskAiItem", IsEnabled = CanAskAt(pane, row) };
+            item.Click += (_, _) => OpenAskAi(pane, row, point.X);
+            menu.Items.Add(item);
+        }
+        if (menu.Items.Count == 0)
+            return;
+        e.Handled = true;
+        menu.Open(view);
+    }
+
+    /// <summary>Jumps from a moved line to where the code was moved to or from.</summary>
+    public void GoToMove(DiffPane pane, int row)
+    {
+        if (_vm?.Document is not { } doc || pane.LineAt(row)?.Move is not { } move)
+            return;
+        var targetSide = pane.SideAt(row) == Side.Left ? Side.Right : Side.Left;
+        var target = targetSide == Side.Left ? doc.Rows[move.Row].Left : doc.Rows[move.Row].Right;
+        var shown = move.Row;
+        if (_unified is { } unified)
+        {
+            for (shown = 0; shown < unified.Rows.Count; shown++)
+            {
+                if (ReferenceEquals(targetSide == Side.Left ? unified.Rows[shown].Left : unified.Rows[shown].Right, target))
+                    break;
+            }
+        }
+
+        _vm.SelectBlockAtRow(move.Row);
+        var targetPane = _unified is null && targetSide == Side.Left ? LeftPane : RightPane;
+        targetPane.SetCaretRow(shown);
+        ScrollToRow(shown, center: true);
     }
 
     private static Point CaretPoint(DiffPane pane)

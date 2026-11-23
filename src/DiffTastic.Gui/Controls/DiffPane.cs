@@ -84,6 +84,7 @@ public sealed class DiffPane : DockPanel
 
         _margin = new RowNumberMargin(side);
         Editor.TextArea.LeftMargins.Insert(0, _margin);
+        _margin.MoveRequested += (_, row) => MoveRequested?.Invoke(this, row);
 
         Children.Add(Editor);
 
@@ -114,6 +115,9 @@ public sealed class DiffPane : DockPanel
         Editor.SearchResultsBrush = colors.SearchResult;
         Editor.TextArea.TextView.Redraw();
     }
+
+    /// <summary>Raised with the row when the user clicks the gutter of a moved line.</summary>
+    public event EventHandler<int>? MoveRequested;
 
     /// <summary>Raised after the user opened or closed a folding.</summary>
     public event EventHandler? FoldsToggled;
@@ -258,6 +262,16 @@ public sealed class DiffPane : DockPanel
         Editor.TextArea.Caret.Column = 1;
         Editor.TextArea.Focus();
     }
+
+    /// <summary>Side of the line a row shows.</summary>
+    public Side SideAt(int row) => Unified ? UnifiedRow.SideOf(Rows[row]) : Side;
+
+    /// <summary>Line a row shows, or null for a filler row.</summary>
+    public DiffLine? LineAt(int row) =>
+        row < 0 || row >= Rows.Count ? null : SideAt(row) == Side.Left ? Rows[row].Left : Rows[row].Right;
+
+    /// <summary>"Moved to/from line N" for a row, or null when its line is not moved.</summary>
+    public string? MoveTextAt(int row) => row < 0 || row >= Rows.Count ? null : RowNumberMargin.MoveText(Rows[row], Unified, Side);
 
     /// <summary>Row index under a point relative to this pane's text view, or -1.</summary>
     public int RowAt(Point pointInTextView)

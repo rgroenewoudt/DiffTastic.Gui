@@ -5,8 +5,14 @@ public enum RowKind { Equal, Changed, Added, Removed }
 /// <summary>Character range in UTF-16 units.</summary>
 public readonly record struct TextRange(int Start, int Length);
 
-/// <summary>One line of a file. LineIndex is 0-based. Moved: the line is part of code moved to or from another block.</summary>
-public sealed record DiffLine(int LineIndex, string Text, IReadOnlyList<TextRange> Changes, bool Moved = false);
+/// <summary>The matching line of moved code on the other side: its document row and 0-based line index.</summary>
+public readonly record struct MoveLink(int Row, int LineIndex);
+
+/// <summary>One line of a file. LineIndex is 0-based. Move is set when the line is part of code moved to or from another block.</summary>
+public sealed record DiffLine(int LineIndex, string Text, IReadOnlyList<TextRange> Changes, MoveLink? Move = null)
+{
+    public bool Moved => Move is not null;
+}
 
 public sealed record AlignedRow(DiffLine? Left, DiffLine? Right, RowKind Kind);
 

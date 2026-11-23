@@ -1,9 +1,11 @@
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using DiffTastic.Core.Ai;
 using DiffTastic.Core.Diff;
 using DiffTastic.Core.Difft;
 using DiffTastic.Core.Git;
+using DiffTastic.Core.IO;
 using DiffTastic.Gui.Controls;
 using DiffTastic.Gui.Resources;
 
@@ -21,6 +23,9 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     private Task<BlameResult?> _leftBlame = Task.FromResult<BlameResult?>(null);
     private Task<BlameResult?> _rightBlame = Task.FromResult<BlameResult?>(null);
     private CancellationTokenSource? _blameCts;
+    private FileChangeWatcher? _watcher;
+    private (string Left, string Right)? _loadedPaths;
+    private bool _reloadPending;
 
     [ObservableProperty] private string? _leftPath = args.Left;
     [ObservableProperty] private string? _rightPath = args.Right;
@@ -196,14 +201,24 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         if (LeftPath is null || RightPath is null)
             return;
 
+        var reload = _loadedPaths == (LeftPath, RightPath);
+        if (!reload)
+            Watch(LeftPath, RightPath);
+
         IsBusy = true;
         Error = null;
         try
         {
-            CurrentBlock = -1;
+            var block = reload ? CurrentBlock : -1;
+            if (!reload)
+                CurrentBlock = -1;
             CancelAnalysis();
             Document = await Task.Run(() => _diffService.CompareAsync(LeftPath, RightPath));
-            if (Document.Blocks.Count > 0)
+            if (Document.Blocks.Count == 0)
+                CurrentBlock = -1;
+            else if (block >= 0)
+                CurrentBlock = Math.Min(block, Document.Blocks.Count - 1);
+            else
                 CurrentBlock = Math.Max(0, FindBlock(0, 1));
             BlameReady = LoadBlameAsync(LeftPath, RightPath);
             AnalysisReady = AnalyzeAsync();
@@ -218,6 +233,29 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         {
             IsBusy = false;
         }
+
+        if (_reloadPending)
+        {
+            _reloadPending = false;
+            await LoadAsync();
+        }
+    }
+
+    private void Watch(string left, string right)
+    {
+        _watcher?.Dispose();
+        _loadedPaths = (left, right);
+        _watcher = new FileChangeWatcher([left, right], TimeSpan.FromMilliseconds(300));
+        _watcher.Changed += (_, _) => Dispatcher.UIThread.Post(() => _ = ReloadChangedAsync());
+    }
+
+    /// <summary>Reloads after a file changed on disk; waits for a running load first.</summary>
+    private async Task ReloadChangedAsync()
+    {
+        if (IsBusy)
+            _reloadPending = true;
+        else
+            await LoadAsync();
     }
 
     partial void OnAiEnabledChanged(bool value)
@@ -425,6 +463,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
 
     public void Dispose()
     {
+        _watcher?.Dispose();
+        _watcher = null;
         _blameCts?.Cancel();
         _blameCts?.Dispose();
         _blameCts = null;

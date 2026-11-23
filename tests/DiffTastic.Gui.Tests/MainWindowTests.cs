@@ -218,6 +218,48 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Reloads_when_file_changes_on_disk_and_keeps_position()
+    {
+        var dir = Directory.CreateTempSubdirectory("difftastic-reload").FullName;
+        var lines = Enumerable.Range(0, 2000).Select(i => $"int value{i} = {i};").ToArray();
+        var left = Path.Combine(dir, "a.cs");
+        var right = Path.Combine(dir, "b.cs");
+        await File.WriteAllLinesAsync(left, lines);
+        lines[1500] = "int value1500 = -1;";
+        await File.WriteAllLinesAsync(right, lines);
+
+        var vm = new MainWindowViewModel(new StartupArgs(left, right, null));
+        var window = new MainWindow { DataContext = vm, Width = 1200, Height = 600 };
+        window.Show();
+        await vm.LoadAsync();
+        for (var i = 0; i < 10; i++)
+            Dispatcher.UIThread.RunJobs();
+        var offset = window.RightPane.VerticalOffset;
+        var before = vm.Document;
+
+        lines[1502] = "int value1502 = -2;";
+        await File.WriteAllLinesAsync(right, lines);
+
+        var deadline = DateTime.UtcNow.AddSeconds(10);
+        while ((vm.Document == before || vm.IsBusy) && DateTime.UtcNow < deadline)
+        {
+            Dispatcher.UIThread.RunJobs();
+            await Task.Delay(50);
+        }
+        for (var i = 0; i < 10; i++)
+            Dispatcher.UIThread.RunJobs();
+
+        Assert.NotSame(before, vm.Document);
+        Assert.Contains(vm.Document!.Rows, r => r.Right?.Text == "int value1502 = -2;");
+        Assert.Equal(0, vm.CurrentBlock);
+        Assert.Equal(offset, window.RightPane.VerticalOffset, 1.0);
+        Assert.Equal(window.LeftPane.VerticalOffset, window.RightPane.VerticalOffset);
+        await vm.BlameReady;
+        vm.Dispose();
+        Directory.Delete(dir, recursive: true);
+    }
+
+    [AvaloniaFact]
     public async Task Bare_carriage_return_stays_on_one_row()
     {
         var dir = Directory.CreateTempSubdirectory("difftastic-cr").FullName;

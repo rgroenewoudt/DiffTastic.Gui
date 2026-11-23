@@ -20,6 +20,7 @@ public sealed partial class MainWindow : Window
     private MainWindowViewModel? _vm;
     private IReadOnlyList<FoldRegion> _foldRegions = [];
     private HashSet<FoldRegion> _defaultFolded = [];
+    private (string? Left, string? Right)? _shownPaths;
 
     public MainWindow()
     {
@@ -108,7 +109,7 @@ public sealed partial class MainWindow : Window
                 ShowDocument();
                 break;
             case nameof(MainWindowViewModel.CurrentBlock):
-                ShowCurrentBlock();
+                ShowCurrentBlock(scroll: true);
                 break;
             case nameof(MainWindowViewModel.LeftTitle) or nameof(MainWindowViewModel.RightTitle):
                 UpdateTitles();
@@ -145,6 +146,9 @@ public sealed partial class MainWindow : Window
     private void ShowDocument()
     {
         Blame.Close();
+        var paths = (_vm?.LeftPath, _vm?.RightPath);
+        int? keepRow = _shownPaths == paths ? AnchorRow() : null;
+        _shownPaths = _vm?.Document is null ? null : paths;
         var rows = _vm?.Document?.Rows ?? [];
         var fileName = _vm?.RepoPath ?? _vm?.RightPath;
         LeftPane.SetLanguageFromFileName(fileName);
@@ -158,7 +162,17 @@ public sealed partial class MainWindow : Window
         Overview.Rows = rows;
         ShowAnalysis();
         UpdateTitles();
-        ShowCurrentBlock();
+        ShowCurrentBlock(scroll: keepRow is null);
+        if (keepRow is { } row)
+            ScrollToRow(row, center: false);
+    }
+
+    /// <summary>Row at a third of the viewport, where <see cref="ScrollToRow(int, bool)"/> puts a row.</summary>
+    private int AnchorRow()
+    {
+        var view = RightPane.Editor.TextArea.TextView;
+        var line = view.GetDocumentLineByVisualTop(view.VerticalOffset + RightPane.Editor.ViewportHeight / 3);
+        return (line?.LineNumber ?? 1) - 1;
     }
 
     private void UpdateTitles()
@@ -169,14 +183,14 @@ public sealed partial class MainWindow : Window
         Title = name is null ? "DiffTastic" : $"{name} - DiffTastic";
     }
 
-    private void ShowCurrentBlock()
+    private void ShowCurrentBlock(bool scroll)
     {
         DiffBlock? block = _vm is { Document: { } doc, CurrentBlock: var i } && i >= 0 && i < doc.Blocks.Count
             ? doc.Blocks[i]
             : null;
         LeftPane.SetCurrentBlock(block);
         RightPane.SetCurrentBlock(block);
-        if (block is { } b)
+        if (block is { } b && scroll)
         {
             LeftPane.UnfoldRows(b.StartRow, b.EndRow);
             RightPane.UnfoldRows(b.StartRow, b.EndRow);

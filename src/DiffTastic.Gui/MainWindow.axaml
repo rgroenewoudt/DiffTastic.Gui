@@ -108,6 +108,16 @@
             </StackPanel>
         </Border>
 
+        <Border DockPanel.Dock="Top" Name="GoToLineBar" IsVisible="False" Background="{DynamicResource BarBackgroundBrush}"
+                BorderBrush="{DynamicResource BarBorderBrush}" BorderThickness="0,0,0,1" Padding="8,3">
+            <StackPanel Orientation="Horizontal" Spacing="6">
+                <TextBlock Text="{l:Tr GoToLine}" VerticalAlignment="Center" FontSize="12" />
+                <RadioButton Name="GoToLeft" Content="A" GroupName="GoToSide" />
+                <RadioButton Name="GoToRight" Content="B" GroupName="GoToSide" IsChecked="True" />
+                <TextBox Name="GoToLineBox" Width="80" />
+            </StackPanel>
+        </Border>
+
         <Border DockPanel.Dock="Bottom" Background="{DynamicResource BarBackgroundBrush}" BorderBrush="{DynamicResource BarBorderBrush}" BorderThickness="0,1,0,0" Padding="8,3">
             <TextBlock Name="StatusBar" Text="{Binding StatusText}" FontSize="12" Foreground="{DynamicResource StatusTextBrush}" />
         </Border>

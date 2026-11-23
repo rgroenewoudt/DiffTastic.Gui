@@ -1,3 +1,5 @@
+using System.Globalization;
+using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Headless.XUnit;
 using Avalonia.Input;
@@ -100,6 +102,32 @@ public class MainWindowTests
 
         panel.Close();
         Assert.False(window.LeftPane.Editor.SearchPanel.IsOpened);
+    }
+
+    [AvaloniaFact]
+    public async Task Go_to_line_jumps_to_real_line_of_chosen_side()
+    {
+        var (window, vm) = await OpenAsync("old.cs", "new.cs");
+        var rows = vm.Document!.Rows;
+        var lastLeft = rows.Last(r => r.Left is not null).Left!.LineIndex + 1;
+
+        window.LeftPane.Editor.TextArea.Focus();
+        window.KeyPress(Key.G, RawInputModifiers.Control, PhysicalKey.G, null);
+        Dispatcher.UIThread.RunJobs();
+        var box = window.FindControl<TextBox>("GoToLineBox")!;
+        Assert.True(box.IsEffectivelyVisible);
+
+        box.Text = lastLeft.ToString(CultureInfo.InvariantCulture);
+        Screenshots.Save(window, "10-go-to-line-bar");
+        window.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.False(box.IsEffectivelyVisible);
+        var row = window.LeftPane.Editor.TextArea.Caret.Line - 1;
+        Assert.Equal(lastLeft - 1, rows[row].Left!.LineIndex);
+        Screenshots.Save(window, "11-go-to-line");
+
+        Assert.Equal(rows.Count - 1 - rows.Reverse().TakeWhile(r => r.Right is null).Count(), window.RightPane.RowOfLine(100000));
     }
 
     [AvaloniaFact]

@@ -52,6 +52,7 @@ public sealed partial class MainWindow : Window
         ExpandAllButton.Click += (_, _) => ExpandAll();
         CollapseUnchangedButton.Click += (_, _) => CollapseUnchanged();
         SettingsButton.Click += async (_, _) => await ShowSettingsAsync();
+        GoToLineBox.KeyDown += OnGoToLineKeyDown;
         AddHandler(KeyDownEvent, OnKeyDownTunnel, RoutingStrategies.Tunnel);
         Localization.LanguageChanged += OnLanguageChanged;
     }
@@ -263,6 +264,11 @@ public sealed partial class MainWindow : Window
             Search.Open(LeftPane.IsKeyboardFocusWithin ? LeftPane : RightPane.IsKeyboardFocusWithin ? RightPane : null);
             e.Handled = true;
         }
+        else if (e.Key == Key.G && ctrl)
+        {
+            OpenGoToLine(LeftPane.IsKeyboardFocusWithin ? LeftPane : RightPane.IsKeyboardFocusWithin ? RightPane : null);
+            e.Handled = true;
+        }
         else if (e.Key == Key.F3 || (e.Key == Key.Enter && e.Source is Visual v && v.FindAncestorOfType<SearchPanel>() is not null))
         {
             if (Search.IsOpen)
@@ -272,6 +278,43 @@ public sealed partial class MainWindow : Window
         else if (e.Key == Key.F5)
         {
             _ = _vm.LoadAsync();
+            e.Handled = true;
+        }
+    }
+
+    /// <summary>Shows the go-to-line bar for the given pane (right pane when null).</summary>
+    public void OpenGoToLine(DiffPane? pane)
+    {
+        (pane == LeftPane ? GoToLeft : GoToRight).IsChecked = true;
+        GoToLineBar.IsVisible = true;
+        GoToLineBox.SelectAll();
+        GoToLineBox.Focus();
+    }
+
+    /// <summary>Scrolls to a 1-based line number of one side and puts the caret there.</summary>
+    public void GoToLine(DiffPane pane, int lineNumber)
+    {
+        var row = pane.RowOfLine(lineNumber);
+        if (row < 0)
+            return;
+        ScrollToRow(row, center: true);
+        pane.SetCaretRow(row);
+    }
+
+    private void OnGoToLineKeyDown(object? sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter)
+        {
+            if (int.TryParse(GoToLineBox.Text, out var line))
+            {
+                GoToLineBar.IsVisible = false;
+                GoToLine(GoToLeft.IsChecked == true ? LeftPane : RightPane, line);
+            }
+            e.Handled = true;
+        }
+        else if (e.Key == Key.Escape)
+        {
+            GoToLineBar.IsVisible = false;
             e.Handled = true;
         }
     }

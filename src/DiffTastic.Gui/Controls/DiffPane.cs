@@ -216,6 +216,30 @@ public sealed class DiffPane : DockPanel
             sv.Offset = new Vector(x ?? sv.Offset.X, y);
     }
 
+    /// <summary>Row of a 1-based line number on this side; the nearest row when the line does not exist, or -1.</summary>
+    public int RowOfLine(int lineNumber)
+    {
+        var last = -1;
+        for (var i = 0; i < Rows.Count; i++)
+        {
+            if ((Side == Side.Left ? Rows[i].Left : Rows[i].Right) is not { } line)
+                continue;
+            if (line.LineIndex + 1 >= lineNumber)
+                return i;
+            last = i;
+        }
+        return last;
+    }
+
+    /// <summary>Moves the caret to the start of a row and focuses the editor.</summary>
+    public void SetCaretRow(int row)
+    {
+        Editor.TextArea.ClearSelection();
+        Editor.TextArea.Caret.Line = row + 1;
+        Editor.TextArea.Caret.Column = 1;
+        Editor.TextArea.Focus();
+    }
+
     /// <summary>Row index under a point relative to this pane's text view, or -1.</summary>
     public int RowAt(Point pointInTextView)
     {

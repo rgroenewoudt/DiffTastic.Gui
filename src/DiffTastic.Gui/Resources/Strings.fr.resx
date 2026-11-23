@@ -246,4 +246,7 @@
   <data name="TimeFormat" xml:space="preserve">
     <value>{0:HH:mm} le {0:d MMM yyyy} ({1})</value>
   </data>
+  <data name="GoToLine" xml:space="preserve">
+    <value>Aller à la ligne</value>
+  </data>
 </root>

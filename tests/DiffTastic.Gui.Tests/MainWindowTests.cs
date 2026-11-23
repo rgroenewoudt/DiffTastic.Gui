@@ -67,6 +67,42 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Search_finds_matches_in_both_panes()
+    {
+        var (window, _) = await OpenAsync("old.cs", "new.cs");
+
+        window.KeyPress(Key.F, RawInputModifiers.Control, PhysicalKey.F, null);
+        Dispatcher.UIThread.RunJobs();
+        var panel = window.RightPane.Editor.SearchPanel!;
+        Assert.True(panel.IsOpened);
+        Assert.True(window.LeftPane.Editor.SearchPanel!.IsOpened);
+        Assert.False(window.LeftPane.Editor.SearchPanel.IsVisible);
+
+        panel.SearchPattern = "return";
+        Dispatcher.UIThread.RunJobs();
+        Assert.Equal("return", window.LeftPane.Editor.SearchPanel.SearchPattern);
+        var matches = window.Search.Matches();
+        Assert.Equal(4, matches.Count);
+        Assert.Equal(2, matches.Count(m => m.Pane == window.LeftPane));
+
+        var visited = new List<DiffPane>();
+        for (var i = 0; i < matches.Count; i++)
+        {
+            window.KeyPress(Key.F3, RawInputModifiers.None, PhysicalKey.F3, null);
+            Dispatcher.UIThread.RunJobs();
+            var pane = window.LeftPane.Editor.SelectedText == "return" ? window.LeftPane : window.RightPane;
+            Assert.Equal("return", pane.Editor.SelectedText);
+            visited.Add(pane);
+        }
+        Assert.Contains(window.LeftPane, visited);
+        Assert.Contains(window.RightPane, visited);
+        Screenshots.Save(window, "09-search");
+
+        panel.Close();
+        Assert.False(window.LeftPane.Editor.SearchPanel.IsOpened);
+    }
+
+    [AvaloniaFact]
     public async Task Folds_unchanged_methods_in_both_panes()
     {
         var (window, vm) = await OpenAsync("long-old.cs", "long-new.cs");

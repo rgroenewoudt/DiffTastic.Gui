@@ -16,7 +16,7 @@ public sealed class DiffColors
         filler: "#EEEEEE", fillerHatch: "#D4D4D4", accent: "#3A6FD8",
         changedMarker: "#E0B000", removedMarker: "#D9534F", addedMarker: "#3FA34D", importantMarker: "#E8590C",
         leftHeader: "#DCE6F7", rightHeader: "#DDF1DD",
-        editor: "#FFFFFF", gutter: "#F4F4F4", gutterText: "#8A8A8A", overview: "#F7F7F7");
+        editor: "#FFFFFF", search: "#FFC870", gutter: "#F4F4F4", gutterText: "#8A8A8A", overview: "#F7F7F7");
 
     public static readonly DiffColors Dark = new(
         changedRow: "#3A3520", removedRow: "#4B2626", addedRow: "#233D27",
@@ -24,7 +24,7 @@ public sealed class DiffColors
         filler: "#252526", fillerHatch: "#38383C", accent: "#5B8DEF",
         changedMarker: "#C9A227", removedMarker: "#E06C66", addedMarker: "#4CB860", importantMarker: "#F07A3A",
         leftHeader: "#23324A", rightHeader: "#233A28",
-        editor: "#1E1E1E", gutter: "#252526", gutterText: "#858585", overview: "#252526");
+        editor: "#1E1E1E", search: "#7A5A12", gutter: "#252526", gutterText: "#858585", overview: "#252526");
 
     public static DiffColors For(ThemeVariant variant) => variant == ThemeVariant.Dark ? Dark : Light;
 
@@ -32,7 +32,7 @@ public sealed class DiffColors
         string changedRow, string removedRow, string addedRow, string removedText, string addedText,
         string filler, string fillerHatch, string accent,
         string changedMarker, string removedMarker, string addedMarker, string importantMarker,
-        string leftHeader, string rightHeader, string editor, string gutter, string gutterText, string overview)
+        string leftHeader, string rightHeader, string editor, string search, string gutter, string gutterText, string overview)
     {
         ChangedRow = Brush(changedRow);
         RemovedRow = Brush(removedRow);
@@ -52,6 +52,7 @@ public sealed class DiffColors
         LeftHeader = Brush(leftHeader);
         RightHeader = Brush(rightHeader);
         EditorBackground = Brush(editor);
+        SearchResult = Brush(search);
         Gutter = Brush(gutter);
         GutterText = Brush(gutterText);
         var overviewColor = Color.Parse(overview);
@@ -84,6 +85,7 @@ public sealed class DiffColors
     public IBrush LeftHeader { get; }
     public IBrush RightHeader { get; }
     public IBrush EditorBackground { get; }
+    public IBrush SearchResult { get; }
     public IBrush Gutter { get; }
     public IBrush GutterText { get; }
 

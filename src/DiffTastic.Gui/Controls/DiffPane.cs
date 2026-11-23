@@ -111,6 +111,7 @@ public sealed class DiffPane : DockPanel
         _header.Background = Side == Side.Left ? colors.LeftHeader : colors.RightHeader;
         _badge.Background = Side == Side.Left ? colors.RemovedMarker : colors.AddedMarker;
         Editor.Background = colors.EditorBackground;
+        Editor.SearchResultsBrush = colors.SearchResult;
         Editor.TextArea.TextView.Redraw();
     }
 

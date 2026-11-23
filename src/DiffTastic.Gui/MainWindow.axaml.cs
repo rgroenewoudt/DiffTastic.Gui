@@ -5,6 +5,8 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
+using AvaloniaEdit.Search;
 using DiffTastic.Core.Diff;
 using DiffTastic.Gui.Controls;
 using DiffTastic.Gui.Resources;
@@ -42,6 +44,7 @@ public sealed partial class MainWindow : Window
             _vm?.CreateBlamePopupAsync(side, row) ?? Task.FromResult<BlamePopupViewModel?>(null));
         Blame.Attach(LeftPane);
         Blame.Attach(RightPane);
+        Search = new DiffSearch(LeftPane, RightPane, row => ScrollToRow(row, center: false));
 
         Overview.RowRequested += (_, row) => ScrollToRow(row, center: true);
         OpenButton.Click += async (_, _) => await OpenFilesAsync();
@@ -72,6 +75,7 @@ public sealed partial class MainWindow : Window
     public DiffPane LeftPane { get; }
     public DiffPane RightPane { get; }
     public BlameHoverController Blame { get; }
+    public DiffSearch Search { get; }
 
     protected override void OnClosed(EventArgs e)
     {
@@ -253,6 +257,17 @@ public sealed partial class MainWindow : Window
         {
             Blame.Close();
             e.Handled = true;
+        }
+        else if (e.Key == Key.F && ctrl)
+        {
+            Search.Open(LeftPane.IsKeyboardFocusWithin ? LeftPane : RightPane.IsKeyboardFocusWithin ? RightPane : null);
+            e.Handled = true;
+        }
+        else if (e.Key == Key.F3 || (e.Key == Key.Enter && e.Source is Visual v && v.FindAncestorOfType<SearchPanel>() is not null))
+        {
+            if (Search.IsOpen)
+                Search.FindNext(backwards: e.KeyModifiers.HasFlag(KeyModifiers.Shift));
+            e.Handled = Search.IsOpen;
         }
         else if (e.Key == Key.F5)
         {

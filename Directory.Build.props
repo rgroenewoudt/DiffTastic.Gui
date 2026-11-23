@@ -5,4 +5,8 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <DebugType>embedded</DebugType>
   </PropertyGroup>
+  <PropertyGroup Condition="!$(MSBuildProjectName.EndsWith('.Tests'))">
+    <EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+  </PropertyGroup>
 </Project>

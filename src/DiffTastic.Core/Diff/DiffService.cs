@@ -11,33 +11,41 @@ public sealed class DiffService(DifftRunner? difft)
 
     public async Task<DiffDocument> CompareAsync(string leftPath, string rightPath, CancellationToken ct = default)
     {
-        var leftText = await ReadTextAsync(leftPath, ct);
-        var rightText = await ReadTextAsync(rightPath, ct);
+        var (leftText, leftFormat) = await ReadTextAsync(leftPath, ct);
+        var (rightText, rightFormat) = await ReadTextAsync(rightPath, ct);
         var left = LineAligner.SplitLines(leftText);
         var right = LineAligner.SplitLines(rightText);
 
         if (difft is null)
-            return Fallback(left, right, "difft.exe not found, using simple line diff.");
+            return Fallback(left, right, "difft.exe not found, using simple line diff.", leftFormat, rightFormat);
 
         try
         {
             var result = await difft.RunAsync(EmptyIfMissing(leftPath), EmptyIfMissing(rightPath), DefaultTimeout, ct);
             var rows = LineAligner.Align(left, right, result);
-            return new DiffDocument(rows, result.Language ?? "Text", null);
+            return new DiffDocument(rows, result.Language ?? "Text", null, leftFormat, rightFormat);
         }
         catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
         {
-            return Fallback(left, right, $"{ex.Message} Using simple line diff.");
+            return Fallback(left, right, $"{ex.Message} Using simple line diff.", leftFormat, rightFormat);
         }
     }
 
-    private static async Task<string> ReadTextAsync(string path, CancellationToken ct) =>
-        File.Exists(path) ? await File.ReadAllTextAsync(path, ct) : "";
+    private static async Task<(string Text, TextFormat? Format)> ReadTextAsync(string path, CancellationToken ct)
+    {
+        if (!File.Exists(path))
+            return ("", null);
+
+        var bytes = await File.ReadAllBytesAsync(path, ct);
+        using var reader = new StreamReader(new MemoryStream(bytes), detectEncodingFromByteOrderMarks: true);
+        return (await reader.ReadToEndAsync(ct), TextFormat.Detect(bytes));
+    }
 
     private static string EmptyIfMissing(string path) =>
         File.Exists(path) ? path : (OperatingSystem.IsWindows() ? "NUL" : "/dev/null");
 
-    public static DiffDocument Fallback(string[] left, string[] right, string note)
+    public static DiffDocument Fallback(string[] left, string[] right, string note,
+        TextFormat? leftFormat = null, TextFormat? rightFormat = null)
     {
         var model = SideBySideDiffBuilder.Instance.BuildDiffModel(
             JoinLines(left), JoinLines(right), ignoreWhitespace: false);
@@ -61,7 +69,7 @@ public sealed class DiffService(DifftRunner? difft)
             };
             rows.Add(new AlignedRow(l, r, kind));
         }
-        return new DiffDocument(rows, "Text", note);
+        return new DiffDocument(rows, "Text", note, leftFormat, rightFormat);
     }
 
     /// <summary>DiffPlex also splits on a bare CR, so it is replaced by a visible symbol.</summary>

@@ -15,11 +15,14 @@ public readonly record struct DiffBlock(int StartRow, int EndRow);
 
 public sealed class DiffDocument
 {
-    public DiffDocument(IReadOnlyList<AlignedRow> rows, string language, string? engineNote)
+    public DiffDocument(IReadOnlyList<AlignedRow> rows, string language, string? engineNote,
+        TextFormat? leftFormat = null, TextFormat? rightFormat = null)
     {
         Rows = rows;
         Language = language;
         EngineNote = engineNote;
+        LeftFormat = leftFormat;
+        RightFormat = rightFormat;
         Blocks = BuildBlocks(rows);
         _whitespaceOnly = Blocks.Select(IsWhitespaceOnly).ToArray();
     }
@@ -32,6 +35,11 @@ public sealed class DiffDocument
 
     /// <summary>Set when difftastic was not used, explains why.</summary>
     public string? EngineNote { get; }
+
+    /// <summary>Null when the file does not exist.</summary>
+    public TextFormat? LeftFormat { get; }
+
+    public TextFormat? RightFormat { get; }
 
     /// <summary>True when both sides of the block are the same after removing all whitespace.</summary>
     public bool IsWhitespaceOnly(int block) => block >= 0 && block < _whitespaceOnly.Length && _whitespaceOnly[block];

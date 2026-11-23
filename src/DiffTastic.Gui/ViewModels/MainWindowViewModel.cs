@@ -156,8 +156,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     [NotifyPropertyChangedFor(nameof(RightTitle))]
     private BlameTarget? _rightRevision;
 
-    public string LeftTitle => DisplayName(LeftPath, LeftRevision);
-    public string RightTitle => DisplayName(RightPath, RightRevision);
+    public string LeftTitle => DisplayName(LeftPath, LeftRevision) + FormatDifference(Document?.LeftFormat, Document?.RightFormat);
+    public string RightTitle => DisplayName(RightPath, RightRevision) + FormatDifference(Document?.RightFormat, Document?.LeftFormat);
 
     public string StatusText
     {
@@ -183,6 +183,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     partial void OnDocumentChanged(DiffDocument? value)
     {
         OnPropertyChanged(nameof(StatusText));
+        OnPropertyChanged(nameof(LeftTitle));
+        OnPropertyChanged(nameof(RightTitle));
         OnPropertyChanged(nameof(HasNoise));
     }
 
@@ -492,6 +494,19 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
             return "";
         var name = RepoPath ?? path;
         return revision is null ? name : $"{name}   ·   {RevisionLabel(revision)}";
+    }
+
+    /// <summary>Encoding and line ending of this side, only the parts that differ from the other side.</summary>
+    private static string FormatDifference(TextFormat? own, TextFormat? other)
+    {
+        if (own is null || other is null)
+            return "";
+        var text = "";
+        if (own.Encoding != other.Encoding)
+            text += $"   ·   {own.Encoding}";
+        if (own.LineEnding != other.LineEnding && own.LineEnding is not null && other.LineEnding is not null)
+            text += $"   ·   {own.LineEnding}";
+        return text;
     }
 
     public void Dispose()

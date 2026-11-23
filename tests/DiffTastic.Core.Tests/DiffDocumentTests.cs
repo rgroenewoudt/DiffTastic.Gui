@@ -18,4 +18,13 @@ public class DiffDocumentTests
         Assert.False(doc.IsWhitespaceOnly(2));
         Assert.False(doc.IsWhitespaceOnly(3));
     }
+
+    [Fact]
+    public void Counts_added_and_removed_lines()
+    {
+        var doc = DiffService.Fallback(["a", "b", "c", "d"], ["a", "B", "c", "x", "y"], "test");
+
+        Assert.Equal(3, doc.AddedLines);
+        Assert.Equal(2, doc.RemovedLines);
+    }
 }

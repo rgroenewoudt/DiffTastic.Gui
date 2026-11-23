@@ -24,6 +24,8 @@ public sealed class DiffDocument
         LeftFormat = leftFormat;
         RightFormat = rightFormat;
         Blocks = BuildBlocks(rows);
+        AddedLines = rows.Count(r => r.Kind != RowKind.Equal && r.Right is not null);
+        RemovedLines = rows.Count(r => r.Kind != RowKind.Equal && r.Left is not null);
         _whitespaceOnly = Blocks.Select(IsWhitespaceOnly).ToArray();
     }
 
@@ -32,6 +34,12 @@ public sealed class DiffDocument
     public IReadOnlyList<AlignedRow> Rows { get; }
     public IReadOnlyList<DiffBlock> Blocks { get; }
     public string Language { get; }
+
+    /// <summary>Lines of the right file that are new or changed.</summary>
+    public int AddedLines { get; }
+
+    /// <summary>Lines of the left file that are removed or changed.</summary>
+    public int RemovedLines { get; }
 
     /// <summary>Set when difftastic was not used, explains why.</summary>
     public string? EngineNote { get; }

@@ -171,6 +171,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
                 CurrentBlock >= 0 ? Localization.Format(Strings.DifferenceOf, CurrentBlock + 1, count)
                 : Localization.Format(Strings.DifferenceCount, count);
             var engine = Document.EngineNote ?? "difftastic";
+            if (count > 0)
+                position += $"   ·   +{Document.AddedLines} −{Document.RemovedLines}";
             var text = $"{position}   ·   {Document.Language}   ·   {engine}";
             if (BlameStatus is not null)
                 text += $"   ·   {BlameStatus()}";

@@ -156,8 +156,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     [NotifyPropertyChangedFor(nameof(RightTitle))]
     private BlameTarget? _rightRevision;
 
-    public string LeftTitle => DisplayName(LeftPath, LeftRevision) + FormatDifference(Document?.LeftFormat, Document?.RightFormat);
-    public string RightTitle => DisplayName(RightPath, RightRevision) + FormatDifference(Document?.RightFormat, Document?.LeftFormat);
+    public string LeftTitle => DisplayName(LeftPath, RightPath, LeftRevision) + FormatDifference(Document?.LeftFormat, Document?.RightFormat);
+    public string RightTitle => DisplayName(RightPath, LeftPath, RightRevision) + FormatDifference(Document?.RightFormat, Document?.LeftFormat);
 
     public string StatusText
     {
@@ -178,8 +178,17 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         }
     }
 
-    partial void OnLeftPathChanged(string? value) => OnPropertyChanged(nameof(LeftTitle));
-    partial void OnRightPathChanged(string? value) => OnPropertyChanged(nameof(RightTitle));
+    partial void OnLeftPathChanged(string? value)
+    {
+        OnPropertyChanged(nameof(LeftTitle));
+        OnPropertyChanged(nameof(RightTitle));
+    }
+
+    partial void OnRightPathChanged(string? value)
+    {
+        OnPropertyChanged(nameof(LeftTitle));
+        OnPropertyChanged(nameof(RightTitle));
+    }
     partial void OnDocumentChanged(DiffDocument? value)
     {
         OnPropertyChanged(nameof(StatusText));
@@ -488,12 +497,27 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
         CurrentBlock = FindBlock(last, -1) is >= 0 and var found ? found : last;
     }
 
-    private string DisplayName(string? path, BlameTarget? revision)
+    private string DisplayName(string? path, string? otherPath, BlameTarget? revision)
     {
         if (path is null)
             return "";
-        var name = RepoPath ?? path;
+        var name = RepoPath ?? WithoutCommonDirectory(path, otherPath);
         return revision is null ? name : $"{name}   ·   {RevisionLabel(revision)}";
+    }
+
+    /// <summary>Removes the directories both paths start with; the file name is always kept.</summary>
+    internal static string WithoutCommonDirectory(string path, string? otherPath)
+    {
+        if (otherPath is null)
+            return path;
+        var common = 0;
+        for (var i = 0; i < Math.Min(path.Length, otherPath.Length)
+             && char.ToUpperInvariant(path[i]) == char.ToUpperInvariant(otherPath[i]); i++)
+        {
+            if (path[i] is '\\' or '/')
+                common = i + 1;
+        }
+        return path[common..];
     }
 
     /// <summary>Encoding and line ending of this side, only the parts that differ from the other side.</summary>

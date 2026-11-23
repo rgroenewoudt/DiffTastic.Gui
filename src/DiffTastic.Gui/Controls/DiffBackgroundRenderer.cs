@@ -12,6 +12,9 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
     public IReadOnlyList<AlignedRow> Rows { get; set; } = [];
     public DiffBlock? CurrentBlock { get; set; }
 
+    /// <summary>Rows come from a <see cref="UnifiedLayout"/>: each row shows the side it has.</summary>
+    public bool Unified { get; set; }
+
     public KnownLayer Layer => KnownLayer.Background;
 
     public void Draw(TextView textView, DrawingContext drawingContext)
@@ -30,7 +33,8 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
             var row = Rows[rowIndex];
             var top = visualLine.VisualTop - textView.VerticalOffset;
             var rect = new Rect(0, top, width, visualLine.Height);
-            var line = side == Side.Left ? row.Left : row.Right;
+            var lineSide = Unified ? UnifiedRow.SideOf(row) : side;
+            var line = lineSide == Side.Left ? row.Left : row.Right;
 
             if (line is null)
             {
@@ -38,7 +42,7 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
                 continue;
             }
 
-            if (colors.RowBackground(row.Kind, side) is { } bg)
+            if (colors.RowBackground(Unified ? UnifiedRow.KindOf(row) : row.Kind, lineSide) is { } bg)
                 drawingContext.FillRectangle(bg, rect);
 
             if (row.Kind == RowKind.Changed)
@@ -48,7 +52,7 @@ public sealed class DiffBackgroundRenderer(Side side) : IBackgroundRenderer
                 {
                     var segment = new TextSegment { StartOffset = lineStart + change.Start, Length = change.Length };
                     foreach (var r in BackgroundGeometryBuilder.GetRectsForSegment(textView, segment, false))
-                        drawingContext.FillRectangle(colors.CharHighlight(side), r, 2);
+                        drawingContext.FillRectangle(colors.CharHighlight(lineSide), r, 2);
                 }
             }
         }

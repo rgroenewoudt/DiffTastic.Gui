@@ -252,6 +252,9 @@
   <data name="ShowWhitespaceTip" xml:space="preserve">
     <value>Tabs en spaties tonen</value>
   </data>
+  <data name="UnifiedViewTip" xml:space="preserve">
+    <value>Eén kolom tonen in plaats van naast elkaar</value>
+  </data>
   <data name="WhitespaceIsNoise" xml:space="preserve">
     <value>Wijzigingen in alleen whitespace tellen als ruis</value>
   </data>

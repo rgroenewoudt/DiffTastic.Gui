@@ -19,6 +19,9 @@ public sealed class AppSettings
     /// <summary>Shows tabs and spaces as visible marks.</summary>
     public bool ShowWhitespace { get; set; }
 
+    /// <summary>Shows the diff in one column instead of side by side.</summary>
+    public bool UnifiedView { get; set; }
+
     /// <summary>Differences in whitespace only count as noise.</summary>
     public bool WhitespaceIsNoise { get; set; }
 

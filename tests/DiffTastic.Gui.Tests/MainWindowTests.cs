@@ -339,4 +339,40 @@ public class MainWindowTests
         await vm.BlameReady;
         Directory.Delete(dir, recursive: true);
     }
+
+    [AvaloniaFact]
+    public async Task Unified_view_shows_one_column_and_keeps_navigation()
+    {
+        var settings = new AppSettings();
+        var vm = new MainWindowViewModel(new StartupArgs(Sample("old.cs"), Sample("new.cs"), null), settings);
+        var window = new MainWindow { DataContext = vm, Width = 900, Height = 600 };
+        window.Show();
+        await vm.LoadAsync();
+        Dispatcher.UIThread.RunJobs();
+        vm.NextDiffCommand.Execute(null);
+        var block = vm.CurrentBlock;
+
+        vm.UnifiedView = true;
+        Dispatcher.UIThread.RunJobs();
+
+        var layout = new UnifiedLayout(vm.Document!);
+        Assert.True(settings.UnifiedView);
+        Assert.False(window.LeftPane.IsVisible);
+        Assert.Equal(layout.Rows.Count, window.RightPane.Editor.LineCount);
+        Assert.Equal(block, vm.CurrentBlock);
+        Assert.True(window.RightPane.Bounds.Width > 800);
+        Screenshots.Save(window, "50-unified");
+
+        var removed = layout.Rows.ToList().FindIndex(r => r.Kind != RowKind.Equal && r.Right is null);
+        window.GoToLine(Side.Left, layout.Rows[removed].Left!.LineIndex + 1);
+        Assert.Equal(removed, window.RightPane.Editor.TextArea.Caret.Line - 1);
+
+        vm.UnifiedView = false;
+        Dispatcher.UIThread.RunJobs();
+
+        Assert.True(window.LeftPane.IsVisible);
+        Assert.Equal(vm.Document!.Rows.Count, window.RightPane.Editor.LineCount);
+        Assert.Equal(vm.Document.Rows.Count, window.LeftPane.Editor.LineCount);
+        await vm.BlameReady;
+    }
 }

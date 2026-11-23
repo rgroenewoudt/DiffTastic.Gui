@@ -40,7 +40,20 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
         }
     } = new HashSet<int>();
 
+    /// <summary>Rows come from a <see cref="UnifiedLayout"/>: shows the old and the new line number.</summary>
+    public bool Unified
+    {
+        get;
+        set
+        {
+            field = value;
+            InvalidateMeasure();
+            InvalidateVisual();
+        }
+    }
+
     private const double HintSize = 7;
+    private const double ColumnGap = 8;
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
@@ -54,10 +67,9 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
 
     protected override Size MeasureOverride(Size availableSize)
     {
-        var digits = Math.Max(3, Rows.Count.ToString(CultureInfo.InvariantCulture).Length);
-        var text = Format(new string('9', digits));
         var hintSpace = HintRows.Count > 0 ? HintSize + 3 : 0;
-        return new Size(text.Width + 14 + MarkerWidth + hintSpace, 0);
+        var numbers = Unified ? NumberWidth * 2 + ColumnGap : NumberWidth;
+        return new Size(numbers + 14 + MarkerWidth + hintSpace, 0);
     }
 
     public override void Render(DrawingContext context)
@@ -68,6 +80,7 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
         if (textView is not { VisualLinesValid: true })
             return;
 
+        var numberWidth = Unified ? NumberWidth : 0;
         foreach (var visualLine in textView.VisualLines)
         {
             var rowIndex = visualLine.FirstDocumentLine.LineNumber - 1;
@@ -75,11 +88,11 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
                 continue;
 
             var row = Rows[rowIndex];
-            var line = side == Side.Left ? row.Left : row.Right;
             var top = visualLine.VisualTop - textView.VerticalOffset;
+            var kind = Unified ? UnifiedRow.KindOf(row) : row.Kind;
 
-            if (row.Kind != RowKind.Equal)
-                context.FillRectangle(colors.Marker(row.Kind), new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
+            if (kind != RowKind.Equal)
+                context.FillRectangle(colors.Marker(kind), new Rect(Bounds.Width - MarkerWidth, top, MarkerWidth, visualLine.Height));
 
             if (HintRows.Contains(rowIndex))
             {
@@ -87,13 +100,25 @@ public sealed class RowNumberMargin(Side side) : AbstractMargin
                 context.DrawEllipse(colors.ImportantMarker, null, center, HintSize / 2, HintSize / 2);
             }
 
-            if (line is null)
-                continue;
-
-            var text = Number(line.LineIndex + 1);
-            var x = Bounds.Width - MarkerWidth - 6 - text.Width;
-            context.DrawText(text, new Point(x, top + (visualLine.Height - text.Height) / 2));
+            var right = Bounds.Width - MarkerWidth - 6;
+            if (Unified)
+            {
+                DrawNumber(context, row.Right, right, top, visualLine.Height);
+                DrawNumber(context, row.Left, right - numberWidth - ColumnGap, top, visualLine.Height);
+            }
+            else
+                DrawNumber(context, side == Side.Left ? row.Left : row.Right, right, top, visualLine.Height);
         }
+    }
+
+    private double NumberWidth => Format(new string('9', Math.Max(3, Rows.Count.ToString(CultureInfo.InvariantCulture).Length))).Width;
+
+    private void DrawNumber(DrawingContext context, DiffLine? line, double right, double top, double height)
+    {
+        if (line is null)
+            return;
+        var text = Number(line.LineIndex + 1);
+        context.DrawText(text, new Point(right - text.Width, top + (height - text.Height) / 2));
     }
 
     protected override void OnTextViewChanged(TextView? oldTextView, TextView? newTextView)

@@ -121,6 +121,7 @@ public sealed class DiffPane : DockPanel
     public Side Side { get; }
     public TextEditor Editor { get; }
     public IReadOnlyList<AlignedRow> Rows { get; private set; } = [];
+    public bool Unified { get; private set; }
 
     public string Title => _title.Text ?? "";
 
@@ -141,18 +142,24 @@ public sealed class DiffPane : DockPanel
         ToolTip.SetTip(_title, fullPath);
     }
 
-    public void Show(IReadOnlyList<AlignedRow> rows)
+    /// <summary>Shows rows; <paramref name="unified"/> rows come from a <see cref="UnifiedLayout"/>.</summary>
+    public void Show(IReadOnlyList<AlignedRow> rows, bool unified = false)
     {
         Rows = rows;
+        Unified = unified;
         _renderer.Rows = rows;
+        _renderer.Unified = unified;
         _margin.Rows = rows;
+        _margin.Unified = unified;
+        _badge.IsVisible = !unified;
 
         var sb = new StringBuilder();
         for (var i = 0; i < rows.Count; i++)
         {
             if (i > 0)
                 sb.Append('\n');
-            sb.Append((Side == Side.Left ? rows[i].Left : rows[i].Right)?.Text.Replace('\r', LineAligner.CarriageReturnSymbol));
+            var line = unified ? rows[i].Right ?? rows[i].Left : Side == Side.Left ? rows[i].Left : rows[i].Right;
+            sb.Append(line?.Text.Replace('\r', LineAligner.CarriageReturnSymbol));
         }
         Editor.Text = sb.ToString();
         Editor.TextArea.TextView.Redraw();
@@ -227,13 +234,14 @@ public sealed class DiffPane : DockPanel
             sv.Offset = new Vector(x ?? sv.Offset.X, y);
     }
 
-    /// <summary>Row of a 1-based line number on this side; the nearest row when the line does not exist, or -1.</summary>
-    public int RowOfLine(int lineNumber)
+    /// <summary>Row of a 1-based line number of a side (default this pane's side); the nearest row when the line does not exist, or -1.</summary>
+    public int RowOfLine(int lineNumber, Side? side = null)
     {
+        var lineSide = side ?? Side;
         var last = -1;
         for (var i = 0; i < Rows.Count; i++)
         {
-            if ((Side == Side.Left ? Rows[i].Left : Rows[i].Right) is not { } line)
+            if ((lineSide == Side.Left ? Rows[i].Left : Rows[i].Right) is not { } line)
                 continue;
             if (line.LineIndex + 1 >= lineNumber)
                 return i;

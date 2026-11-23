@@ -71,6 +71,8 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
 
     [ObservableProperty] private bool _showWhitespace = settings?.ShowWhitespace ?? false;
 
+    [ObservableProperty] private bool _unifiedView = settings?.UnifiedView ?? false;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasNoise))]
     [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
@@ -183,6 +185,12 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     partial void OnShowWhitespaceChanged(bool value)
     {
         _settings.ShowWhitespace = value;
+        _settings.Save();
+    }
+
+    partial void OnUnifiedViewChanged(bool value)
+    {
+        _settings.UnifiedView = value;
         _settings.Save();
     }
 

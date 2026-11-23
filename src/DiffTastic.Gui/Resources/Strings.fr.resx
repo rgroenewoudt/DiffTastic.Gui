@@ -252,6 +252,9 @@
   <data name="ShowWhitespaceTip" xml:space="preserve">
     <value>Afficher les tabulations et espaces</value>
   </data>
+  <data name="UnifiedViewTip" xml:space="preserve">
+    <value>Afficher une colonne au lieu de côte à côte</value>
+  </data>
   <data name="WhitespaceIsNoise" xml:space="preserve">
     <value>Compter les changements d'espaces seuls comme du bruit</value>
   </data>

@@ -21,6 +21,8 @@ public sealed partial class MainWindow : Window
     private IReadOnlyList<FoldRegion> _foldRegions = [];
     private HashSet<FoldRegion> _defaultFolded = [];
     private (string? Left, string? Right)? _shownPaths;
+    private UnifiedLayout? _unified;
+    private GridLength _leftWidth = new(1, GridUnitType.Star);
 
     public MainWindow()
     {
@@ -37,12 +39,11 @@ public sealed partial class MainWindow : Window
             var view = pane.Editor.TextArea.TextView;
             view.ScrollOffsetChanged += (_, _) => SyncScroll(pane);
             view.VisualLinesChanged += (_, _) => UpdateViewport();
-            view.PointerPressed += (_, e) => _vm?.SelectBlockAtRow(pane.RowAt(e.GetPosition(view)));
+            view.PointerPressed += (_, e) => _vm?.SelectBlockAtRow(SourceRow(pane.RowAt(e.GetPosition(view))));
             pane.FoldsToggled += (_, _) => (pane == LeftPane ? RightPane : LeftPane).ApplyFoldStates(pane.GetFoldStates());
         }
 
-        Blame = new BlameHoverController(PanesGrid, (side, row) =>
-            _vm?.CreateBlamePopupAsync(side, row) ?? Task.FromResult<BlamePopupViewModel?>(null));
+        Blame = new BlameHoverController(PanesGrid, CreateBlamePopupAsync);
         Blame.Attach(LeftPane);
         Blame.Attach(RightPane);
         Search = new DiffSearch(LeftPane, RightPane, row => ScrollToRow(row, center: false));
@@ -63,6 +64,20 @@ public sealed partial class MainWindow : Window
         Blame.Close();
         UpdateTitles();
     }
+
+    private Task<BlamePopupViewModel?> CreateBlamePopupAsync(Side side, int row)
+    {
+        if (_unified is { } unified && row >= 0 && row < unified.Rows.Count)
+            (side, row) = (UnifiedRow.SideOf(unified.Rows[row]), unified.SourceRow(row));
+        return _vm?.CreateBlamePopupAsync(side, row) ?? Task.FromResult<BlamePopupViewModel?>(null);
+    }
+
+    private IReadOnlyList<DiffBlock> ShownBlocks => _unified?.Blocks ?? _vm?.Document?.Blocks ?? [];
+
+    /// <summary>Row of the document for a shown row; differs in the unified view.</summary>
+    private int SourceRow(int row) => row < 0 || _unified is null ? row : _unified.SourceRow(row);
+
+    private int ShownRow(int sourceRow) => _unified?.RowOf(sourceRow) ?? sourceRow;
 
     public void ExpandAll() => ApplyFoldStates(new bool[_foldRegions.Count]);
 
@@ -120,12 +135,15 @@ public sealed partial class MainWindow : Window
             case nameof(MainWindowViewModel.ShowWhitespace):
                 ShowWhitespace();
                 break;
+            case nameof(MainWindowViewModel.UnifiedView):
+                ShowDocument();
+                break;
         }
     }
 
     private void ShowAnalysis()
     {
-        var blocks = _vm?.Document?.Blocks ?? [];
+        var blocks = ShownBlocks;
         var notes = _vm?.Analysis?.Hunks
             .Where(n => n.Hunk < blocks.Count)
             .Select(n => (Block: blocks[n.Hunk], Note: n))
@@ -147,24 +165,40 @@ public sealed partial class MainWindow : Window
     {
         Blame.Close();
         var paths = (_vm?.LeftPath, _vm?.RightPath);
-        int? keepRow = _shownPaths == paths ? AnchorRow() : null;
+        int? keepRow = _shownPaths == paths ? SourceRow(AnchorRow()) : null;
         _shownPaths = _vm?.Document is null ? null : paths;
-        var rows = _vm?.Document?.Rows ?? [];
+        _unified = _vm is { UnifiedView: true, Document: { } doc } ? new UnifiedLayout(doc) : null;
+        ShowLayout(_unified is not null);
+        var rows = _unified?.Rows ?? _vm?.Document?.Rows ?? [];
         var fileName = _vm?.RepoPath ?? _vm?.RightPath;
         LeftPane.SetLanguageFromFileName(fileName);
         RightPane.SetLanguageFromFileName(fileName);
-        LeftPane.Show(rows);
-        RightPane.Show(rows);
+        LeftPane.Show(_unified is null ? rows : []);
+        RightPane.Show(rows, unified: _unified is not null);
         _foldRegions = FoldRegionFinder.Find(rows);
         _defaultFolded = FoldRegionFinder.DefaultFolded(_foldRegions).ToHashSet();
-        LeftPane.SetFoldings(_foldRegions, _defaultFolded);
+        LeftPane.SetFoldings(_unified is null ? _foldRegions : [], _defaultFolded);
         RightPane.SetFoldings(_foldRegions, _defaultFolded);
         Overview.Rows = rows;
         ShowAnalysis();
         UpdateTitles();
         ShowCurrentBlock(scroll: keepRow is null);
         if (keepRow is { } row)
-            ScrollToRow(row, center: false);
+            ScrollToRow(ShownRow(row), center: false);
+    }
+
+    /// <summary>Unified: only the right pane, at full width.</summary>
+    private void ShowLayout(bool unified)
+    {
+        if (unified != LeftPane.IsVisible)
+            return;
+        var columns = PanesGrid.ColumnDefinitions;
+        if (unified)
+            _leftWidth = columns[0].Width;
+        columns[0].Width = unified ? new GridLength(0) : _leftWidth;
+        columns[1].Width = new GridLength(unified ? 0 : 4);
+        LeftPane.IsVisible = !unified;
+        PanesSplitter.IsVisible = !unified;
     }
 
     /// <summary>Row at a third of the viewport, where <see cref="ScrollToRow(int, bool)"/> puts a row.</summary>
@@ -178,16 +212,18 @@ public sealed partial class MainWindow : Window
     private void UpdateTitles()
     {
         LeftPane.SetTitle(_vm?.LeftTitle ?? "", _vm?.LeftPath);
-        RightPane.SetTitle(_vm?.RightTitle ?? "", _vm?.RightPath);
+        if (_unified is null)
+            RightPane.SetTitle(_vm?.RightTitle ?? "", _vm?.RightPath);
+        else
+            RightPane.SetTitle($"{_vm?.LeftTitle} → {_vm?.RightTitle}", $"{_vm?.LeftPath}\n{_vm?.RightPath}");
         var name = _vm?.RepoPath ?? (_vm?.RightPath is { } p ? Path.GetFileName(p) : null);
         Title = name is null ? "DiffTastic" : $"{name} - DiffTastic";
     }
 
     private void ShowCurrentBlock(bool scroll)
     {
-        DiffBlock? block = _vm is { Document: { } doc, CurrentBlock: var i } && i >= 0 && i < doc.Blocks.Count
-            ? doc.Blocks[i]
-            : null;
+        var blocks = ShownBlocks;
+        DiffBlock? block = _vm is { CurrentBlock: var i } && i >= 0 && i < blocks.Count ? blocks[i] : null;
         LeftPane.SetCurrentBlock(block);
         RightPane.SetCurrentBlock(block);
         if (block is { } b && scroll)
@@ -317,9 +353,10 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>Scrolls to a 1-based line number of one side and puts the caret there.</summary>
-    public void GoToLine(DiffPane pane, int lineNumber)
+    public void GoToLine(Side side, int lineNumber)
     {
-        var row = pane.RowOfLine(lineNumber);
+        var pane = side == Side.Left && _unified is null ? LeftPane : RightPane;
+        var row = pane.RowOfLine(lineNumber, side);
         if (row < 0)
             return;
         ScrollToRow(row, center: true);
@@ -333,7 +370,7 @@ public sealed partial class MainWindow : Window
             if (int.TryParse(GoToLineBox.Text, out var line))
             {
                 GoToLineBar.IsVisible = false;
-                GoToLine(GoToLeft.IsChecked == true ? LeftPane : RightPane, line);
+                GoToLine(GoToLeft.IsChecked == true ? Side.Left : Side.Right, line);
             }
             e.Handled = true;
         }

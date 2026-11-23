@@ -27,11 +27,13 @@ dotnet run --project src/DiffTastic.Gui -- samples/old.cs samples/new.cs [--path
 - `Diff/LineAligner` turns difft's `aligned_lines` + per-line changes into `AlignedRow`s (left/right `DiffLine` or null = filler row).
 - `Diff/DiffService` is the entry point. When difft is missing, fails or exceeds 15 s it falls back to a DiffPlex line diff and sets `DiffDocument.EngineNote` (shown in the status bar).
 - `DiffDocument` holds rows plus `Blocks` (runs of non-equal rows) used for next/previous navigation and the overview bar.
+- `UnifiedLayout` turns a document into one-column rows (per block old lines, then new lines) with row mapping both ways; block indexes stay the same.
 - `Git/`: `GitRunner` shells out to `git`; `RevisionLocator` finds which version a (temp) difftool file is: working tree, `HEAD`, a commit holding the same blob (`git log --find-object`), or else raw contents. `BlameService` does blame and line history (`git log -L`).
 
 **DiffTastic.Gui** (Avalonia, CommunityToolkit.Mvvm, compiled bindings by default)
 - `StartupArgs`: `<left> <right> [--path <repo path>]`, matching the git difftool setup in README.
 - `MainWindowViewModel` loads the diff and starts blame for both sides in the background.
 - `MainWindow.axaml.cs` owns two `DiffPane`s and keeps their scroll offsets in sync; scrolling is done via the inner `ScrollViewer`.
+- Unified view (`UnifiedView` setting): the left pane is hidden and the right pane shows `UnifiedLayout` rows; `MainWindow` maps shown rows to document rows for block selection and blame.
 - `DiffPane` wraps an AvaloniaEdit `TextEditor`. Each pane's text is one line per aligned row (filler rows are empty lines), so row index == document line index in both panes. Highlighting is drawn by `DiffBackgroundRenderer`; real line numbers by `RowNumberMargin`; syntax by TextMate.
 - `BlameHoverController` + `BlamePopup` show the commit for the hovered line, with Older/Newer history navigation.

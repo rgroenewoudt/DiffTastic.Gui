@@ -1,3 +1,5 @@
+using System.Buffers;
+using System.Text;
 using System.Text.Json;
 
 namespace DiffTastic.Core.Ai;
@@ -92,7 +94,10 @@ public sealed class ClaudeProvider(string executable, string model) : AiProvider
     internal static string MinifyJson(string json)
     {
         using var doc = JsonDocument.Parse(json);
-        return JsonSerializer.Serialize(doc.RootElement);
+        var buffer = new ArrayBufferWriter<byte>();
+        using (var writer = new Utf8JsonWriter(buffer))
+            doc.RootElement.WriteTo(writer);
+        return Encoding.UTF8.GetString(buffer.WrittenSpan);
     }
 }
 

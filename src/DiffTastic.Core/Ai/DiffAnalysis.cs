@@ -12,7 +12,7 @@ public sealed record HunkNote(int Hunk, int Importance, bool IsNoise, string Rea
     public bool IsImportant => Importance >= 2 && !IsNoise;
 }
 
-public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
+public sealed partial record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
 {
     public HunkNote? NoteFor(int hunk) => Hunks.FirstOrDefault(h => h.Hunk == hunk);
 
@@ -140,12 +140,10 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
         sb.Append('\n');
     }
 
-    private static readonly JsonSerializerOptions JsonOptions = new() { PropertyNameCaseInsensitive = true };
-
     /// <summary>Parses the AI answer; drops unknown or duplicate hunk ids.</summary>
     public static DiffAnalysis Parse(string json, int hunkCount)
     {
-        var raw = JsonSerializer.Deserialize<RawAnalysis>(json, JsonOptions)
+        var raw = JsonSerializer.Deserialize(json, RawAnalysisJsonContext.Default.RawAnalysis)
                   ?? throw new JsonException("Empty AI answer.");
         var notes = (raw.Hunks ?? [])
             .Where(h => h.Hunk >= 0 && h.Hunk < hunkCount)
@@ -171,4 +169,8 @@ public sealed record DiffAnalysis(string Summary, IReadOnlyList<HunkNote> Hunks)
         [property: JsonPropertyName("noise")] bool Noise,
         [property: JsonPropertyName("reason")] string? Reason,
         [property: JsonPropertyName("reviewHints")] List<string>? ReviewHints);
+
+    [JsonSourceGenerationOptions(PropertyNameCaseInsensitive = true)]
+    [JsonSerializable(typeof(RawAnalysis))]
+    private sealed partial class RawAnalysisJsonContext : JsonSerializerContext;
 }

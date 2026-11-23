@@ -6,8 +6,6 @@ namespace DiffTastic.Gui;
 /// <summary>User settings in %APPDATA%/DiffTastic/settings.json. Without a file path nothing is saved.</summary>
 public sealed class AppSettings
 {
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
-
     /// <summary>"en", "de", "nl" or "fr"; null follows the system language.</summary>
     public string? Language { get; set; }
 
@@ -43,7 +41,7 @@ public sealed class AppSettings
         try
         {
             if (File.Exists(path))
-                settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(path), JsonOptions);
+                settings = JsonSerializer.Deserialize(File.ReadAllText(path), AppSettingsJsonContext.Default.AppSettings);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
         {
@@ -60,10 +58,14 @@ public sealed class AppSettings
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(FilePath)!);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, JsonOptions));
+            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, AppSettingsJsonContext.Default.AppSettings));
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
         }
     }
 }
+
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(AppSettings))]
+internal sealed partial class AppSettingsJsonContext : JsonSerializerContext;

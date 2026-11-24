@@ -96,7 +96,7 @@ public sealed class DiffPane : DockPanel
         _folding = FoldingManager.Install(Editor.TextArea);
         Editor.TextArea.TextView.VisualLinesChanged += (_, _) =>
         {
-            if (!GetFoldStates().SequenceEqual(_knownStates))
+            if (FoldStatesChanged())
             {
                 RememberFoldStates();
                 FoldsToggled?.Invoke(this, EventArgs.Empty);
@@ -208,6 +208,18 @@ public sealed class DiffPane : DockPanel
     }
 
     private void RememberFoldStates() => _knownStates = GetFoldStates();
+
+    private bool FoldStatesChanged()
+    {
+        if (_knownStates.Length != _sections.Count)
+            return true;
+        for (var i = 0; i < _sections.Count; i++)
+        {
+            if (_sections[i].IsFolded != _knownStates[i])
+                return true;
+        }
+        return false;
+    }
 
     /// <summary>Picks a syntax grammar from a file name; plain text when unknown.</summary>
     public void SetLanguageFromFileName(string? fileName)

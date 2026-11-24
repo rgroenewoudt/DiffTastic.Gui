@@ -26,7 +26,17 @@ public sealed class OverviewBar : Control
     } = [];
 
     /// <summary>First and last visible row.</summary>
-    public (double First, double Last) Viewport { get; set { field = value; InvalidateVisual(); } }
+    public (double First, double Last) Viewport
+    {
+        get;
+        set
+        {
+            if (field == value)
+                return;
+            field = value;
+            InvalidateVisual();
+        }
+    }
 
     /// <summary>AI notes per block; important blocks get a strip on the left.</summary>
     public IReadOnlyList<(DiffBlock Block, HunkNote Note)> Notes { get; set { field = value; InvalidateVisual(); } } = [];

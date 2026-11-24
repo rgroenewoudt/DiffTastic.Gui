@@ -8,6 +8,7 @@
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
     <NeutralLanguage>en</NeutralLanguage>
+    <PublishAot>true</PublishAot>
   </PropertyGroup>
 
   <ItemGroup>

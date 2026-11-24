@@ -38,7 +38,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     private DiffDocument? _document;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(StatusText), nameof(CurrentNote), nameof(CurrentNoteText), nameof(CurrentHintsText))]
+    [NotifyPropertyChangedFor(nameof(StatusText), nameof(CurrentNote), nameof(CurrentNoteText))]
     [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
     private int _currentBlock = -1;
 
@@ -67,7 +67,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     private Func<string>? _aiStatus;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(Summary), nameof(CurrentNote), nameof(CurrentNoteText), nameof(CurrentHintsText), nameof(HasNoise))]
+    [NotifyPropertyChangedFor(nameof(Summary), nameof(CurrentNote), nameof(CurrentNoteText), nameof(HasNoise))]
     [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
     private DiffAnalysis? _analysis;
 
@@ -96,8 +96,6 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     public string? CurrentNoteText => CurrentNote is { } note
         ? $"{Localization.Format(Strings.Difference, note.Hunk + 1)}   ·   {ImportanceLabel(note)}   ·   {note.Reason}"
         : null;
-
-    public string? CurrentHintsText => HintsText(CurrentNote);
 
     public static string? HintsText(HunkNote? note) => note is { ReviewHints.Count: > 0 }
         ? string.Join('\n', note.ReviewHints.Select(h => "⚠ " + h))

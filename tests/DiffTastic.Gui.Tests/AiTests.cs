@@ -50,7 +50,6 @@ public sealed partial class AiTests
 
         vm.FirstDiffCommand.Execute(null);
         Assert.StartsWith("Difference 1   ·   ●●● critical   ·   Hunk 0 changes behavior.", vm.CurrentNoteText);
-        Assert.Equal("⚠ Check callers of hunk 0.", vm.CurrentHintsText);
 
         var firstBlock = vm.Document!.Blocks[0];
         Assert.Equal("⚠ Check callers of hunk 0.", window.LeftPane.Hints[firstBlock.StartRow]);
@@ -59,7 +58,7 @@ public sealed partial class AiTests
 
         vm.CurrentBlock = 1;
         Assert.Contains("noise", vm.CurrentNoteText);
-        Assert.Null(vm.CurrentHintsText);
+        Assert.False(window.LeftPane.Hints.ContainsKey(vm.Document.Blocks[1].StartRow));
     }
 
     [AvaloniaFact]

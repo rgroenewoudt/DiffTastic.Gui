@@ -23,7 +23,6 @@
                     <SolidColorBrush x:Key="AiAccentBrush" Color="#9B8CC9" />
                     <SolidColorBrush x:Key="AiTextBrush" Color="#2A2440" />
                     <SolidColorBrush x:Key="AiNoteTextBrush" Color="#5A5470" />
-                    <SolidColorBrush x:Key="AiHintTextBrush" Color="#9A5B00" />
                     <SolidColorBrush x:Key="PopupBackgroundBrush" Color="White" />
                     <SolidColorBrush x:Key="PopupBorderBrush" Color="#D8D8D8" />
                     <SolidColorBrush x:Key="PopupTextBrush" Color="#24292F" />
@@ -48,7 +47,6 @@
                     <SolidColorBrush x:Key="AiAccentBrush" Color="#8B7CC9" />
                     <SolidColorBrush x:Key="AiTextBrush" Color="#E2DDF5" />
                     <SolidColorBrush x:Key="AiNoteTextBrush" Color="#B4ADD0" />
-                    <SolidColorBrush x:Key="AiHintTextBrush" Color="#E0A040" />
                     <SolidColorBrush x:Key="PopupBackgroundBrush" Color="#2D2D30" />
                     <SolidColorBrush x:Key="PopupBorderBrush" Color="#454545" />
                     <SolidColorBrush x:Key="PopupTextBrush" Color="#E6EDF3" />

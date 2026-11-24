@@ -123,9 +123,6 @@
                 <SelectableTextBlock Name="AiNote" Text="{Binding CurrentNoteText}" TextWrapping="Wrap" FontSize="12"
                                      Foreground="{DynamicResource AiNoteTextBrush}"
                                      IsVisible="{Binding CurrentNoteText, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                <SelectableTextBlock Name="AiHints" Text="{Binding CurrentHintsText}" TextWrapping="Wrap" FontSize="12"
-                                     Foreground="{DynamicResource AiHintTextBrush}"
-                                     IsVisible="{Binding CurrentHintsText, Converter={x:Static ObjectConverters.IsNotNull}}" />
             </StackPanel>
             </DockPanel>
         </Border>

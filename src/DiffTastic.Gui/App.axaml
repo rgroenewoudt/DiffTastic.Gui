@@ -4,6 +4,14 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
+        <Style Selector="ToolTip">
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Foreground" Value="{DynamicResource PopupTextBrush}" />
+            <Setter Property="Background" Value="{DynamicResource PopupBackgroundBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource PopupBorderBrush}" />
+            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="Transitions" Value="{x:Null}" />
+        </Style>
     </Application.Styles>
 
     <Application.Resources>

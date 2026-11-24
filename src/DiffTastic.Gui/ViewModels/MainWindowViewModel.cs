@@ -33,6 +33,7 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     [ObservableProperty] private string? _repoPath = args.RepoPath;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLoading))]
     [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand), nameof(FirstDiffCommand), nameof(LastDiffCommand))]
     private DiffDocument? _document;
 
@@ -41,7 +42,12 @@ public sealed partial class MainWindowViewModel(StartupArgs args, AppSettings? s
     [NotifyCanExecuteChangedFor(nameof(NextDiffCommand), nameof(PreviousDiffCommand))]
     private int _currentBlock = -1;
 
-    [ObservableProperty] private bool _isBusy;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsLoading))]
+    private bool _isBusy;
+
+    /// <summary>Busy with no diff shown yet; a reload keeps showing the old diff instead.</summary>
+    public bool IsLoading => IsBusy && Document is null;
     [ObservableProperty] private string? _error;
 
     [ObservableProperty]

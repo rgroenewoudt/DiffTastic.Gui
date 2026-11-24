@@ -39,6 +39,29 @@ public class MainWindowTests
     }
 
     [AvaloniaFact]
+    public async Task Shows_loader_until_first_diff_is_loaded()
+    {
+        var vm = new MainWindowViewModel(new StartupArgs(Sample("old.cs"), Sample("new.cs"), null));
+        var window = new MainWindow { DataContext = vm, Width = 1200, Height = 600 };
+        window.Show();
+        var overlay = window.FindControl<Control>("LoadingOverlay")!;
+
+        var load = vm.LoadAsync();
+        Dispatcher.UIThread.RunJobs();
+        Assert.True(overlay.IsVisible);
+        Screenshots.Save(window, "52-loading");
+
+        await load;
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(overlay.IsVisible);
+
+        var reload = vm.LoadAsync();
+        Dispatcher.UIThread.RunJobs();
+        Assert.False(overlay.IsVisible);
+        await reload;
+    }
+
+    [AvaloniaFact]
     public async Task Dark_theme_switches_diff_colors_and_syntax_theme()
     {
         var (window, _) = await OpenAsync("old.cs", "new.cs");
